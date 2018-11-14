@@ -1,0 +1,38 @@
+---
+title: "Aquaculture Model"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+#####Objective: Step through optimal harvest and planting decisions by a generic totoaba farm..
+
+```{r pkg_ins, include = FALSE}
+
+# Check out knitr for knitr::read_chunk.
+library(knitr)
+
+# Name packages.
+pkg <- c("readr",
+         "knitr",
+         "tidyverse",
+         "gapminder",
+         "sandwich",
+         "broom",
+         "stargazer",
+         "cowplot")
+
+# Install packages.
+#install.packages(pkg, verbose = FALSE, quiet = TRUE)
+
+  
+# Update packages.
+#update.packages(pkg, verbose = FALSE, quiet = TRUE)
+
+# Check out packages.
+lapply(pkg, library, character.only = TRUE)
+
+```
+
+#####Appendix: LaTeX Demo
+
+$$ d_i = \alpha_{0, i} - \alpha_{1, i} * x_{emissions} + u_i$$

@@ -1,0 +1,164 @@
+Year,Month,Price (USD/kg),Price (USD/g),Price (per lb.),Price (per buche local),Price (per buche Asia),Total Value (USD),Mass/Buche (kg),Mass (kg.),Number of buche,Condition (Inferred),Condition (Inferred),Condition,Country,Source
+2013,,,,,,,,,13.61,,Wet,Wet,,United States,CBP
+2013,,,,,,,,0.60,102.06,169,Wet,Wet,,United States,CBP
+2013,,,,,"5,000.00","10,000.00","3,600,000.00",,,241,Wet,Wet,,United States,CBP
+2013,,,,,,,"5,000,000.00",,239.95,,Wet,Wet,,United States,CBP
+2015,July,,,,"10,500.00",,,,602.00,,Wet,Wet,,United States,CBP
+2013,April,,,,,,,,,241,Wet,Wet,,United States,CBP
+2013,February,,,,,,,0.44,219.08,500,Wet,Wet,,United States,CBP
+2013,February,,,,"1,650.00",,,,,170,Wet,Wet,,United States,CBP
+2013,February,,,,,,,,,11,Wet,Wet,,United States,CBP
+2014,March,,,,,,,1.37,8.20,6,Wet,Wet,Wet,Mexico,C4ADS
+2015,April,"5,000.00",5.00,,,,"127,500.00",0.28,25.50,90,Wet,Wet,,Mexico,C4ADS
+2015,September,,,,,,,,22.18,,Wet,Wet,,Mexico,C4ADS
+2016,December,,,,,,,,,3,Wet,Wet,Wet,Mexico,C4ADS
+2016,February,,,,,,,,,6,Wet,Wet,Wet,Mexico,C4ADS
+2016,March,,,,,,"150,000.00",0.32,39.00,121,Wet,Wet,Wet,Mexico,C4ADS
+2015,March,,,,,,,0.68,23.00,34,Wet,Wet,Wet,Mexico,C4ADS
+2016,May,,,,,,,,,11,Wet,Wet,Wet,Mexico,C4ADS
+2017,March,,,,,,,,,9,Wet,Wet,Wet,Mexico,C4ADS
+2017,March,,,,,,,0.71,17.00,24,Wet,Wet,Wet,Mexico,C4ADS
+2013,,,,,,,"2,800,000.00",,,560,Wet,Dry,Dry,United States,C4ADS
+2014,April,,,,,,,,2.74,,Wet,Dry,Dry,Mexico,C4ADS
+2013,May,,,,,,,,142.80,,Wet,Dry,Dry,Mexico,C4ADS
+2015,August,,,,,,,0.21,0.64,3,Dry,Dry,Dry,China,C4ADS
+2015,July,,,,,,,0.13,34.78,274,Wet,Dry,Dry,Mexico,C4ADS
+2014,November,,,,,,,,,385,Wet,Dry,Dry,Mexico,C4ADS
+2013,January,,,,,,,,,,Wet,Wet,,Mexico,EIA
+2013,January,,,,,,,,,,Wet,Wet,,Mexico,EIA
+2013,February,,,,,,,,,,Wet,Wet,,Mexico,EIA
+2013,February,,,,,,,,,11,Wet,Wet,,United States,EIA
+2013,March,,,,,,,,,169,Wet,Wet,,United States,EIA
+2013,April,,,,,,,0.57,16.02,28,Wet,Wet,Wet,United States,EIA
+2013,April,,,,,,,,,241,Wet,Wet,,United States,EIA
+2013,May,,,,,,,,,,Wet,Wet,,Mexico,EIA
+2013,August,,,,,,,,,9,Wet,Wet,,Mexico,EIA
+2013,September,,,,,,,,,12,Dry,Dry,,Hong Kong,EIA
+2013,October,,,,,,,,,169,Wet,Wet,,United States,EIA
+2013,October,,,,,,,,,58,Wet,Wet,,United States,EIA
+2013,November,,,,,,,,0.40,,Wet,Wet,,Mexico,EIA
+2014,January,,,,,,,,,2,Dry,Dry,,Hong Kong,EIA
+2014,March,,,,,,,,,,Wet,Wet,,United States,EIA
+2014,April,,,,,,,,,241,Wet,Wet,,United States,EIA
+2014,March,,,,,,,,,8.2,Wet,Wet,,Mexico,EIA
+2014,April,,,,,,,,,1,Wet,Wet,,Mexico,EIA
+2014,April,,,,,,,,2.76,,Wet,Wet,,Mexico,EIA
+2014,August,,,,,,,0.68,23.00,34,Wet,Wet,Wet,Mexico,EIA
+2014,August,,,,,,,,,3,Wet,Wet,,Mexico,EIA
+2014,November,,,,,,,,,385,Wet,Wet,,Mexico,EIA
+2015,January,,,,,,,,,2,Wet,Wet,,Mexico,EIA
+2015,March,,,,,,,,,86,Wet,Wet,,Mexico,EIA
+2015,May,,,,,,,,,,Wet,Wet,,Mexico,EIA
+2015,May,,,,,,,,,14,Dry,Dry,,Hong Kong,EIA
+2015,July,,,,,,,0.13,34.78,274,Wet,Wet,,Mexico,EIA
+2015,August,,,,,,,,,,Wet,Wet,,Mexico,EIA
+2015,August,,,,,,,0.21,0.64,3,Dry,Dry,,Hong Kong,EIA
+2015,September,,,,,,,,22.00,,Wet,Wet,,Mexico,EIA
+2015,October,,,,,,,,,58,Wet,Wet,,United States,EIA
+2015,December,,,,,,,,,14,Dry,Dry,,Hong Kong,EIA
+2016,February,,,,,,,,,6,Wet,Wet,,Mexico,EIA
+2016,February,,,,,,,0.12,7.10,61,Wet,Wet,,Mexico,EIA
+2016,March,,,,,,,0.32,39.00,121,Wet,Wet,,Mexico,EIA
+2016,April,,,,,,,,,,Wet,Wet,,Mexico,EIA
+2016,April,,,,,,,,4.00,,Wet,Wet,,Mexico,EIA
+2016,December,,,,,,,,,3,Wet,Wet,,Mexico,EIA
+2016,December,,,,,,,,,,Wet,Wet,,Mexico,EIA
+2016,December,,,,,,,1.40,1.40,1,Wet,Wet,Wet,Mexico,EIA
+2017,January,,,,,,,,,1,Wet,Wet,,Mexico,EIA
+2017,January,,,,,,,0.20,2.80,14,Wet,Wet,,Mexico,EIA
+2017,February,,,,,,,,,,Wet,Wet,,Mexico,EIA
+2017,February,,,,,,,,,,Wet,Wet,,Mexico,EIA
+2017,February,,,,,,,,,1,Wet,Wet,,Mexico,EIA
+2017,February,,,,,,,,,,Wet,Wet,,Mexico,EIA
+2017,March,,,,,,,,,24,Wet,Wet,,Mexico,EIA
+2017,March,,,,,,,,,,Wet,Wet,,Mexico,EIA
+2017,March,,,,,,,,,,Wet,Wet,,Mexico,EIA
+2017,April,,,,,,,,,,Wet,Wet,,Mexico,EIA
+2017,April,,,,,,,,,,Wet,Wet,,Mexico,EIA
+2017,April,,,,,,,,,,Wet,Wet,,Mexico,EIA
+2017,April,,,,,,,,,,Wet,Wet,,Mexico,EIA
+2017,April,,,,,,,,,,Wet,Wet,,Mexico,EIA
+2017,July,,,,,,,0.07,26.00,375,Wet,Wet,,Mexico,EIA
+2017,October,,,,,,,7.00,70.00,10,Wet,Wet,Wet,Mexico,EIA
+2017,December,,,,,,,,0.00,0,Wet,Wet,,Mexico,EIA
+2018,January,,,,,,,,28.00,,Dry,Dry,,Hong Kong,EIA
+2018,February,,,,,,,1.75,7.00,4,Wet,Wet,Wet,Mexico,EIA
+2018,February,,,,,,,,,,Wet,Wet,,Mexico,EIA
+2018,February,,,,,,,0.35,30.50,87,Wet,Wet,,Mexico,EIA
+2018,March,,,,,,,,,1,Wet,Wet,,Mexico,EIA
+2018,March,,,,,,,0.49,10.83,22,Wet,Wet,,Mexico,EIA
+2018,March,,,,,,,0.70,19.00,27,Wet,Wet,Wet,Mexico,EIA
+2018,March,,,,,,,,,1,Wet,Wet,,Mexico,EIA
+2018,March,,,,,,,,20.90,,Wet,Wet,,Mexico,EIA
+2018,March,,,,,,,,,,Wet,Wet,,Mexico,EIA
+2018,April,,,,,,,,,32,Wet,Wet,,Mexico,EIA
+2018,April,,,,,,,,,408,Wet,Wet,,Mexico,EIA
+2018,April,,,,,,,,40.00,,Wet,Wet,,Mexico,EIA
+2018,April,,,,,,,,,417,Wet,Wet,,Mexico,EIA
+2018,May,,,,,,,0.44,100.00,229,Wet,Wet,,Mexico,EIA
+2014,October,"34,135.67",34.14,,,"15,600.00",,0.46,0.46,1,Dry,Dry,,Hong Kong,WildAid
+2014,October,"42,048.52",42.05,,,"15,600.00",,0.37,0.37,1,Dry,Dry,,Hong Kong,WildAid
+2014,October,"38,888.89",38.89,,,"2,800.00",,0.07,0.07,1,Dry,Dry,,Hong Kong,WildAid
+2014,October,"38,997.21",39.00,,,"28,000.00",,0.72,0.72,1,Dry,Dry,,Hong Kong,WildAid
+2014,October,"35,895.65",35.90,,,"4,128.00",,0.12,0.12,1,Dry,Dry,,Hong Kong,WildAid
+2014,October,"32,558.14",32.56,,,"14,000.00",,0.43,0.43,1,Dry,Dry,,Hong Kong,WildAid
+2014,October,"30,769.23",30.77,,,"14,000.00",,0.46,0.46,1,Dry,Dry,,Hong Kong,WildAid
+2014,October,"15,503.88",15.50,,,"4,000.00",,0.26,0.26,1,Dry,Dry,,Hong Kong,WildAid
+2014,October,"27,500.00",27.50,,,"11,000.00",,0.40,0.40,1,Dry,Dry,,Hong Kong,WildAid
+2014,October,"52,500.00",52.50,,,"10,500.00",,0.20,0.20,1,Dry,Dry,,Hong Kong,WildAid
+2014,October,"14,136.67",14.14,,,"4,241.00",,0.30,0.30,1,Dry,Dry,,Hong Kong,WildAid
+2014,October,"24,660.00",24.66,,,"2,466.00",,0.10,0.10,1,Dry,Dry,,Hong Kong,WildAid
+2015,March,,,,,,,0.24,0.24,1,Dry,Dry,,Hong Kong,Greenpeace
+2015,March,"37,790.70",37.79,,,"3,250.00",,0.09,0.09,1,Dry,Dry,,Hong Kong,Greenpeace
+2015,March,"39,156.63",39.16,,,"3,250.00",,0.08,0.08,1,Dry,Dry,,Hong Kong,Greenpeace
+2015,March,"34,821.43",34.82,,,"3,900.00",,0.11,0.11,1,Dry,Dry,,Hong Kong,Greenpeace
+2015,March,"47,272.73",47.27,,,"18,200.00",,0.39,0.39,1,Dry,Dry,,Hong Kong,Greenpeace
+2015,March,"48,404.26",48.40,,,"18,200.00",,0.38,0.38,1,Dry,Dry,,Hong Kong,Greenpeace
+2015,March,"49,189.19",49.19,,,"18,200.00",,0.37,0.37,1,Dry,Dry,,Hong Kong,Greenpeace
+2015,March,"46,428.57",46.43,,,"18,200.00",,0.39,0.39,1,Dry,Dry,,Hong Kong,Greenpeace
+2015,March,"52,702.70",52.70,,,"19,500.00",,0.37,0.37,1,Dry,Dry,,Hong Kong,Greenpeace
+2015,March,"46,428.57",46.43,,,"19,500.00",,0.42,0.42,1,Dry,Dry,,Hong Kong,Greenpeace
+2015,March,"50,470.59",50.47,,,"4,290.00",,0.09,0.09,1,Dry,Dry,,Hong Kong,Greenpeace
+2015,March,"83,870.97",83.87,,,"31,200.00",,0.37,0.37,1,Dry,Dry,,Hong Kong,Greenpeace
+2015,March,"86,908.08",86.91,,,"31,200.00",,0.36,0.36,1,Dry,Dry,,Hong Kong,Greenpeace
+2015,March,"51,485.15",51.49,,,"26,000.00",,0.51,0.51,1,Dry,Dry,,Hong Kong,Greenpeace
+2015,March,"50,980.39",50.98,,,"26,000.00",,0.51,0.51,1,Dry,Dry,,Hong Kong,Greenpeace
+2015,March,"30,160.00",30.16,,,"7,540.00",,0.25,0.25,1,Dry,Dry,,Hong Kong,Greenpeace
+2015,March,"52,353.74",52.35,,,"19,240.00",,0.37,0.37,1,Dry,Dry,,Hong Kong,Greenpeace
+2015,March,"80,166.67",80.17,,,"19,240.00",,0.24,0.24,1,Dry,Dry,,Hong Kong,Greenpeace
+2015,March,"105,405.41",105.41,,,"39,000.00",,0.37,0.37,1,Dry,Dry,,Hong Kong,Greenpeace
+2016,January,"23,140.35",23.14,,,"10,552.00",,0.46,0.46,1,Dry,Dry,,China,EIA
+2016,January,"26,447.37",26.45,,,"12,060.00",,0.46,0.46,1,Dry,Dry,,China,EIA
+2016,January,"31,290.73",31.29,,,"9,794.00",,0.31,0.31,1,Dry,Dry,,China,EIA
+2016,January,"2,700.00",2.70,,,135.00,,0.03,0.05,2,Dry,Dry,,China,EIA
+2016,January,"7,000.00",7.00,,,700.00,,0.03,0.10,4,Dry,Dry,,China,EIA
+2016,January,"5,700.00",5.70,,,855.00,,0.15,0.15,1,Dry,Dry,,China,EIA
+2016,January,"6,000.00",6.00,,,"1,500.00",,0.25,0.25,1,Dry,Dry,,China,EIA
+2016,January,"15,707.79",15.71,,,"4,838.00",,0.31,0.31,1,Dry,Dry,,China,EIA
+2016,January,"21,000.00",21.00,,,"10,500.00",,0.10,0.50,5,Dry,Dry,,China,EIA
+2017,March,"23,200.00",23.20,,,,,0.01,0.18,20,Dry,Dry,,China,EAL
+2017,March,"6,674.00",6.67,,,,,,0.10,,Dry,Dry,,China,EAL
+2017,March,"35,847.06",35.85,,,"15,235.00",,,0.43,,Dry,Dry,,China,EAL
+2017,March,"63,086.96",63.09,,,"7,255.00",,,0.12,,Dry,Dry,,China,EAL
+2017,March,"19,342.22",19.34,,,"4,352.00",,0.23,0.23,1,Dry,Dry,,China,EAL
+2017,March,"16,582.86",16.58,,,"2,902.00",,0.09,0.18,2,Dry,Dry,,China,EAL
+2017,March,,,,,,,0.21,0.21,1,Dry,Dry,,China,EAL
+2017,March,"34,482.76",34.48,,,"15,000.00",,0.44,0.44,1,Dry,Dry,,China,EAL
+2017,March,"25,232.92",25.23,,,"8,125.00",,0.32,0.32,1,Dry,Dry,,China,EAL
+2017,March,"27,207.03",27.21,,,"6,965.00",,0.26,0.26,1,Dry,Dry,,China,EAL
+2017,,115.00,0.12,,,,,,,,Wet,Wet,Wet,Mexico,MC
+2017,,"6,000.00",6.00,,"13,200.00",,,2.20,2.20,1,Wet,Wet,Wet,Mexico,MC
+2018,August,"3,000.00",3.00,,,,,1.00,1.00,1,Wet,Wet,Wet,Mexico,MC
+2018,August,100.00,0.10,,,,500.00,,5.00,100,Wet,Wet,Wet,Mexico,MC
+2018,August,"3,000.00",3.00,,"3,000.00",,,0.90,0.90,1,Wet,Wet,Wet,Mexico,MC
+2018,August,"4,800.00",4.80,,"7,200.00",,,1.50,1.50,1,Wet,Wet,Wet,Mexico,MC
+2018,August,"1,125.00",1.13,,225.00,,,0.20,0.20,1,Wet,Wet,Wet,Mexico,MC
+2018,August,"1,800.00",1.80,,900.00,,,0.50,0.50,1,Wet,Wet,Wet,Mexico,MC
+2018,August,"6,667.00",6.67,,"10,000.00",,,1.50,1.50,1,Wet,Wet,Wet,Mexico,MC
+2018,July,"7,000.00",7.00,,"3,500.00",,,0.50,0.50,1,Wet,Wet,Wet,Mexico,MC
+2018,July,400.00,0.40,,100.00,,,0.25,1.00,4,Wet,Wet,Wet,Mexico,MC
+2018,July,300.00,0.30,,300.00,,,0.35,0.35,1,Wet,Wet,Wet,Mexico,MC
+2018,July,"4,000.00",4.00,,"4,000.00",,,0.45,0.45,1,Wet,Wet,Wet,Mexico,MC
+2018,July,"4,500.00",4.50,,"4,500.00",,,0.50,0.50,1,Wet,Wet,Wet,Mexico,MC
+2018,July,"5,000.00",5.00,,"5,000.00",,,,,1,Wet,Wet,Wet,Mexico,MC
+2017,,"4,000.00",4.00,,"4,000.00",,,,,1,Wet,Wet,Wet,Mexico,MC

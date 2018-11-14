@@ -1,0 +1,387 @@
+---
+title: "Market Model"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+#####Objective: Visualize database of prices for swim bladder at first and final sale.
+
+1. When was data collected?
+2. Where was data collected?
+3. On what species was data collected, and in what volume?
+4. How's the price distribution?
+4.1. How's the price distribution over swim bladder weight?
+5. How's the price distribution over time for totoaba?
+6. What does the INAPESCA harvest estimate indicate about export volume?
+7. What do price distributions and estimated export volumes by year suggest about the demand function?
+
+Bonus: is stockpiling apparent or plausible?
+
+```{r pkg_ins, include = FALSE}
+
+# Check out knitr for knitr::read_chunk.
+library(knitr)
+
+# Name packages.
+pkg <- c("readr",
+         "knitr",
+         "tidyverse",
+         "gapminder",
+         "sandwich",
+         "broom",
+         "stargazer",
+         "cowplot")
+
+# Install packages.
+#install.packages(pkg, verbose = FALSE, quiet = TRUE)
+
+  
+# Update packages.
+#update.packages(pkg, verbose = FALSE, quiet = TRUE)
+
+# Check out packages.
+lapply(pkg, library, character.only = TRUE)
+
+```
+
+#####1. Reading Data
+Data has sources, uses, and shortcomings.
+
+```{r data, message = FALSE}
+
+# Read data.
+dat_other = read_csv('GP_OtherBuchePrices.csv')
+dat_tma   = read_csv('GP_TotoabaBuchePrices.csv')
+
+```
+
+#####2. Cleaning Data
+Everyone loves cleaner data.
+
+```{r clean}
+
+# Drop, rename, and rearrange variables for a full join.
+dat_tma = dat_tma %>%
+  select(., 
+         -Month, 
+         -`Price (USD/kg)`, 
+         -`Price (per lb.)`, 
+         -`Price (per buche local)`, 
+         -`Price (per buche Asia)`, 
+         -`Condition (Inferred)`) %>%
+  rename(., 
+         "year" = Year,
+         "price_gram" = "Price (USD/g)",
+         "price_total" = "Total Value (USD)",
+         "kg_buche" = "Mass/Buche (kg)",
+         "kg_total" = "Mass (kg.)",
+         "count_buche" = "Number of buche",
+         "condition_infer" = "Condition (Inferred)_1",
+         "condition" = Condition,
+         "place" = Country, 
+         "source" = Source) %>% 
+  mutate(., sp_sci = "Totoaba macdonaldi") %>% 
+  mutate(., sp_com = "Totoaba") %>% 
+  tbl_df(.)
+
+dat_other = dat_other %>%
+  select(., 
+         -Month, 
+         #-`Species (Scientific)`, 
+         #-`Species (Common)`, 
+         -`Price / lb (USD)`, 
+         -`Price / Buche (USD)`, 
+         -`Total Volume (lbs)`,
+         -`Location (City/Other)`, 
+         -Notes) %>% 
+  rename(.,
+         "year" = Year,
+         "price_gram" = "Price / kg (USD)",
+         "price_total" = "Total Value (USD)",
+         "kg_total" = "Total Volume (kg)",
+         "count_buche" = "Buche Count",
+         "condition_infer" = Condition,
+         "condition" = Condition,
+         "place" = "Location (Country)", 
+         "source" = Source,
+         "sp_sci" = `Species (Scientific)`,
+         "sp_com" = `Species (Common)`) %>%
+  mutate(., condition_infer = condition) %>%
+  mutate(., price_gram = price_gram * 0.001) %>%
+  mutate(., count_buche = 1) %>% 
+  tbl_df(.)
+
+# Fix default types.
+dat_other$price_total = as.double(dat_other$price_total)
+dat_other$kg_total = as.double(dat_other$kg_total)
+
+# Full join data for totoaba and other species.
+dat = full_join(dat_tma, dat_other)
+
+# Distinguish totoaba from other species by a dummy.
+dat = mutate(dat, tma = ifelse(sp_com == "Totoaba", 1, 0))
+
+```
+
+#####3. Adjusting Prices for Inflation
+Inflation is neat. Thanks, sources!
+
+```{r real}
+
+# Adjust data for inflation.
+# Inflation estimates by the Bureau of Labor Statistics, bls.gov/bls/inflation.htm and bls.gov/data/inflation_calculator.htm
+# Accessed 11/3/2018. All inflation adjustments queried for January 20** against January 2018.
+
+# Create vectors for years and inflation adjustment by year.
+year = c(2000:2018)
+infl = c(1.47, 1.42, 1.40, 1.36, 1.34, 1.30, 1.25, 1.22, 1.17, 1.17, 1.14, 1.13, 1.09, 1.08, 1.06, 1.06, 1.05, 1.02, 1.00)
+
+# Tibble.
+dat_infl = tibble(year, infl)
+
+# Smoosh inflation adjustents up on the database.
+dat = left_join(dat, dat_infl, by = "year")
+
+# Mutate adjusted prices out of nominal prices and inflation adjustments.
+dat = dat %>% 
+  mutate(., p_g_r = price_gram * infl) %>% 
+  mutate(., p_t_r = price_total * infl)
+
+```
+
+#####4. Adding Harvest Estimates
+Totoaba is delicious, but sadly often goes uneaten. Thanks, INAPESCA!
+
+```{r q}
+
+# Join INAPESCA estimate of totoaba harvest in metric tonnes to database.
+year = c(2000:2017)
+y_biomass = c(462, 485, 509, 535, 562, 590, 619, 650, 682, 717, 752, 790, 869, 956, 1051, 1156, 1272, 1400)
+
+# Convert estimate of biomass to wet buche from 2.5% estimate (MC Pers. Comm, Ogunja et al. 1988).
+y_wet = y_biomass*0.025
+
+# Convert wet buche to dry from 40% estimate (Centre for Food Technology 1994, Food Safety Alliance 2018.
+y_dry = y_wet*0.400
+
+# Tibble.
+dat_q = tibble(year, y_dry)
+
+# Smoosh estimated export volume of dry buche up on the database.
+dat = left_join(dat, dat_q, by = "year")
+
+```
+
+#####5. Visualizations
+All that really matters is graphs.
+
+```{r figs, echo = FALSE, width = 6.5, height = 4.5, dpi = 300}
+
+# break this up by group of figures ; add captions for each group, or for each as necessary
+
+# frequency of mass by bins, simple
+# fix breaks
+#ggplot(dat, aes(p_g_r, fill = factor(tma))) +
+#  geom_histogram(binwidth=10, position="identity") +
+#  theme_classic()
+
+# price by year, jitter, totoaba and other species
+tmaplus = ggplot(dat, aes(year, price_gram)) + 
+  geom_jitter(aes(shape = factor(place), colour = factor(tma))) + 
+  labs(x = "Year", y = "Nominal USD / Gram", title = "Observed Prices for Swim Bladder, 2000 - 2018") +
+  scale_x_continuous(breaks = c(2005:2018), limits = c(2005,2018)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        legend.text = element_text(size = 8),
+        axis.title.x = element_text(size = 9),
+        axis.title.y = element_text(size = 9),
+        legend.title = element_text(size = 9),
+        plot.title = element_text(size = 10))
+
+# price by year, jitter, totoaba only
+tma = ggplot(filter(dat, tma == 1), aes(year, price_gram)) + 
+  geom_jitter(width = 0.15, aes(shape = factor(place), colour = factor(condition_infer))) + 
+  labs(x = "Year", y = "Nominal USD / Gram", title = "Observed Prices for Totoaba Swim Bladder", shape="Location", colour="Condition") +
+  scale_x_continuous(breaks = c(2014:2018), limits = c(2014,2018)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        legend.text = element_text(size = 8),
+        axis.title.x = element_text(size = 9),
+        axis.title.y = element_text(size = 9),
+        legend.title = element_text(size = 9),
+        plot.title = element_text(size = 10))
+
+# usd2018/gram scatter 
+pgr_grams = ggplot(filter(dat, tma == 1), aes(kg_buche*1000, p_g_r)) + 
+  geom_point() + 
+  labs(x = "Grams", y = "USD2018 / Gram") +
+  scale_x_continuous(breaks = seq(0, 2500, by = 500), limits = c(0, 2500)) +
+  scale_y_continuous(breaks = seq(0, 100, by = 50), limits = c(0, 100)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        legend.text = element_text(size = 8),
+        axis.title.x = element_text(size = 9),
+        axis.title.y = element_text(size = 9),
+        legend.title = element_text(size = 9),
+        plot.title = element_text(size = 10))
+
+# usd2018/place (discrete, US, MX, HK, CN) jitter
+pgr_place = ggplot(filter(dat, tma == 1 & place != "United States"), aes(place, p_g_r)) +
+  geom_jitter(width = 0.25) +
+  labs(x = "", y = "USD2018 / Gram") +
+  scale_y_continuous(breaks = seq(0, 100, by = 50), limits = c(0, 100)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        legend.text = element_text(size = 8),
+        axis.title.x = element_text(size = 9),
+        axis.title.y = element_text(size = 9),
+        legend.title = element_text(size = 9),
+        plot.title = element_text(size = 10))
+
+
+# usd2018/condition (dry, wet) jitter
+pgr_condition = ggplot(filter(dat, tma == 1), aes(condition_infer, p_g_r)) +
+  geom_jitter(width = 0.25) +
+  labs(x = "", y = "USD2018 / Gram") +
+  scale_y_continuous(breaks = seq(0, 100, by = 50), limits = c(0, 100)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        legend.text = element_text(size = 8),
+        axis.title.x = element_text(size = 9),
+        axis.title.y = element_text(size = 9),
+        legend.title = element_text(size = 9),
+        plot.title = element_text(size = 10))
+
+
+# usd2018/q (estimated from INAPESCA 2018) jitter
+pgr_quantity = ggplot(filter(dat, tma == 1 & year < 2018), aes(y_dry, p_g_r)) +
+  geom_point() +
+  labs(x = "Estimated Annual Post-Processing Totoaba Maw Production (Tonnes)", y = "USD2018 / Gram") +
+  scale_y_continuous(breaks = seq(0, 100, by = 50), limits = c(0, 100)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        legend.text = element_text(size = 8),
+        axis.title.x = element_text(size = 9),
+        axis.title.y = element_text(size = 9),
+        legend.title = element_text(size = 9),
+        plot.title = element_text(size = 10))
+
+# grid
+# fix grid please
+pgr_all = plot_grid(pgr_place, pgr_condition, pgr_grams, pgr_quantity)
+ggsave("pgr_all.pdf", dpi = 300, pgr_all)
+
+# box/whiskers for prices by species w/ labels for n 
+# jitter for prices by species
+
+# bar estimated export volume by year
+# + 3d option for same w/ weight distribution
+
+# !!!
+# bar estimated export value by year
+# + 3d option for same w/ weight distribution
+# !!!
+
+
+```
+
+```{r show}
+
+# Display figures.
+tma
+tmaplus
+pgr_grams
+pgr_place
+pgr_condition
+pgr_quantity
+pgr_all
+
+```
+
+```{r save, eval = FALSE}
+
+# Save figures.
+
+ggsave("filename.filetype", ggobject)
+
+```
+
+#####6. Multiple Regression Analysis
+OLS suits the question for reasons. Necessary assumptions are several.
+
+```{r spec}
+
+# Totoaba only.
+
+# Assign specifications for linear models of price.
+#  Get a cleaner database.
+    minidat = select(dat, 
+                     year, 
+                     p_g_r,
+                     y_dry,
+                     kg_buche, 
+                     condition_infer, 
+                     place, 
+                     sp_com)
+    
+    minidat = rename(minidat,
+                    "year" = year,
+                    "p" = p_g_r,
+                    "q" = y_dry,
+                    "kg" = kg_buche,
+                    "cond" = condition_infer,
+                    "place" = place,
+                    "spp" = sp_com)
+    
+    minidat = filter(minidat, !is.na(p))
+
+    minidat = mutate(minidat, g = kg*1000)
+    
+    minidat = mutate(minidat, bicond = ifelse(cond == "Wet", 0, 1))
+    
+    tinydat = select(filter(minidat, spp == "Totoaba"),
+                     "Price (USD2018)" = p,
+                     "Grams / Unit" = g,
+                     "Quantity Supplied (Tonnes)" = q, 
+                     "Processing" = bicond)
+    
+# Intuition: for any maw, price follows supply, weight, and processing.
+lm = lm(`Price (USD2018)` ~ `Quantity Supplied (Tonnes)` + log(`Grams / Unit`) + `Processing`, data = tinydat)
+
+```
+
+```{r star, results='asis'}
+
+# Display model results.
+stargazer(lm, type = "latex", digits = 2)
+
+```
+
+#####7. Model Comparison
+Some models are better than others, but who's to say which?
+
+```{r test, eval = FALSE}
+
+#AIC(models)
+
+```
+
+
+#####8. Model Visualization
+Again, graphs.
+
+```{r}
+
+```
+
+
+#####Appendix: LaTeX Demo
+
+$$ d_i = \alpha_{0, i} - \alpha_{1, i} * x_{emissions} + u_i$$
+
