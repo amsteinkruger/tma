@@ -1,2 +1,4 @@
-# tma
-Analysis and visualization for 'Driving Sustainability in the Gulf of California.'
+Content for a group thesis project in the UCSB Bren School of Environmental Science & Management.
+
+More at
+totoabaproject.weebly.com
