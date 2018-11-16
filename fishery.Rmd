@@ -52,10 +52,10 @@ grow_log = function(r, K, n0, start, end){
                      v_n = as.numeric(vector(length=(end - start)))
                      v_n[1] = n0
                      t = length(seq(start, end))
-            for (i in 2:t){v_n[i] = r * v_n[i - 1] * (1 - v_n[i - 1] / K)}
+            for (i in 2:t){v_n[i] = v_n[i - 1] + r * v_n[i - 1] * (1 - v_n[i - 1] / K)}
                      return(v_n)}
 
-v_grow_log = grow_log(0.01, 50, 1, 2000, 2025)
+v_grow_log = grow_log(0.25, 50, 10, 2000, 2025)
 
 ```
 
