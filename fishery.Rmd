@@ -32,7 +32,6 @@ pkg <- c("readr",
 
 # Install packages.
 #install.packages(pkg, verbose = FALSE, quiet = TRUE)
-
   
 # Update packages.
 #update.packages(pkg, verbose = FALSE, quiet = TRUE)
@@ -43,6 +42,8 @@ lapply(pkg, library, character.only = TRUE)
 ```
 
 #####1. Deterministic Logistic Growth Demo
+
+$$ N_t = N_t + rN_t(1-N_t/K) $$
 
 ```{r function}
 
