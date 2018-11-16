@@ -1,18 +1,35 @@
 ---
-title: "Aquaculture Model"
+title: "Fishery Model"
 date: "`r Sys.Date()`"
-output: pdf_document
+output: html_document
 ---
 
 #####Objective: Step through optimal aggregate harvest in an open access fishery.
+Swap out toy model for INAPESCA's age-structured model. Sort out selectivity and dam problems.
 
-Gordon-Schaefer Model / INAPESCA 2018
+Toy Model (Conrad):
 
+Stock
+$$ X_{t+1} = X_t (1 + r - r X_t / K - qE_t) $$
 
+Yield-Effort
+$$ Y_t = q X_t E_t $$
 
-Add a formalized reference.
+Dynamic Effort
+$$ E_{t+1} =  E_t ( 1 + \eta (p q X_t - c )) $$
 
-Walk through system of equations with salient outputs.
+Variable  | Definition
+--------- | ---------------------------
+*t*       | Timestep (Year)
+*X*       | Stock (Tons)
+*r*       | Growth (%)
+*K*       | Carrying Capacity (Tons)
+*q*       | Catchability (Parameter)
+*E*       | Effort (Vessel Days)
+$\eta$    | Adjustability Parameter
+*p*       | Price (USD2018 / Ton)
+*c*       | Cost (USD2018 / Boat Day)
+
 
 ```{r pkg_ins, include = FALSE}
 
@@ -45,9 +62,9 @@ lapply(pkg, library, character.only = TRUE)
 
 $$ N_t = N_t + rN_t(1-N_t/K) $$
 
-```{r function}
+```{r stock_function}
 
-# Growth references growth instead of stock. Merp.
+#Model growth w/o mortality.
 grow_log = function(r, K, n0, start, end){
                      v_n = as.numeric(vector(length=(end - start)))
                      v_n[1] = n0
@@ -57,13 +74,29 @@ grow_log = function(r, K, n0, start, end){
 
 v_grow_log = grow_log(0.25, 50, 10, 2000, 2025)
 
+plot(v_grow_log)
+
+```
+
+```{r effort_function}
+
+#Model effort at MSY, economic optimum over changes in price, costs.
+
+
+```
+
+```{r alltogethernow}
+
+#Model growth and effort together. Try to get extinction?
+
+
+
 ```
 
 
+```{r figures}
 
-```{r figure}
 
-plot(v_grow_log)
 
 ```
 
