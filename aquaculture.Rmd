@@ -6,6 +6,35 @@ output: pdf_document
 
 #####Objective: Step through optimal harvest and planting decisions by a generic totoaba farm..
 
+Toy Model:
+
+Von Bertalanffy Growth Model
+
+$L(t) = L_\infty ( 1 - e^{ - K ( t - t_0 )})$
+
+```{r growth_function}
+
+# Von Bertalanffy estimation(s) for totoaba.
+
+fn_vb = function(linf, k, t, t_0){l = linf * ( 1 - 10 ^ ( - k * ( t - t_0)))}
+
+test = fn_vb(20, 50, 5, 0.5)
+
+```
+
+Weight-Length Conversion
+
+Equation Name
+
+$Equation!$
+
+```{r wl_function}
+
+```
+
+
+
+
 ```{r pkg_ins, include = FALSE}
 
 # Check out knitr for knitr::read_chunk.
@@ -32,6 +61,11 @@ pkg <- c("readr",
 lapply(pkg, library, character.only = TRUE)
 
 ```
+
+
+
+
+
 
 #####Appendix: LaTeX Demo
 
