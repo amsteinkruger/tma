@@ -4,37 +4,6 @@ date: "`r Sys.Date()`"
 output: pdf_document
 ---
 
-#####Objective: Step through optimal harvest and planting decisions by a generic totoaba farm..
-
-Toy Model:
-
-Von Bertalanffy Growth Model
-
-$L(t) = L_\infty ( 1 - e^{ - K ( t - t_0 )})$
-
-```{r growth_function}
-
-# Von Bertalanffy estimation(s) for totoaba.
-
-fn_vb = function(linf, k, t, t_0){l = linf * ( 1 - 10 ^ ( - k * ( t - t_0)))}
-
-test = fn_vb(20, 50, 5, 0.5)
-
-```
-
-Weight-Length Conversion
-
-Equation Name
-
-$Equation!$
-
-```{r wl_function}
-
-```
-
-
-
-
 ```{r pkg_ins, include = FALSE}
 
 # Check out knitr for knitr::read_chunk.
@@ -62,11 +31,199 @@ lapply(pkg, library, character.only = TRUE)
 
 ```
 
+#####Objective: Step through optimal harvest and planting decisions by a generic totoaba farm..
+
+Toy Model:
+
+Parameters for White seabass (Cynoscion nobiliis) from:
+Thomas, J. C. (1968). Management of the white seabass (Cynoscion nobilis) in California waters. State of California. The Resources Agency. Department of Fish and Game.
+
+#####Von Bertalanffy Growth Model
+
+$L(t) = L_\infty ( 1 - e^{ - K ( t - t_0 )})$
+
+Variable   | Definition
+---------- | ---------------------------
+*L*        | Length (Millimeters)
+$L_\infty$ | Maximum Length (mm)
+*K*        | Catabolic Constant (?!)
+*t*        | Age (Years)
+$t_0$      | Age, *L* = 0
+
+```{r al_function}
+
+# Von Bertalanffy function.
+fn_vb = function(linf, k, t, t_0){l = linf * ( 1 - exp( - k * ( t - t_0)))}
+
+# White seabass demo with age in years and length in millimeters.
+v_vb_a_wsb = seq(0, 25)
+v_vb_l_wsb = fn_vb(1465.3822, 0.1280, v_vb_a_wsb, -0.2805)
+plot(v_vb_a_wsb, v_vb_l_wsb)
 
 
+# Totoaba demo.
+#v_vb_a_tma = seq(a0, amax)
+#v_vb_l_tma = fn_vb(linf, k, v_vb_a_tma, t_0)
+#plot(v_vb_a_tma, v_vb_l_tma)
+
+```
+
+#####Weight-Length Conversion
+
+$W = aL^b$
+
+Variable   | Definition
+---------- | ---------------------------
+*W*        | Weight (Grams)
+*a*        | Length (Millimeters)
+*L*        | Parameter
+*b*        | Parameter
+
+```{r lw_function}
+
+# Generic length-to-weight conversion. 
+fn_lw = function(a, l, b){ w = a * l ^ b }
+
+# White seabass demo in mm:g.
+v_lw_l_wsb = seq(0, 1500, by = 100)
+v_lw_w_wsb = fn_lw(0.000015491, v_lw_l_wsb, 2.92167)
+plot(v_lw_l_wsb, v_lw_w_wsb)
+
+# Totoaba demo.
+#v_lw_l_tma = seq(l0, linf, by = 100)
+#v_lw_w_tma = fn_lw(a, v_lw_l_tma, b)
+#plot(v_lw_l_tma, v_lw_w_tma)
+
+```
+
+#####Weight-Maw Conversion
+
+For a stock of $n_{a, t}$ totoaba cultivated for *a* years in year *t* to weight $w_{a, t}$ for a total round weight of $x_{a, t}$, maw yield $y_{a, t}$ depends on wet maw yield ratio $c^{maw}_{a, t}$ and dry yield ratio $k$.
+
+$y^{maw}_{a, t} = w_{a, t}n_{a, t}c^{maw}_{a, t}k^{maw}_{dry}$
+
+Variable   | Definition
+---------- | --------------------------------
+$y^{maw}$  | Cohort Dry Maw Yield (Kilograms)
+*w*        | Individual Round Weight (Kilograms)
+*n*        | Cohort Count
+$c^{maw}$  | Yield of maw from round weight.
+$k^{maw}$  | Yield of dry maw from wet maw.
+
+```{r wm_function}
+
+fn_wm = function(w, n, c, k){ymaw = w * n * c * k}
+
+```
+
+#####Maw-Price Conversion
+
+Plug the market model in here. Use the following placeholder in the meantime.
+
+```{r mp_function}
+
+fn_mp = function(w, b0, bw, bq, q, bc, c){pmaw = b0 + w ^ bw + bq * q + bc * c}
+
+```
+
+#####Maw-Revenue Conversion
+
+Fix from regression specification. See Maw-Price Conversion.
+
+For a dry maw yield $y^{maw}$ in kilograms, revenue depends on price.
+
+$R^{maw}_{a, t} = x_{a, t}/n_{a, t} * (\beta_0 + \beta_{g}(x_{a, t}/n_{a, t}))$
+
+```{r mr_function}
+
+fn_mr = function(y, pmaw){rmaw = ymaw * pmaw}
+
+```
 
 
+#####Weight-Fillet Conversion
 
-#####Appendix: LaTeX Demo
+For a stock of totoaba cultivated for *a* years in year *t* for a total round weight of $x_{a, t}$, fillet yield $y^{fil}_{a, t}$ depends on fillet yield ratio $c^{fil}_{a, t}$.
 
-$$ d_i = \alpha_{0, i} - \alpha_{1, i} * x_{emissions} + u_i$$
+Variable | Definition
+-------- | --------------------------------
+$y^{fil}$| Cohort Fillet Yield (Kilograms)
+*x*      | Cohort Round Weight (Kilograms)
+$c^{fil}$| Fillet Yield Ratio (%)
+
+```{r wf_function}
+
+fn_wf = function(x, c){yfil = x * c}
+
+```
+
+#####Fillet-Revenue Conversion
+
+For a fillet yield $y^{fil}$ in kilograms, revenue depends on price.
+
+$R^{fil}_{a, t} = y^{fil}_{a, t} * p^{fil}$
+
+```{r fp_function}
+
+fn_fr = function(yfil, pfil){rfil = yfil * pfil}
+
+```
+
+#####Feed Conversion Function
+
+Check in with Goto. Fix.
+
+```{r fcr_function}
+
+#fn_fcr = function(){}
+
+```
+
+
+#####No-Harvest Cost
+
+Fix FCR, then fix this.
+
+```{r c_stock}
+
+# Feed costs for a cohort.
+
+fn_ch0 = function(a, c){cstock = a ^ c}
+
+```
+
+
+#####Harvest Cost
+
+Cost of restocking a cage after harvest. USD?
+
+```{r c_restock}
+
+# COst of fry plus overhead.
+
+ch1 = 5000
+
+```
+
+
+#####Harvest Decision
+
+help
+
+```{r model}
+
+
+q_aq = function(r, k, q, p, c, eta, x0, e0, start, end){
+                     x = as.numeric(vector(length = (end - start)))
+                     x[1] = x0
+                     e = as.numeric(vector(length = (end - start)))
+                     e[1] = e0
+                     T = length(seq(start, end))
+                     t = seq(start, end)
+            for (i in 2:T){x[i] = x[i-1] * ( 1 + r - r * x[i-1] / k - q * e[i-1])
+                           e[i] = e[i-1] * ( 1 + eta * ( p * q * x[i-1] - c))}
+                     return(x)}
+
+
+```
+

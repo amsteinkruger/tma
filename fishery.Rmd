@@ -4,36 +4,6 @@ date: "`r Sys.Date()`"
 output: pdf_document
 ---
 
-#####Objective: Step through optimal aggregate harvest in an open access fishery.
-Swap out toy model for INAPESCA's age-structured model. Sort out selectivity and dam problems.
-
-Toy Model (Conrad):
-
-Stock
-
-$X_{t+1} = X_t (1 + r - r X_t / K - qE_t)$
-
-Yield-Effort
-
-$Y_t = q X_t E_t$
-
-Dynamic Effort
-
-$E_{t+1} =  E_t ( 1 + \eta (p q X_t - c ))$
-
-Variable  | Definition
---------- | ---------------------------
-*t*       | Timestep (Year)
-*X*       | Stock (Tons)
-*r*       | Growth (%)
-*K*       | Carrying Capacity (Tons)
-*q*       | Catchability (Parameter)
-*E*       | Effort (Vessel Days)
-$\eta$    | Adjustability (Parameter)
-*p*       | Price (USD2018 / Ton)
-*c*       | Cost (USD2018 / Vessel Day)
-
-
 ```{r pkg_ins, include = FALSE}
 
 # rm(list=ls())
@@ -63,6 +33,35 @@ pkg <- c("readr",
 lapply(pkg, library, character.only = TRUE)
 
 ```
+
+#####Objective: Step through optimal aggregate harvest in an open access fishery.
+Swap out toy model for INAPESCA's age-structured model. Sort out selectivity and dam problems.
+
+Toy Model (Conrad):
+
+Stock
+
+$X_{t+1} = X_t (1 + r - r X_t / K - qE_t)$
+
+Yield-Effort
+
+$Y_t = q X_t E_t$
+
+Dynamic Effort
+
+$E_{t+1} =  E_t ( 1 + \eta (p q X_t - c ))$
+
+Variable  | Definition
+--------- | ---------------------------
+*t*       | Timestep (Year)
+*X*       | Stock (Tons)
+*r*       | Growth (%)
+*K*       | Carrying Capacity (Tons)
+*q*       | Catchability (Parameter)
+*E*       | Effort (Vessel Days)
+$\eta$    | Adjustability (Parameter)
+*p*       | Price (USD2018 / Ton)
+*c*       | Cost (USD2018 / Vessel Day)
 
 #####1. Logistic Growth Demo
 
@@ -187,7 +186,3 @@ ggplot(demo_x_log_p_long, aes(t, x, color = status, group = p)) +
 #ggplot(demo_x_log_p, aes(t, ))
 
 ```
-
-#####Appendix: LaTeX Demo
-
-$$ d_i = \alpha_{0, i} - \alpha_{1, i} * x_{emissions} + u_i$$

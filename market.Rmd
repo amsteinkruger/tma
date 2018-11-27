@@ -154,9 +154,11 @@ Totoaba is delicious, but sadly often goes uneaten. Thanks, INAPESCA!
 
 ```{r q}
 
+# Fix arbitrary value for 2018.
+
 # Join INAPESCA estimate of totoaba harvest in metric tonnes to database.
-year = c(2000:2017)
-y_biomass = c(462, 485, 509, 535, 562, 590, 619, 650, 682, 717, 752, 790, 869, 956, 1051, 1156, 1272, 1400)
+year = c(2000:2018)
+y_biomass = c(462, 485, 509, 535, 562, 590, 619, 650, 682, 717, 752, 790, 869, 956, 1051, 1156, 1272, 1400, 1550)
 
 # Convert estimate of biomass to wet buche from 2.5% estimate (MC Pers. Comm, Ogunja et al. 1988).
 y_wet = y_biomass*0.025
@@ -345,14 +347,20 @@ OLS suits the question for reasons. Necessary assumptions are several.
     
     minidat = mutate(minidat, bicond = ifelse(cond == "Wet", 0, 1))
     
-    tinydat = select(filter(minidat, spp == "Totoaba"),
-                     "Price (USD2018)" = p,
-                     "Grams / Unit" = g,
-                     "Quantity Supplied (Tonnes)" = q, 
-                     "Processing" = bicond)
+    tinydat = filter(minidat, spp == "Totoaba" & bicond == 1)
     
-# Intuition: for any maw, price follows supply, weight, and processing.
-lm = lm(`Price (USD2018)` ~ `Quantity Supplied (Tonnes)` + log(`Grams / Unit`) + `Processing`, data = tinydat)
+    #tinydat = select(filter(minidat, spp == "Totoaba"),
+                     #"Price (USD2018)" = p,
+                     #"Grams / Unit" = g,
+                     #"Quantity Supplied (Tonnes)" = q, 
+                     #"Processing" = bicond)
+    tinydat = na.omit(tinydat)
+
+    # Intuition: for any maw, price follows supply, weight, and processing.
+#lm = lm((`Price (USD2018)`) ~ (`Quantity Supplied (Tonnes)`) + (`Grams / Unit`) + (`Processing`), data = tinydat)
+lm = lm(p ~ q + g, data = tinydat)
+lmlog = lm(log(p) ~ log(q) + g, data = tinydat)
+nlm = nls(p ~ q * a + (g ^ b) + c, data = tinydat, start = c(a = -5.00, b = 2.00, c = 20))
 
 ```
 
