@@ -17,7 +17,8 @@ pkg <- c("readr",
          "sandwich",
          "broom",
          "stargazer",
-         "cowplot")
+         "cowplot",
+         "reshape2")
 
 # Install packages.
 #install.packages(pkg, verbose = FALSE, quiet = TRUE)
@@ -118,11 +119,12 @@ fn_wm = function(w, n, c, k){ymaw = w * n * c * k}
 
 #####Maw-Price Conversion
 
-Plug the market model in here. Use the following placeholder in the meantime.
+Plug the market model in here.
 
 ```{r mp_function}
 
-fn_mp = function(w, b0, bw, bq, q, bc, c){pmaw = b0 + w ^ bw + bq * q + bc * c}
+#fn_mp = function(w, b0, bw, bq, q, bc, c){pmaw = b0 + w ^ bw + bq * q + bc * c}
+fn_mp = function(w, b0, b){pmaw = b0 + w^b}
 
 ```
 
@@ -206,12 +208,37 @@ ch1 = 5000
 ```
 
 
-#####Harvest Decision
+#####Single Run, No-Harvest Demo
 
-help
+```{r demo_noharvest}
 
-```{r model}
+t = seq(0, 25)
+l = fn_vb(1465.3822, 0.1280, t, -0.2805)
+w = fn_lw(0.000015491, l, 2.92167)
+ymaw = fn_wm(w, 1000, 0.40, 0.02)
+pmaw = fn_mp(w, 25, 1.75)
+rmaw = fn_mr(ymaw, pmaw)
+yfil = fn_wf(w, 0.50)
+rfil = fn_fr(yfil, 2.50)
+r = rfil + rmaw
+c = (10000 * w)^1.5
 
+demo_h0 = data.frame(t, r, c)
+
+demo_h0 = melt(demo_h0, id = 1)
+
+ggplot(demo_h0, aes(t, value, colour = variable)) +
+  geom_path()
+
+
+```
+
+
+#####Single Run, Harvest Demo
+
+```{r demo_harvest, eval = FALSE, include = FALSE}
+
+# Duplicating structure from fishery demo - do not run without changes.
 
 q_aq = function(r, k, q, p, c, eta, x0, e0, start, end){
                      x = as.numeric(vector(length = (end - start)))
