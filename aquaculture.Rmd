@@ -1,7 +1,7 @@
 ---
 title: "Aquaculture Model"
 date: "`r Sys.Date()`"
-output: pdf_document
+output: html_document
 ---
 
 ```{r pkg_ins, include = FALSE}
@@ -251,6 +251,14 @@ q_aq = function(r, k, q, p, c, eta, x0, e0, start, end){
                            e[i] = e[i-1] * ( 1 + eta * ( p * q * x[i-1] - c))}
                      return(x)}
 
+var = c("start", "end", "linf", "k", "t", "t_0", "a", "l", "b", "w", "n", "c", "k", "b0", "w", "b", "ymaw", "maw", "x", "c", "yfil", "pfil", "c_h0", "c_h1")
+fun = c("All", "All", "Age-Length", "Age-Length", "Age-Length", "Age-Length", "Length-Weight", "Length-Weight", "Length-Weight", "Weight-Maw", "Weight-Maw", "Weight-Maw", "Weight-Maw", "Maw-Price", "Maw-Price", "Maw-Price", "Maw-Revenue", "Maw-Revenue", "Weight-Fillet", "Weight-Fillet", "Fillet-Revenue", "Fillet-Revenue", "No-Harvest Cost", "Harvest Cost")
+#val = c(0, 25, 1465, 0.1280, )
+par = data.frame(var,fun)
+
+q_aq = function()
+
+  kable(par)
 
 ```
 
