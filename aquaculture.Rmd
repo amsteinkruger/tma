@@ -6,6 +6,8 @@ output: html_document
 
 ```{r pkg_ins, include = FALSE}
 
+#rm(list=ls())
+
 # Check out knitr for knitr::read_chunk.
 library(knitr)
 
@@ -18,7 +20,8 @@ pkg <- c("readr",
          "broom",
          "stargazer",
          "cowplot",
-         "reshape2")
+         "reshape2",
+         "kableExtra")
 
 # Install packages.
 #install.packages(pkg, verbose = FALSE, quiet = TRUE)
@@ -54,7 +57,8 @@ $t_0$      | Age, *L* = 0
 ```{r al_function}
 
 # Von Bertalanffy function.
-fn_vb = function(linf, k, t, t_0){l = linf * ( 1 - exp( - k * ( t - t_0)))}
+fn_vb = function(linf, k, t, t_0){l = linf * ( 1 - exp( - k * ( t - t_0)))
+                                  return(l)}
 
 # White seabass demo with age in years and length in millimeters.
 v_vb_a_wsb = seq(0, 25)
@@ -83,7 +87,8 @@ Variable   | Definition
 ```{r lw_function}
 
 # Generic length-to-weight conversion. 
-fn_lw = function(a, l, b){ w = a * l ^ b }
+fn_lw = function(a, l, b){w = a * l ^ b
+                          return(w)}
 
 # White seabass demo in mm:g.
 v_lw_l_wsb = seq(0, 1500, by = 100)
@@ -113,7 +118,8 @@ $k^{maw}$  | Yield of dry maw from wet maw.
 
 ```{r wm_function}
 
-fn_wm = function(w, n, c, k){ymaw = w * n * c * k}
+fn_wm = function(w, n, c, k){ymaw = w * n * c * k
+                             return(ymaw)}
 
 ```
 
@@ -124,7 +130,8 @@ Plug the market model in here.
 ```{r mp_function}
 
 #fn_mp = function(w, b0, bw, bq, q, bc, c){pmaw = b0 + w ^ bw + bq * q + bc * c}
-fn_mp = function(w, b0, b){pmaw = b0 + w^b}
+fn_mp = function(w, b0, b){pmaw = b0 + w^b
+                           return(pmaw)}
 
 ```
 
@@ -138,36 +145,21 @@ $R^{maw}_{a, t} = x_{a, t}/n_{a, t} * (\beta_0 + \beta_{g}(x_{a, t}/n_{a, t}))$
 
 ```{r mr_function}
 
-fn_mr = function(y, pmaw){rmaw = ymaw * pmaw}
+fn_mr = function(ymaw, pmaw){rmaw = ymaw * pmaw
+                             return(rmaw)}
 
 ```
 
+#####Round-Revenue Conversion
 
-#####Weight-Fillet Conversion
+For a stock of *n* totoaba cultivated for *a* years in year *t* for an individual round weight of $w_{a, t}$, revenue depends on price.
 
-For a stock of totoaba cultivated for *a* years in year *t* for a total round weight of $x_{a, t}$, fillet yield $y^{fil}_{a, t}$ depends on fillet yield ratio $c^{fil}_{a, t}$.
+$R^{round}_{a, t} = w_{a, t} * n_{a, t} * p^{round}$
 
-Variable | Definition
--------- | --------------------------------
-$y^{fil}$| Cohort Fillet Yield (Kilograms)
-*x*      | Cohort Round Weight (Kilograms)
-$c^{fil}$| Fillet Yield Ratio (%)
+```{r wr_function}
 
-```{r wf_function}
-
-fn_wf = function(x, c){yfil = x * c}
-
-```
-
-#####Fillet-Revenue Conversion
-
-For a fillet yield $y^{fil}$ in kilograms, revenue depends on price.
-
-$R^{fil}_{a, t} = y^{fil}_{a, t} * p^{fil}$
-
-```{r fp_function}
-
-fn_fr = function(yfil, pfil){rfil = yfil * pfil}
+fn_fr = function(w, n, pround){rround = w * n * pround
+                               return(rround)}
 
 ```
 
@@ -177,7 +169,7 @@ Check in with Goto. Fix.
 
 ```{r fcr_function}
 
-#fn_fcr = function(){}
+#fn_fcr = function(w, fcr){}
 
 ```
 
@@ -190,7 +182,8 @@ Fix FCR, then fix this.
 
 # Feed costs for a cohort.
 
-fn_ch0 = function(a, c){cstock = a ^ c}
+fn_ch0 = function(w, cstock, n){ch0 = w * n * cstock
+                                return(ch0)}#{cstock = ccoeff * a ^ cexp}
 
 ```
 
@@ -201,9 +194,9 @@ Cost of restocking a cage after harvest. USD?
 
 ```{r c_restock}
 
-# COst of fry plus overhead.
+# Cost of fry plus overhead.
 
-ch1 = 5000
+#fn_ch1 = function(){}
 
 ```
 
@@ -218,9 +211,8 @@ w = fn_lw(0.000015491, l, 2.92167)
 ymaw = fn_wm(w, 1000, 0.40, 0.02)
 pmaw = fn_mp(w, 25, 1.75)
 rmaw = fn_mr(ymaw, pmaw)
-yfil = fn_wf(w, 0.50)
-rfil = fn_fr(yfil, 2.50)
-r = rfil + rmaw
+rround = fn_fr(w, 1000, 2.50)
+r = rround + rmaw
 c = (10000 * w)^1.5
 
 demo_h0 = data.frame(t, r, c)
@@ -240,25 +232,133 @@ ggplot(demo_h0, aes(t, value, colour = variable)) +
 
 # Duplicating structure from fishery demo - do not run without changes.
 
-q_aq = function(r, k, q, p, c, eta, x0, e0, start, end){
-                     x = as.numeric(vector(length = (end - start)))
-                     x[1] = x0
-                     e = as.numeric(vector(length = (end - start)))
-                     e[1] = e0
-                     T = length(seq(start, end))
-                     t = seq(start, end)
-            for (i in 2:T){x[i] = x[i-1] * ( 1 + r - r * x[i-1] / k - q * e[i-1])
-                           e[i] = e[i-1] * ( 1 + eta * ( p * q * x[i-1] - c))}
-                     return(x)}
+# Define parameters for each low-level function to easily run the high-level function.
+var = c("start", 
+        "end", 
+        "linf", 
+        "k",
+        "t0", 
+        "a", 
+        "b", 
+        "n0", 
+        "yround", 
+        "ywet", 
+        "b0", 
+        "b1",
+        "pround", 
+        #"c_coeff",
+        #"c_exp",
+        "c_stock",
+        "c_restock")
 
-var = c("start", "end", "linf", "k", "t", "t_0", "a", "l", "b", "w", "n", "c", "k", "b0", "w", "b", "ymaw", "maw", "x", "c", "yfil", "pfil", "c_h0", "c_h1")
-fun = c("All", "All", "Age-Length", "Age-Length", "Age-Length", "Age-Length", "Length-Weight", "Length-Weight", "Length-Weight", "Weight-Maw", "Weight-Maw", "Weight-Maw", "Weight-Maw", "Maw-Price", "Maw-Price", "Maw-Price", "Maw-Revenue", "Maw-Revenue", "Weight-Fillet", "Weight-Fillet", "Fillet-Revenue", "Fillet-Revenue", "No-Harvest Cost", "Harvest Cost")
-#val = c(0, 25, 1465, 0.1280, )
-par = data.frame(var,fun)
 
-q_aq = function()
+par = c(1, 
+        25, 
+        1465, 
+        0.1280, 
+        -0.2805,
+        0.000015491,
+        2.92167,
+        1000,
+        0.4,
+        0.02,
+        25,
+        1.75,
+        2.50,
+        #10000,
+        #2.00,
+        10,
+        200000)
 
-  kable(par)
+fun = c(rep("All", 2), 
+        rep("Age-Length", 3),
+        rep("Length-Weight", 2),
+        rep("Weight-Maw", 3),
+        rep("Maw-Price", 2),
+        "Weight-Revenue (Round)",
+        #rep("No-Harvest Cost", 2), 
+        "No-Harvest Cost",
+        "Harvest Cost")
+
+num = seq(1, length(var))
+
+tab = data.frame(num, fun, var, par)
+
+kable(tab)
+```
+
+```{r whatever}
+#q_aq = function(r, k, q, p, c, eta, x0, e0, start, end){
+#                     x = as.numeric(vector(length = (end - start)))
+#                     x[1] = x0
+#                     e = as.numeric(vector(length = (end - start)))
+#                     e[1] = e0
+#                     T = length(seq(start, end))
+#                     t = seq(start, end)
+#            for (i in 2:T){x[i] = x[i-1] * ( 1 + r - r * x[i-1] / k - q * e[i-1])
+#                           e[i] = e[i-1] * ( 1 + eta * ( p * q * x[i-1] - c))}
+#                     return(x)}
+
+# Define a function for aquaculture output over time for one cage.
+aq = function(par){t = as.numeric(vector(length = par[2]))
+                   h = as.numeric(vector(length = par[2]))
+                   hinv = as.numeric(vector(length = par[2]))
+                   a = as.numeric(vector(length = par[2]))
+                   l = as.numeric(vector(length = par[2]))
+                   w = as.numeric(vector(length = par[2]))
+                   n = as.numeric(vector(length = par[2]))
+                   y = as.numeric(vector(length = par[2]))
+                   n = as.numeric(vector(length = par[2]))
+                   p = as.numeric(vector(length = par[2]))
+                   rmaw = as.numeric(vector(length = par[2]))
+                   rround = as.numeric(vector(length = par[2]))
+                   r = as.numeric(vector(length = par[2]))
+                   c = as.numeric(vector(length = par[2]))
+                  
+                   t[1] = par[1]
+                   h[1] = 0
+                   hinv[1] = 1
+                   a[1] = t[1]
+                   l[1] = fn_vb(par[3], par[4], t[1], par[5])
+                   w[1] = fn_lw(par[6], l[1], par[7])
+                   n[1] = par[8]
+                   y[1] = fn_wm(w[1], n[1], par[9], par[10])
+                   p[1] = fn_mp(w[1], par[11], par[12])
+                   rmaw[1] = y[1] * p[1]
+                   rround[1] = w[1] * par[13]
+                   r[1] = (rmaw[1] + rround[1]) * h[1]
+                   c[1] = fn_ch0(w[1], par[14], n[1])
+                  
+                   for(i in 2:par[2]){
+                     t[i] = t[i - 1] + 1
+                     h[i] = 0
+                     hinv[i] = (h[i] - 1) ^ 2
+                     a[i] = a[i - 1] * hinv[i - 1] + 1
+                     l[i] = fn_vb(par[3], par[4], a[i], par[5])
+                     w[i] = fn_lw(par[6], l[i], par[7])
+                     n[i] = par[8]
+                     y[i] = fn_wm(w[i], n[i], par[9], par[10])
+                     p[i] = fn_mp(w[i], par[11], par[12])
+                     rmaw[i] = y[i] * p[i]                         # Fix yield-revenue function for maw.
+                     rround[i] = fn_fr(w[i], n[i], par[13])
+                     r[i] = (rmaw[i] + rround[i]) * h[i]
+                     c[i] = fn_ch0(w[i], par[14], n[i]) * hinv[i] + par[15] * h[i]
+                     }
+                   
+                  output = tibble(t, h, a, l, w, n, y, p, rmaw, rround, r, c)
+
+                  return(output)}
+
+output = aq(par)
+
+trim = tibble(output$t, output$rmaw, output$c)
+
+use = melt(trim, id = 1)
+
+colnames(use) = c("t", "val", "var")
+
+ggplot(use, aes(t, var, colour = val)) +
+  geom_path()
 
 ```
 
