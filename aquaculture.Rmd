@@ -182,8 +182,8 @@ Fix FCR, then fix this.
 
 # Feed costs for a cohort.
 
-fn_ch0 = function(w, cstock, n){ch0 = w * n * cstock
-                                return(ch0)}#{cstock = ccoeff * a ^ cexp}
+fn_ch0 = function(t, cstock, n){ch0 = (10000000 * t ^ cstock + 100000000) * n
+                                return(ch0)}#{cstock = ccoeff * a ^ cexp - cintercept}
 
 ```
 
@@ -208,12 +208,12 @@ Cost of restocking a cage after harvest. USD?
 t = seq(0, 25)
 l = fn_vb(1465.3822, 0.1280, t, -0.2805)
 w = fn_lw(0.000015491, l, 2.92167)
-ymaw = fn_wm(w, 1000, 0.40, 0.02)
+ymaw = fn_wm(w, 1, 0.40, 0.02)
 pmaw = fn_mp(w, 25, 1.75)
 rmaw = fn_mr(ymaw, pmaw)
-rround = fn_fr(w, 1000, 2.50)
+rround = fn_fr(w, 1, 50000)
 r = rround + rmaw
-c = (10000 * w)^1.5
+c =  10000000 * t ^ 2.15 + 100000000
 
 demo_h0 = data.frame(t, r, c)
 
@@ -249,7 +249,8 @@ var = c("start",
         #"c_coeff",
         #"c_exp",
         "c_stock",
-        "c_restock")
+        "c_restock",
+        "disc")
 
 
 par = c(1, 
@@ -259,16 +260,17 @@ par = c(1,
         -0.2805,
         0.000015491,
         2.92167,
-        1000,
+        1,
         0.4,
         0.02,
         25,
         1.75,
-        2.50,
+        5000,
         #10000,
         #2.00,
-        10,
-        200000)
+        2.15,
+        2000,
+        0.95)
 
 fun = c(rep("All", 2), 
         rep("Age-Length", 3),
@@ -278,13 +280,15 @@ fun = c(rep("All", 2),
         "Weight-Revenue (Round)",
         #rep("No-Harvest Cost", 2), 
         "No-Harvest Cost",
-        "Harvest Cost")
+        "Harvest Cost",
+        "Discount Factor")
 
 num = seq(1, length(var))
 
 tab = data.frame(num, fun, var, par)
 
 kable(tab)
+
 ```
 
 ```{r whatever}
@@ -301,64 +305,108 @@ kable(tab)
 
 # Define a function for aquaculture output over time for one cage.
 aq = function(par){t = as.numeric(vector(length = par[2]))
+                   a0 = as.numeric(vector(length = par[2]))
+                   a1 = as.numeric(vector(length = par[2]))
+
                    h = as.numeric(vector(length = par[2]))
                    hinv = as.numeric(vector(length = par[2]))
-                   a = as.numeric(vector(length = par[2]))
-                   l = as.numeric(vector(length = par[2]))
-                   w = as.numeric(vector(length = par[2]))
-                   n = as.numeric(vector(length = par[2]))
-                   y = as.numeric(vector(length = par[2]))
-                   n = as.numeric(vector(length = par[2]))
-                   p = as.numeric(vector(length = par[2]))
-                   rmaw = as.numeric(vector(length = par[2]))
-                   rround = as.numeric(vector(length = par[2]))
-                   r = as.numeric(vector(length = par[2]))
-                   c = as.numeric(vector(length = par[2]))
+                   
+                   l0 = as.numeric(vector(length = par[2]))
+                   w0 = as.numeric(vector(length = par[2]))
+                   n0 = as.numeric(vector(length = par[2]))
+                   y0 = as.numeric(vector(length = par[2]))
+                   n0 = as.numeric(vector(length = par[2]))
+                   p0 = as.numeric(vector(length = par[2]))
+                   rmaw0 = as.numeric(vector(length = par[2]))
+                   rround0 = as.numeric(vector(length = par[2]))
+                   r0 = as.numeric(vector(length = par[2]))
+                   c0 = as.numeric(vector(length = par[2]))
+                   
+                   l1 = as.numeric(vector(length = par[2]))
+                   w1 = as.numeric(vector(length = par[2]))
+                   n1 = as.numeric(vector(length = par[2]))
+                   y1 = as.numeric(vector(length = par[2]))
+                   n1 = as.numeric(vector(length = par[2]))
+                   p1 = as.numeric(vector(length = par[2]))
+                   rmaw1 = as.numeric(vector(length = par[2]))
+                   rround1 = as.numeric(vector(length = par[2]))
+                   r1 = as.numeric(vector(length = par[2]))
+                   c1 = as.numeric(vector(length = par[2]))                   
                   
                    t[1] = par[1]
+                   a0[1] = t[1]
+                   a1[1] = a0[1] + 1
+                   
                    h[1] = 0
                    hinv[1] = 1
-                   a[1] = t[1]
-                   l[1] = fn_vb(par[3], par[4], t[1], par[5])
-                   w[1] = fn_lw(par[6], l[1], par[7])
-                   n[1] = par[8]
-                   y[1] = fn_wm(w[1], n[1], par[9], par[10])
-                   p[1] = fn_mp(w[1], par[11], par[12])
-                   rmaw[1] = y[1] * p[1]
-                   rround[1] = w[1] * par[13]
-                   r[1] = (rmaw[1] + rround[1]) * h[1]
-                   c[1] = fn_ch0(w[1], par[14], n[1])
-                  
+                   
+                   l0[1] = fn_vb(par[3], par[4], t[1], par[5])
+                   w0[1] = fn_lw(par[6], l0[1], par[7])
+                   n0[1] = par[8]
+                   y0[1] = fn_wm(w0[1], n0[1], par[9], par[10])
+                   p0[1] = fn_mp(w0[1], par[11], par[12])
+                   rmaw0[1] = y0[1] * p0[1]
+                   rround0[1] = w0[1] * par[13]
+                   r0[1] = (rmaw0[1] + rround0[1])
+                   c0[1] = 0 #fn_ch0(w[1], par[14], n[1])
+
+                   l1[1] = fn_vb(par[3], par[4], 2, par[5])
+                   w1[1] = fn_lw(par[6], l1[1], par[7])
+                   n1[1] = par[8]
+                   y1[1] = fn_wm(w1[1], n1[1], par[9], par[10])
+                   p1[1] = fn_mp(w1[1], par[11], par[12])
+                   rmaw1[1] = y1[1] * p1[1]
+                   rround1[1] = w1[1] * par[13]
+                   r1[1] = (rmaw1[1] + rround1[1]) * h[1]
+                   c1[1] = 0 #fn_ch0(w[1], par[14], n[1])                   
+                                     
                    for(i in 2:par[2]){
                      t[i] = t[i - 1] + 1
-                     h[i] = 0
+                     h[i] = ifelse(r0[i] > (par[16] * (r1[i])), 1, 0)
                      hinv[i] = (h[i] - 1) ^ 2
-                     a[i] = a[i - 1] * hinv[i - 1] + 1
-                     l[i] = fn_vb(par[3], par[4], a[i], par[5])
-                     w[i] = fn_lw(par[6], l[i], par[7])
-                     n[i] = par[8]
-                     y[i] = fn_wm(w[i], n[i], par[9], par[10])
-                     p[i] = fn_mp(w[i], par[11], par[12])
-                     rmaw[i] = y[i] * p[i]                         # Fix yield-revenue function for maw.
-                     rround[i] = fn_fr(w[i], n[i], par[13])
-                     r[i] = (rmaw[i] + rround[i]) * h[i]
-                     c[i] = fn_ch0(w[i], par[14], n[i]) * hinv[i] + par[15] * h[i]
+                     
+                     a0[i] = a0[i - 1] * hinv[i - 1] + 1
+                     a1[i] = a0[i] + 1
+                     
+                     l0[i] = fn_vb(par[3], par[4], a0[i], par[5])
+                     w0[i] = fn_lw(par[6], l0[i], par[7])
+                     n0[i] = par[8]
+                     y0[i] = fn_wm(w0[i], n0[i], par[9], par[10])
+                     p0[i] = fn_mp(w0[i], par[11], par[12])
+                     rmaw0[i] = y0[i] * p0[i]                         # Fix yield-revenue function for maw.
+                     rround0[i] = fn_fr(w0[i], n0[i], par[13])
+                     r0[i] = rmaw0[i] + rround0[i]
+                     c0[i] = fn_ch0(a0[i], par[14], n0[i]) # * hinv[i] + par[15] * h[i]
+                     
+                     l1[i] = fn_vb(par[3], par[4], a1[i], par[5])
+                     w1[i] = fn_lw(par[6], l1[i], par[7])
+                     n1[i] = par[8]
+                     y1[i] = fn_wm(w1[i], n1[i], par[9], par[10])
+                     p1[i] = fn_mp(w1[i], par[11], par[12])
+                     rmaw1[i] = y1[i] * p1[i]                         # Fix yield-revenue function for maw.
+                     rround1[i] = fn_fr(w1[i], n1[i], par[13])
+                     r1[i] = rmaw1[i] + rround1[i]
+                     c1[i] = fn_ch0(a1[i], par[14], n1[i]) # * hinv[i] + par[15] * h[i]
+                     
+                     r[i] = r0[i] * h[i]
+                     c[i] = c0[i] * hinv[i] + par[15] * h[i] 
+                     
                      }
-                   
-                  output = tibble(t, h, a, l, w, n, y, p, rmaw, rround, r, c)
+                    
+                    output = tibble(t, h, r, c)
 
                   return(output)}
 
 output = aq(par)
 
-trim = tibble(output$t, output$rmaw, output$c)
+#trim = tibble(output$r, output$c)
 
-use = melt(trim, id = 1)
+#use = melt(trim, id = 1)
 
-colnames(use) = c("t", "val", "var")
+#colnames(use) = c("t", "var", "val")
 
-ggplot(use, aes(t, var, colour = val)) +
-  geom_path()
+#ggplot(use, aes(t, val, colour = var)) +
+  #geom_path()
 
 ```
 
