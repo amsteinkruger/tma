@@ -1,7 +1,7 @@
 ---
-title: "Aquaculture Model - Demo"
+title: "Aquaculture Model"
 date: "`r Sys.Date()`"
-output: html_document
+output: pdf_document
 ---
 
 ```{r pkg_ins, include = FALSE}
@@ -35,58 +35,12 @@ lapply(pkg, library, character.only = TRUE)
 
 ```
 
-#####Objective: Step through optimal rotations for a generic totoaba farm.
+#####Objective: Step through optimal harvest and planting decisions by a generic totoaba farm.
 
-Steps:
-Age to Length
- - Data
- - Methods
- - Results
+Toy Model:
 
-Age to Mortality
- - Data
- - Methods
- - Results
-
-Length to Weight
- - Data
- - Methods
- - Results
-
-Weight to Trimming
- - Data
- - Methods
- - Results
-
-Weight to Round Revenue
- - Data
- - Methods
- - Results
-
-Weight to Maw Revenue
- - Data
- - Methods
- - Results
-
-Weight to Feed Cost
- - Data
- - Methods
- - Results
-
-Constant Cost
- - Data
- - Methods
- - Results
-
-Stocking Cost
- - Data
- - Methods
- - Results
-
-Discounting
- - Data
- - Methods
- - Results
+Parameters for White seabass (Cynoscion nobiliis) from:
+Thomas, J. C. (1968). Management of the white seabass (Cynoscion nobilis) in California waters. State of California. The Resources Agency. Department of Fish and Game.
 
 #####Von Bertalanffy Growth Model
 
