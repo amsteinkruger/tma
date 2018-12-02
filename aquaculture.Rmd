@@ -277,7 +277,7 @@ ggplot(demo_h0, aes(t, value, colour = variable)) +
 
 #####Single Run, Harvest Demo
 
-```{r demo_harvest, eval = FALSE, include = FALSE}
+```{r demo_harvest}
 
 # Define parameters for each low-level function in a high-level function of multiple harvests over time
 var = c("start", 
