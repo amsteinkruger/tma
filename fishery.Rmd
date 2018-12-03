@@ -171,9 +171,9 @@ fish = ggplot(demo_x_log_p_long, aes(t, x, color = p, group = p)) +
   theme(legend.position = "none")
 
 # Plot by status. Thresholds are arbitrary. This gets you a flag effect, but not a path-dependency illustration.
-demo_x_log_p_long = mutate(demo_x_log_p_long, status = ifelse(x < 0.7, "bad", ifelse(x < 0.8, "meh", "good")))
+#demo_x_log_p_long = mutate(demo_x_log_p_long, status = ifelse(x < 0.7, "bad", ifelse(x < 0.8, "meh", "good")))
 
-ggplot(demo_x_log_p_long, aes(t, x, color = status, group = p)) + 
+ggplot(demo_x_log_p_long, aes(t, x, group = p)) + 
   geom_path() +
   theme(legend.position = "none")
 

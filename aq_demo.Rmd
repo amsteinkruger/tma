@@ -65,12 +65,6 @@ fn_vb = function(linf, k, t, t_0){l = linf * ( 1 - exp( - k * ( t - t_0)))
 #v_vb_l_wsb = fn_vb(1465.3822, 0.1280, v_vb_a_wsb, -0.2805)
 #plot(v_vb_a_wsb, v_vb_l_wsb)
 
-
-# Totoaba demo.
-#v_vb_a_tma = seq(a0, amax)
-#v_vb_l_tma = fn_vb(linf, k, v_vb_a_tma, t_0)
-#plot(v_vb_a_tma, v_vb_l_tma)
-
 ```
 
 #####Weight-Length Conversion
@@ -244,7 +238,7 @@ ggplot(demo_h0, aes(t, value, colour = variable)) +
 
 #####Single Run, Harvest Demo
 
-```{r demo_harvest}
+```{r demo_harvest0}
 
 # Define parameters for each low-level function in a high-level function of multiple harvests over time
 var = c("start", 
@@ -416,14 +410,35 @@ colnames(tibble_rc) = c("t", "var", "val")
 ggplot(tibble_rc, aes(t, val, colour = var)) +
   geom_area(aes(fill = var), alpha = 0.5)
 
-# Sort out the drop-off issue in marginal cost before continuing on the profit plot.
-# Calculate marginal cost for profit plot.
-#tibble_pi = output %>% 
-  #mutate(., c1 = lead(c)) %>% 
-  #mutate(., mc = c1 - c)
+# Calculate and plot profit.
+tbl_pi = output %>% 
+  mutate(., c1 = lead(c)) %>% 
+  mutate(., mc = ifelse(c1 - c > 0, c1 - c, 0)) %>% 
+  mutate(., rsale = r * h) %>% 
+  mutate(., pi = rsale - mc)
+
+plot(tbl_pi$t, tbl_pi$pi)
+
+# Calculate and plot cumulative profit.
+pi_sum = as.numeric(vector(length = par[2]))
+pi_sum[1] = 0
+
+for(i in 2:par[2]){pi_sum[i] = tbl_pi$r[i] * tbl_pi$h[i] - tbl_pi$mc[i] + pi_sum[i - 1]}
+
+tbl_pi = cbind(tbl_pi, pi_sum)
+
+# Add a column for color by vertical position.
+tbl_pi =  mutate(tbl_pi, color = ifelse(pi_sum > 0, 1, 0))
+
+# Basic plot.  
+plot(tbl_pi$t, tbl_pi$pi_sum)
+
+# Area plot.
+ggplot(tbl_pi, aes(t, pi_sum)) +
+  geom_area()
 
 # Plot profits over harvest cycles.
-#ggplot(output, aes(t)) +
+#ggplot(, aes(t)) +
   #geom_ribbon(ymin)
 
 ```
