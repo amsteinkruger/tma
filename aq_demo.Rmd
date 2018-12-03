@@ -1,7 +1,7 @@
 ---
-title: "Aquaculture Model - Demo"
-date: '`r Sys.Date()`'
-output: html_document
+title: "Aquaculture Model"
+date: "`r Sys.Date()`"
+output: pdf_document
 ---
 
 ```{r pkg_ins, include = FALSE}
@@ -35,19 +35,24 @@ lapply(pkg, library, character.only = TRUE)
 
 ```
 
-#####Objective: Step through optimal rotations for a generic totoaba farm.
+#####Objective: Step through optimal harvest and planting decisions by a generic totoaba farm.
 
-#####Age to Length
+Toy Model:
+
+Parameters for White seabass (Cynoscion nobiliis) from:
+Thomas, J. C. (1968). Management of the white seabass (Cynoscion nobilis) in California waters. State of California. The Resources Agency. Department of Fish and Game.
+
+#####Von Bertalanffy Growth Model
 
 $L(t) = L_\infty ( 1 - e^{ - K ( t - t_0 )})$
 
-Variable   | Definition                   | Value
----------- | ---------------------------  | --------------
-*L*        | Length (Centimeters)         | 
-$L_\infty$ | Maximum Length (Centimeters) | 180.000000
-*K*        | Catabolic Constant (?!)      | 000.289291
-*t*        | Age (Years)                  | 
-$t_0$      | Age, *L* = 0                 | 000.000000
+Variable   | Definition
+---------- | ---------------------------
+*L*        | Length (Millimeters)
+$L_\infty$ | Maximum Length (mm)
+*K*        | Catabolic Constant (?!)
+*t*        | Age (Years)
+$t_0$      | Age, *L* = 0
 
 ```{r al_function}
 
@@ -55,70 +60,10 @@ $t_0$      | Age, *L* = 0                 | 000.000000
 fn_vb = function(linf, k, t, t_0){l = linf * ( 1 - exp( - k * ( t - t_0)))
                                   return(l)}
 
-# Set parameter values for future reference.
-vb_linf = 180
-vb_k    = 0.289291
-vb_t0   = 0
-
-# Parameterization demo.
-a = seq(1, 20)
-l = fn_vb(vb_linf, vb_k, a, vb_t0)
-plot(a, l)
-
-```
-
-#####Age to Mortality
-
-Cygnus Ocean Farms, SA de CV report mortality by month for two years.
- 
-```{r am_data}
-
-a_months = seq(1, 24)
-m_months = c(rep(5.00, 2), rep(2.40, 2), rep(1.60, 2), rep(1.15, 2), rep(1.00, 3), rep(0.80, 3), 0.50, rep(0.40, 6), 0.30, rep(0.20, 2))
-
-dat_m = tibble(a_months, m_months)
-
-#plot(dat_m$a_months, dat_m$m_months)
-
-```
- 
- Supposing a mortality trend $m = \beta_1 * e^{\beta_2a}$, R function nls in package Stats 3.4.2 returns:
- 
-```{r am_results, echo = FALSE}
-
-# Specification for nonlinear regression:
-am_reg = nls(m_months ~ b1 * exp(b2 * a_months), dat_m, start = list(b1 = 8.00, b2 = - 1.00))
-
-# Clean up output:
-am_reg_tidy = tidy(am_reg, conf.int = TRUE, conf.level = 0.95)
-dat_m_est = augment(am_reg)
-
-kable(am_reg_tidy)
-
-ggplot(dat_m_est) +
-  geom_point(aes(a_months, m_months)) +
-  geom_path(aes(a_months, .fitted))
-
-```
-
- Those results plug into a mortality-at-age function:
-
-
-Variable   | Definition                  | Value
----------- | --------------------------- | -----------
-*m*        | Cohort Mortality (%)        |
-*a*        | Age (Months)                |
-$\beta_1$  | Parameter                   | `r am_reg_tidy$estimate[1]`
-$\beta_2$  | Parameter                   | `r am_reg_tidy$estimate[2]`
- 
-```{r am_function}
-
-# Set function.
-fn_am = function(b1, b2, a){m = b1 * exp(b2 * a_months)}
-
-# Set parameters for reference.
-am_b1 = am_reg_tidy$estimate[1]
-am_b2 = am_reg_tidy$estimate[2]
+# White seabass demo with age in years and length in millimeters.
+#v_vb_a_wsb = seq(0, 25)
+#v_vb_l_wsb = fn_vb(1465.3822, 0.1280, v_vb_a_wsb, -0.2805)
+#plot(v_vb_a_wsb, v_vb_l_wsb)
 
 ```
 
@@ -128,9 +73,9 @@ $W = aL^b$
 
 Variable   | Definition
 ---------- | ---------------------------
-*W*        | Weight (Kilograms)
-*L*        | Length (Centimeters)
-*a*        | Parameter
+*W*        | Weight (Grams)
+*a*        | Length (Millimeters)
+*L*        | Parameter
 *b*        | Parameter
 
 ```{r lw_function}
@@ -139,70 +84,17 @@ Variable   | Definition
 fn_lw = function(a, l, b){w = a * l ^ b
                           return(w)}
 
-# Set parameter values for future reference.
-wl_a = 0.000004128
-wl_b = 3.24674
+# White seabass demo in mm:g.
+#v_lw_l_wsb = seq(0, 1500, by = 100)
+#v_lw_w_wsb = fn_lw(0.000015491, v_lw_l_wsb, 2.92167)
+#plot(v_lw_l_wsb, v_lw_w_wsb)
 
-# Parameterization demo.
-l = seq(1, 180, by = 10)
-w = fn_lw(wl_a, l, wl_b)
-plot(l, w)
-
-```
-
-#####Age to Count
-
-After mortality, any biomass in excess of optimal stocking density is harvested. Optimal density is 140,000 kilograms per cage at and after first salable size.
-
-First salable size is set to 143 grams for a rough plate size.
-
-$T = n_t^* - n_{t-1}^* * m_{t-1}$
-
-```{r ac_calc}
-
-density = 140000
-size = 0.143
-
-a = seq(1, 20)
-alag = a - 1
-w = fn_lw(wl_a, fn_vb(vb_linf, vb_k, a, vb_t0), wl_b)
-n = density / w * fn_am(am_b1, am_b2, alag)
-
+# Totoaba demo.
+#v_lw_l_tma = seq(l0, linf, by = 100)
+#v_lw_w_tma = fn_lw(a, v_lw_l_tma, b)
+#plot(v_lw_l_tma, v_lw_w_tma)
 
 ```
-
-
-
-
-Weight to Round Revenue
- - Data
- - Methods
- - Results
-
-Weight to Maw Revenue
- - Data
- - Methods
- - Results
-
-Weight to Feed Cost
- - Data
- - Methods
- - Results
-
-Constant Cost
- - Data
- - Methods
- - Results
-
-Stocking Cost
- - Data
- - Methods
- - Results
-
-Discounting
- - Data
- - Methods
- - Results
 
 #####Weight-Maw Conversion
 
@@ -310,7 +202,6 @@ Without a harvest mechanism, this series of functions and vectors just demonstra
 ```{r demo_noharvest}
 
 t = seq(0, 25)
-m = fn_am(am_b1, am_b2, t)
 l = fn_vb(1465.3822, 0.1280, t, -0.2805)
 w = fn_lw(0.000015491, l, 2.92167)
 ymaw = fn_wm(w, 1, 0.40, 0.02)
@@ -333,7 +224,7 @@ ggplot(demo_h0, aes(t, value, colour = variable)) +
 
 #####Single Run, Harvest Demo
 
-```{r demo_harvest}
+```{r demo_harvest0}
 
 # Define parameters for each low-level function in a high-level function of multiple harvests over time
 var = c("start", 
@@ -505,7 +396,6 @@ colnames(tibble_rc) = c("t", "var", "val")
 ggplot(tibble_rc, aes(t, val, colour = var)) +
   geom_area(aes(fill = var), alpha = 0.5)
 
-
 # Calculate and plot profit.
 tbl_pi = output %>% 
   mutate(., c1 = lead(c)) %>% 
@@ -532,6 +422,10 @@ plot(tbl_pi$t, tbl_pi$pi_sum)
 # Area plot.
 ggplot(tbl_pi, aes(t, pi_sum)) +
   geom_area()
+
+# Plot profits over harvest cycles.
+#ggplot(, aes(t)) +
+  #geom_ribbon(ymin)
 
 ```
 
