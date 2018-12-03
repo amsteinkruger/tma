@@ -1,9 +1,7 @@
 ---
 title: "Aquaculture Model - Demo"
-output:
-  pdf_document: default
-  html_document: default
 date: '`r Sys.Date()`'
+output: html_document
 ---
 
 ```{r pkg_ins, include = FALSE}
