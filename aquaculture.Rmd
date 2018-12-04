@@ -17,8 +17,6 @@ pkg <- c("readr",
          "tidyverse",
          "gapminder",
          "sandwich",
-         "broom",
-         "stargazer",
          "cowplot",
          "reshape2",
          "kableExtra")
@@ -110,15 +108,18 @@ Variable   | Definition                  | Value
 *a*        | Age (Months)                |
 $\beta_1$  | Parameter                   | `r am_reg_tidy$estimate[1]`
 $\beta_2$  | Parameter                   | `r am_reg_tidy$estimate[2]`
- 
+
+To keep a realistic, non-zero mortality-at-age estimate, we add a proportional mortality of 0.01 to each month of age.
+
 ```{r am_function}
 
 # Set function.
-fn_am = function(b1, b2, a){m = b1 * exp(b2 * a_months)}
+fn_am = function(a, b1, b2, b3){m = b1 * exp(b2 * a) + b3} 
 
 # Set parameters for reference.
 am_b1 = am_reg_tidy$estimate[1]
 am_b2 = am_reg_tidy$estimate[2]
+am_b3 = 0.01
 
 ```
 
@@ -154,19 +155,39 @@ plot(l, w)
 
 After mortality, any biomass in excess of optimal stocking density is harvested. Optimal density is 140,000 kilograms per cage at and after first salable size.
 
-First salable size is set to 143 grams for a rough plate size.
+First salable size is set to 2 kilograms.
 
 $T = n_t^* - n_{t-1}^* * m_{t-1}$
 
 ```{r ac_calc}
 
-density = 140000
-size = 0.143
+# Density is highest possible kilograms per cubic meter without density-dependence slowing growth.
+density = 160000
 
-a = seq(1, 20)
-alag = a - 1
-w = fn_lw(wl_a, fn_vb(vb_linf, vb_k, a, vb_t0), wl_b)
-n = density / w * fn_am(am_b1, am_b2, alag)
+# Size is first saleable size in kilograms.
+size = 2
+
+am = seq(1, 240)
+ay = seq(1/12, 20, by = 1/12)
+amlag = am - 1
+w = fn_lw(wl_a, fn_vb(vb_linf, vb_k, ay, vb_t0), wl_b)
+n = density / w * (1 - 0.01 * fn_am(amlag, am_b1, am_b2, am_b3))
+
+# Hard-coding mortality yields a unidimensional function for integration below.
+
+# Cohort count at first saleable size is the ratio of density in kgm^-3 to size in kg.
+nsale = density / size
+
+# Initial cohort count is cohort count at first saleable size, plus cumulative mortality at first saleable age.
+# Casually, nstart = nsale + mort(a(l(wsale)))
+# Cumulative mortality to first saleable age:
+a_sale = (vb_t0 - 1 / vb_k * (log(1 - ((size / wl_a) ^ (1 / wl_b))/vb_linf))) * 12
+m_sale = integrate(fn_am, lower = 0, upper = a_sale, b1 = am_b1, b2 = am_b2, b3 = am_b3)
+
+# Initial cohort count:
+nsale + nsale * ((m_sale$value) * 0.01)
+
+# Trimming experiment:
 
 
 ```
