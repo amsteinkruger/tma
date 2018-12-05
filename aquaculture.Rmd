@@ -19,6 +19,7 @@ pkg <- c("readr",
          "sandwich",
          "cowplot",
          "reshape2",
+         "broom",
          "kableExtra")
 
 # Install packages.
@@ -80,7 +81,7 @@ dat_m = tibble(a_months, m_months)
 
 ```
  
- Supposing a mortality trend $m = \beta_1 * e^{\beta_2a}$, R function nls in package Stats 3.4.2 returns:
+Supposing a mortality trend $m = \beta_1 * e^{\beta_2a}$, R function nls in package Stats 3.4.2 returns:
  
 ```{r am_results, echo = FALSE}
 
@@ -109,17 +110,22 @@ Variable   | Definition                  | Value
 $\beta_1$  | Parameter                   | `r am_reg_tidy$estimate[1]`
 $\beta_2$  | Parameter                   | `r am_reg_tidy$estimate[2]`
 
-To keep a realistic, non-zero mortality-at-age estimate, we add a proportional mortality of 0.01 to each month of age.
+~~To keep a realistic non-zero mortality-at-age estimate, we add a proportional mortality of 0.01 to each month of age.~~
+
+For convenience below, the indefinite integral of mortality-at-age, i.e. cumulative mortality, is also defined as:
+$M = \frac{\beta_1 * e^{\beta_2a}}{\beta_2}$
 
 ```{r am_function}
 
-# Set function.
-fn_am = function(a, b1, b2, b3){m = b1 * exp(b2 * a) + b3} 
+# Set marginal mortality.
+fn_am_marg = function(a, b1, b2){m = b1 * exp(b2 * a)} 
+
+# Set cumulative mortality.
+fn_am_cumu = function(a, b1, b2){M = (b1 * exp(b2 * a)) / b2}
 
 # Set parameters for reference.
 am_b1 = am_reg_tidy$estimate[1]
 am_b2 = am_reg_tidy$estimate[2]
-am_b3 = 0.01
 
 ```
 
@@ -171,7 +177,7 @@ am = seq(1, 240)
 ay = seq(1/12, 20, by = 1/12)
 amlag = am - 1
 w = fn_lw(wl_a, fn_vb(vb_linf, vb_k, ay, vb_t0), wl_b)
-n = density / w * (1 - 0.01 * fn_am(amlag, am_b1, am_b2, am_b3))
+n = density / w * (1 - 0.01 * fn_am_marg(amlag, am_b1, am_b2))
 
 # Hard-coding mortality yields a unidimensional function for integration below.
 
@@ -182,48 +188,15 @@ nsale = density / size
 # Casually, nstart = nsale + mort(a(l(wsale)))
 # Cumulative mortality to first saleable age:
 a_sale = (vb_t0 - 1 / vb_k * (log(1 - ((size / wl_a) ^ (1 / wl_b))/vb_linf))) * 12
-m_sale = integrate(fn_am, lower = 0, upper = a_sale, b1 = am_b1, b2 = am_b2, b3 = am_b3)
+m_sale = integrate(fn_am_marg, lower = 0, upper = a_sale, b1 = am_b1, b2 = am_b2)
 
 # Initial cohort count:
-nsale + nsale * ((m_sale$value) * 0.01)
+nstart = nsale + nsale * ((m_sale$value) * 0.01)
 
 # Trimming experiment:
 
 
 ```
-
-
-
-
-Weight to Round Revenue
- - Data
- - Methods
- - Results
-
-Weight to Maw Revenue
- - Data
- - Methods
- - Results
-
-Weight to Feed Cost
- - Data
- - Methods
- - Results
-
-Constant Cost
- - Data
- - Methods
- - Results
-
-Stocking Cost
- - Data
- - Methods
- - Results
-
-Discounting
- - Data
- - Methods
- - Results
 
 #####Weight-Maw Conversion
 
@@ -241,8 +214,11 @@ $k^{maw}$  | Yield of dry maw from wet maw.
 
 ```{r wm_function}
 
-fn_wm = function(w, n, c, k){ymaw = w * n * c * k
-                             return(ymaw)}
+fn_wm = function(w, n, c, k){ymaw = w * n * c * k}
+
+# Parameters from literature:
+wm_c = 0.02
+wm_k = 0.40
 
 ```
 
@@ -253,8 +229,11 @@ Plug the market model in here.
 ```{r mp_function}
 
 #fn_mp = function(w, b0, bw, bq, q, bc, c){pmaw = b0 + w ^ bw + bq * q + bc * c}
-fn_mp = function(w, b0, b){pmaw = b0 + w^b
-                           return(pmaw)}
+fn_mp = function(w, b0, b1){pmaw = b0 + w^b1}
+
+# Parameters from regression.
+mp_b0 = 25
+mp_b1 = 1.75
 
 ```
 
@@ -268,8 +247,7 @@ $R^{maw}_{a, t} = x_{a, t}/n_{a, t} * (\beta_0 + \beta_{g}(x_{a, t}/n_{a, t}))$
 
 ```{r mr_function}
 
-fn_mr = function(ymaw, pmaw){rmaw = ymaw * pmaw
-                             return(rmaw)}
+fn_mr = function(ymaw, pmaw){rmaw = ymaw * pmaw}
 
 ```
 
@@ -281,45 +259,103 @@ $R^{round}_{a, t} = w_{a, t} * n_{a, t} * p^{round}$
 
 ```{r wr_function}
 
-fn_fr = function(w, n, pround){rround = w * n * pround
-                               return(rround)}
+fn_fr = function(w, n, pround){rround = w * n * pround}
+
+# Parameter from market research:
+pround = 6.50
 
 ```
 
 #####Feed Conversion Function
 
-Check in with Goto. Fix.
+Thanks, Goto!
 
-```{r fcr_function}
+```{r fcr_data}
 
-#fn_fcr = function(w, fcr){}
+dat_fcr = read.csv("fcr.csv")
+
+# Convert values from grams to kilograms for later.
+dat_fcr$weight = dat_fcr$weight / 1000
+dat_fcr$feed = dat_fcr$feed / 1000
 
 ```
 
+For reasons, we assume functional form $F = \beta_1 * w^{\beta_2}$
+
+```{r fcr_results}
+
+# Specification for nonlinear regression:
+fcr_reg = nls(feed ~ b1 * weight ^ b2, dat_fcr, start = list(b1 = 0.0268, b2 = - 1.855))
+
+# Clean up output:
+fcr_reg_tidy = tidy(fcr_reg, conf.int = TRUE, conf.level = 0.95)
+dat_fcr_est = augment(fcr_reg)
+
+kable(fcr_reg_tidy)
+
+ggplot(dat_fcr_est) +
+  geom_point(aes(weight, feed)) +
+  geom_point(aes(weight, .fitted, colour = "red"))
+
+```
+
+Those results plug into a feed-at-weight function:
+
+Variable   | Definition                  | Value
+---------- | --------------------------- | -----------
+*w*        | Weight (Kilograms)          |
+*f*        | Cumulative Feed (Kilograms) |
+$\beta_1$  | Parameter                   | `r fcr_reg_tidy$estimate[1]`
+$\beta_2$  | Parameter                   | `r fcr_reg_tidy$estimate[2]`
+
+For convenience below, the derivative of feed-at-weight, i.e. instantaneous feed requirement, is also defined as:
+$f = \beta_1 \beta_2 w^{\beta_{1}-1}$
+
+```{r fcr_function}
+
+# Set cumulative feed requirement.
+fn_f_cumu = function(w, b1, b2){F = b1 * w ^ b2}
+
+# Set marginal feed requirement.
+fn_f_marg = function(w, b1, b2){f = b1 * b2 * w ^ (b2 - 1)} 
+
+# Set parameters for reference.
+f_b1 = fcr_reg_tidy$estimate[1]
+f_b2 = fcr_reg_tidy$estimate[2]
+
+```
 
 #####No-Harvest Cost
 
-Fix FCR, then fix this.
+Thanks, Goto!
 
 ```{r c_stock}
 
-# Feed costs for a cohort.
+# Marginal cohort cost.
+fn_ch0 = function(w, b1, b2, cf, n, o){ch0 = n * cf * fn_f_marg(w, b1, b2) + o}
 
-fn_ch0 = function(t, cstock, n){ch0 = (10000000 * t ^ cstock + 100000000) * n
-                                return(ch0)}#{cstock = ccoeff * a ^ cexp - cintercept}
+# Parameters.
+#  Cost, USD/kg.
+ch0_cf = 1.545
+# Overhead, from eight cages for ten years down to one cage for one year.
+o = 87500
+
+# Demo.
+w = seq(0, 40)
+n = seq(4200, 4000, by = -5)
+
+ch0_demo = fn_ch0(w, f_b1, f_b2, ch0_cf, n, o)
+
+plot(w, ch0_demo)
 
 ```
 
 
 #####Harvest Cost
 
-Cost of restocking a cage after harvest. USD?
-
 ```{r c_restock}
 
-# Cost of fry plus overhead.
-
-#fn_ch1 = function(){}
+ch1 = nstart * 2 + o
 
 ```
 
@@ -330,24 +366,33 @@ Without a harvest mechanism, this series of functions and vectors just demonstra
 
 ```{r demo_noharvest}
 
-t = seq(0, 25)
-m = fn_am(am_b1, am_b2, t)
-l = fn_vb(1465.3822, 0.1280, t, -0.2805)
-w = fn_lw(0.000015491, l, 2.92167)
-ymaw = fn_wm(w, 1, 0.40, 0.02)
-pmaw = fn_mp(w, 25, 1.75)
+t = seq(1, 25)
+l = fn_vb(vb_linf, vb_k, t, vb_t0)
+w = fn_lw(wl_a, l, wl_b)
+#n = nstart - nstart * (100 + fn_am_cumu(t * 12, am_b1, am_b2)) * 0.01
+ymaw = fn_wm(w, 1500, wm_c, wm_k)
+pmaw = fn_mp(w, mp_b0, mp_b1)
 rmaw = fn_mr(ymaw, pmaw)
-rround = fn_fr(w, 1, 50000)
-r = rround + rmaw + 500000000
-c =  10000000 * t ^ 2.15
+rround = fn_fr(w, 1500, pround)
+r = rround + rmaw 
+c =  fn_ch0(w, f_b1, f_b2, ch0_cf, 1500, o)
 
 demo_h0 = data.frame(t, r, c)
 
 demo_h0 = melt(demo_h0, id = 1)
 
-ggplot(demo_h0, aes(t, value, colour = variable)) +
-  geom_path()
+noh = ggplot(demo_h0, aes(t, value, colour = variable)) +
+              geom_path()
 
+noh
+
+# Save no-harvest plot to working directory.
+ggsave("nohplot.png", plot = noh, dpi = 300, width = 6.5, height = 4.5)
+
+# Save no-harvest table to working directory.
+kable(demo_h0, digits = 2) %>%
+  kable_styling() %>%
+  save_kable(file = "nohtab.html", self_contained = T)
 
 ```
 
@@ -372,28 +417,34 @@ var = c("start",
         "pround", 
         #"c_coeff",
         #"c_exp",
-        "c_stock",
+        "f_b1", 
+        "f_b2", 
+        "ch0_cf", 
+        "o",
         "c_restock",
         "disc")
 
 
 par = c(1, 
-        50, 
-        1465, 
-        0.1280, 
-        -0.2805,
-        0.000015491,
-        2.92167,
-        1,
-        0.4,
-        0.02,
-        25,
-        1.75,
-        5000,
+        25, 
+        vb_linf, 
+        vb_k, 
+        vb_t0,
+        wl_a,
+        wl_b,
+        1500,
+        wm_c,
+        wm_k,
+        mp_b0,
+        mp_b1,
+        pround,
         #10000,
         #2.00,
-        2.15,
-        2000,
+        f_b1, 
+        f_b2, 
+        ch0_cf, 
+        o,
+        ch1,
         0.95)
 
 fun = c(rep("All", 2), 
@@ -402,8 +453,7 @@ fun = c(rep("All", 2),
         rep("Weight-Maw", 3),
         rep("Maw-Price", 2),
         "Weight-Revenue (Round)",
-        #rep("No-Harvest Cost", 2), 
-        "No-Harvest Cost",
+        rep("No-Harvest Cost", 4),
         "Harvest Cost",
         "Discount Factor")
 
@@ -411,7 +461,11 @@ num = seq(1, length(var))
 
 tab = data.frame(num, fun, var, par)
 
-kable(tab)
+# Save parameters to working directory.
+kable(tab, digits = 2) %>%
+  kable_styling() %>%
+  save_kable(file = "partab.html", self_contained = T)
+
 
 # Define a function for dynamic harvests over time.
 aq = function(par){t = as.numeric(vector(length = par[2]))
@@ -461,7 +515,7 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                    rmaw0[1] = y0[1] * p0[1]
                    rround0[1] = w0[1] * par[13]
                    r0[1] = (rmaw0[1] + rround0[1]) # * h[1]
-                   c0[1] = 0 #fn_ch0(w[1], par[14], n[1])
+                   c0[1] = fn_ch0(w0[1], par[14], par[15], par[16], par[8], par[17])
 
                    l1[1] = fn_vb(par[3], par[4], 2, par[5])
                    w1[1] = fn_lw(par[6], l1[1], par[7])
@@ -471,7 +525,7 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                    rmaw1[1] = y1[1] * p1[1]
                    rround1[1] = w1[1] * par[13]
                    r1[1] = (rmaw1[1] + rround1[1]) # * h[1]
-                   c1[1] = 0 #fn_ch0(w[1], par[14], n[1])
+                   c1[1] = fn_ch0(w1[1], par[14], par[15], par[16], par[8], par[17])
                    
                    r[1] = r0[1]
                    c[1] = c0[1]
@@ -490,7 +544,7 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                      rmaw0[i] = y0[i] * p0[i]                         # Fix yield-revenue function for maw.
                      rround0[i] = fn_fr(w0[i], n0[i], par[13])
                      r0[i] = rmaw0[i] + rround0[i]
-                     c0[i] = fn_ch0(a0[i], par[14], n0[i]) # * hinv[i] + par[15] * h[i]
+                     c0[i] = fn_ch0(w0[i], par[14], par[15], par[16], n0[i], par[17])
                      
                      l1[i] = fn_vb(par[3], par[4], a1[i], par[5])
                      w1[i] = fn_lw(par[6], l1[i], par[7])
@@ -500,10 +554,10 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                      rmaw1[i] = y1[i] * p1[i]                         # Fix yield-revenue function for maw.
                      rround1[i] = fn_fr(w1[i], n1[i], par[13])
                      r1[i] = rmaw1[i] + rround1[i]
-                     c1[i] = fn_ch0(a1[i], par[14], n1[i]) # * hinv[i] + par[15] * h[i]
+                     c1[i] = fn_ch0(w1[i], par[14], par[15], par[16], n1[i], par[17])
                      
                      # Mind wrapper for hard-coding lower bound age at harvest.
-                     h[i] = ifelse(a0[i] > 6, ifelse((r0[i] - c0[i]) > (par[16] * (r1[i] - c1[i])), 1, 0), 0)
+                     h[i] = ifelse(a0[i] > 6, ifelse((r0[i] - c0[i]) > (par[19] * (r1[i] - c1[i])), 1, 0), 0)
                      hinv[i] = (h[i] - 1) ^ 2
                      
                      r[i] = r0[i]
@@ -511,7 +565,7 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                      
                      }
                     
-                    output = tibble(t, h, r, c) #tibble(t, h, r, c)
+                    output = tibble(t, c, r) #tibble(t, h, r, c)
 
                   return(output)}
 
@@ -523,36 +577,45 @@ tibble_rc = melt(output, id = 1)
 colnames(tibble_rc) = c("t", "var", "val")
 
 # Plot cumulative revenues and costs through harvest cycles.
-ggplot(tibble_rc, aes(t, val, colour = var)) +
-  geom_area(aes(fill = var), alpha = 0.5)
+h = ggplot(tibble_rc, aes(t, val, colour = var)) +
+            geom_area(aes(fill = var), alpha = 0.5)
 
+h
+
+# Save no-harvest plot to working directory.
+ggsave("hplot.png", plot = h, dpi = 300, width = 6.5, height = 4.5)
+
+# Save output to working directory.
+kable(output) %>%
+  kable_styling() %>%
+  save_kable(file = "htab.html", self_contained = T)
 
 # Calculate and plot profit.
-tbl_pi = output %>% 
-  mutate(., c1 = lead(c)) %>% 
-  mutate(., mc = ifelse(c1 - c > 0, c1 - c, 0)) %>% 
-  mutate(., rsale = r * h) %>% 
-  mutate(., pi = rsale - mc)
+#tbl_pi = output %>% 
+  #mutate(., c1 = lead(c)) %>% 
+  #mutate(., mc = ifelse(c1 - c > 0, c1 - c, 0)) %>% 
+  #mutate(., rsale = r * h) %>% 
+  #mutate(., pi = rsale - mc)
 
-plot(tbl_pi$t, tbl_pi$pi)
+#plot(tbl_pi$t, tbl_pi$pi)
 
 # Calculate and plot cumulative profit.
-pi_sum = as.numeric(vector(length = par[2]))
-pi_sum[1] = 0
+#pi_sum = as.numeric(vector(length = par[2]))
+#pi_sum[1] = 0
 
-for(i in 2:par[2]){pi_sum[i] = tbl_pi$r[i] * tbl_pi$h[i] - tbl_pi$mc[i] + pi_sum[i - 1]}
+#for(i in 2:par[2]){pi_sum[i] = tbl_pi$r[i] * tbl_pi$h[i] - tbl_pi$mc[i] + pi_sum[i - 1]}
 
-tbl_pi = cbind(tbl_pi, pi_sum)
+#tbl_pi = cbind(tbl_pi, pi_sum)
 
 # Add a column for color by vertical position.
-tbl_pi =  mutate(tbl_pi, color = ifelse(pi_sum > 0, 1, 0))
+#tbl_pi =  mutate(tbl_pi, color = ifelse(pi_sum > 0, 1, 0))
 
 # Basic plot.  
-plot(tbl_pi$t, tbl_pi$pi_sum)
+#plot(tbl_pi$t, tbl_pi$pi_sum)
 
 # Area plot.
-ggplot(tbl_pi, aes(t, pi_sum)) +
-  geom_area()
+#ggplot(tbl_pi, aes(t, pi_sum)) +
+  #geom_area()
 
 ```
 
