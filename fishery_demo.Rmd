@@ -1,0 +1,186 @@
+---
+title: "Fishery Model"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r pkg_ins, include = FALSE}
+
+#rm(list=ls())
+
+# Check out knitr for knitr::read_chunk.
+library(knitr)
+
+# Name packages.
+pkg <- c("readr",
+         "knitr",
+         "tidyverse",
+         "gapminder",
+         "sandwich",
+         "broom",
+         "stargazer",
+         "cowplot",
+         "kableExtra",
+         "reshape2")
+
+# Install packages.
+#install.packages(pkg, verbose = FALSE, quiet = TRUE)
+  
+# Update packages.
+#update.packages(pkg, verbose = FALSE, quiet = TRUE)
+
+# Check out packages.
+lapply(pkg, library, character.only = TRUE)
+
+```
+
+#####Objective: Step through optimal aggregate harvest in an open access fishery.
+Toy Model (Conrad):
+
+Stock
+
+$X_{t+1} = X_t (1 + r - r X_t / K - qE_t)$
+
+Yield-Effort
+
+$Y_t = q X_t E_t$
+
+Dynamic Effort
+
+$E_{t+1} =  E_t ( 1 + \eta (p q X_t - c ))$
+
+Variable  | Definition                
+--------- | ---------------------------
+*t*       | Timestep (Year)
+*X*       | Stock (Tons)
+*r*       | Growth (%)
+*K*       | Carrying Capacity (Tons)
+*q*       | Catchability (Parameter)
+*E*       | Effort (Vessel Days)
+$\eta$    | Adjustability (Parameter)
+*p*       | Price (USD2018 / Ton)
+*c*       | Cost (USD2018 / Vessel Day)
+
+#####1. Logistic Growth Demo
+
+```{r stock_function}
+
+# Workflow: build function, run function over some parameters, plot output.
+
+# Growth / Stock, i.e. F(X)/X. NB: Not dynamic, just a demo of growth from different stocks.
+fx_log = function(r, k, x){ fx = r * x * ( 1 - x / k )}
+
+demo_x = seq(0, 50)
+
+demo_fx = fx_log(0.25, 50, demo_x)
+
+plot(demo_x, demo_fx)
+
+# Growth / Time, w/o mortality.
+x_log = function(r, k, x0, start, end){
+                     v_n = as.numeric(vector(length=(end - start)))
+                     v_n[1] = x0
+                     t = length(seq(start, end))
+            for (i in 2:t){v_n[i] = v_n[i - 1] + r * v_n[i - 1] * (1 - v_n[i - 1] / k)}
+                     return(v_n)}
+
+
+demo_x_log = x_log(0.25, 50, 10, 2000, 2025)
+
+t = seq(2000, 2025)
+
+plot(t, demo_x_log)
+
+```
+
+```{r effort_function}
+
+# Function for Effort at MSY:
+#  Conrad pp87
+demo_e = function(r, k, q, p, c, eta){ e = ( r * ( p * q * k - c )) / ( p * q ^ 2 * k)}
+
+# Effort / Carrying Capacity.
+demo_k = seq(0, 50)
+
+demo_e_k = demo_e(0.25, demo_k, 0.05, 50, 1, 1)
+
+plot(demo_k, demo_e_k)
+
+# Effort / Price, Y = FX = MSY.
+demo_p = seq(0, 50)
+
+demo_e_p = demo_e(0.25, 50, 0.05, demo_p, 1, 1)
+
+plot(demo_p, demo_e_p)
+
+# Effort / Cost, Y = FX = MSY.
+demo_c = seq(0, 50)
+
+demo_e_c = demo_e(0.25, 50, 0.05, 50, demo_c, 1)
+
+plot(demo_c, demo_e_c)
+
+``` 
+
+``` {r dynamic}
+# Effort / Time.
+# x_log modified to only return x for handy use in x_log_p - revert and make fresh function for x_log_p.
+x_log = function(r, k, q, p, c, eta, x0, e0, start, end){
+                     x = as.numeric(vector(length = (end - start)))
+                     x[1] = x0
+                     e = as.numeric(vector(length = (end - start)))
+                     e[1] = e0
+                     T = length(seq(start, end))
+                     t = seq(start, end)
+            for (i in 2:T){x[i] = x[i-1] * ( 1 + r - r * x[i-1] / k - q * e[i-1])
+                           e[i] = e[i-1] * ( 1 + eta * ( p * q * x[i-1] - c))}
+                     demo = tibble(t, x, e)
+                     
+                     return(demo)}
+
+
+demo_x_log = x_log(0.1, 1, 0.01, 200, 1, 0.3, 0.50, 1.00, 0, 100)
+
+plot(demo_x_log$t, demo_x_log$x)
+
+# Function for multiple runs stored in a matrix.
+x_log_p = function(r, k, q, c, eta, x0, e0, start, end, p_lwr, p_upr){
+                      t = seq(start, end)
+                      p = seq(p_lwr, p_upr)
+                      mat_x_p = matrix(, nrow = length(t), ncol = length(p), dimnames = list(NULL, (paste("p_",p_lwr:p_upr, sep = ""))))
+                        for(j in 1:length(p)){mat_x_p[, j] = x_log(r, k, q, (j+p_lwr-1), c, eta, x0, e0, start, end)}
+                      return(mat_x_p)}
+
+# Cough up a matrix and reformat it as a data frame with a time variable.
+demo_x_log_p = x_log_p(0.1, 1, 0.01, 1, 0.3, 0.50, 1.00, 0, 250, 50, 150) %>% 
+  data.frame(.) #%>% 
+  #mutate(., t = seq(0, 100)) #%>% 
+
+# Fix this abomination.
+demo_x_log_p_long = reshape2::melt(demo_x_log_p)
+
+# This is part of the abomination.
+demo_x_log_p_long = cbind(demo_x_log_p_long, rep(seq(0, 250), times = 101))
+colnames(demo_x_log_p_long)[1:3] = c("p", "x", "t")
+
+# Plot. Abomination stops here.
+fish = ggplot(demo_x_log_p_long, aes(t, x, color = p, group = p)) + 
+  geom_path() +
+  theme(legend.position = "none")
+
+# Plot by status. Thresholds are arbitrary. This gets you a flag effect, but not a path-dependency illustration.
+#demo_x_log_p_long = mutate(demo_x_log_p_long, status = ifelse(x < 0.7, "bad", ifelse(x < 0.8, "meh", "good")))
+
+ggplot(demo_x_log_p_long, aes(t, x, group = p)) + 
+  geom_path() +
+  theme(legend.position = "none")
+
+# Group by p, mutate status, ungroup?, plot with status by group.
+#group_by
+#mutate
+
+#plot(demo_x_log_p$t, demo_x_log_p$p_150)
+
+#ggplot(demo_x_log_p, aes(t, ))
+
+```
