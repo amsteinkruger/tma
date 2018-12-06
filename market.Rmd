@@ -33,7 +33,8 @@ pkg <- c("readr",
          "broom",
          "stargazer",
          "pander",
-         "cowplot")
+         "cowplot",
+         "kableExtra")
 
 # Install packages.
 #install.packages(pkg, verbose = FALSE, quiet = TRUE)
@@ -389,14 +390,14 @@ plot_nlm_g =
   geom_point(aes(g, .fitted), colour = "firebrick") +
   labs(x = "Grams of Dry Maw", y = "USD2018 / Gram") +
   scale_y_continuous(breaks = seq(0, 100, by = 50), limits = c(0, 100), expand = c(0, 0)) +
-  ggtitle("Observed and Estimated Prices for Totoaba Maw by Maw Weight") +
+  #ggtitle("Observed and Estimated Prices for Totoaba Maw by Maw Weight") +
   theme(axis.text.x = element_text(size = 8),
         axis.text.y = element_text(size = 8),
         legend.text = element_text(size = 8),
         axis.title.x = element_text(size = 9),
         axis.title.y = element_text(size = 9),
-        legend.title = element_text(size = 9),
-        plot.title = element_text(size = 9)) +
+        legend.title = element_text(size = 9)) +#,
+        #plot.title = element_text(size = 9)) +
   theme_classic()
 
 # Price against tonnes maw.
@@ -406,14 +407,14 @@ plot_nlm_q =
   geom_jitter(aes(as.factor(q), p), colour = "gray50") +
   labs(x = "Tonnes of Dry Maw at Market", y = "USD2018 / Gram") +
   scale_y_continuous(breaks = seq(0, 100, by = 50), limits = c(0, 100), expand = c(0, 0)) +
-  ggtitle("Observed and Estimated Prices for Totoaba Maw by Maw Production") +
+  #ggtitle("Observed and Estimated Prices for Totoaba Maw by Maw Production") +
   theme(axis.text.x = element_text(size = 8),
         axis.text.y = element_text(size = 8),
         legend.text = element_text(size = 8),
         axis.title.x = element_text(size = 9),
         axis.title.y = element_text(size = 9),
-        legend.title = element_text(size = 9),
-        plot.title = element_text(size = 9)) +
+        legend.title = element_text(size = 9)) +#,
+        #plot.title = element_text(size = 9)) +
   theme_classic()
 
 # Price against quantity, with some prerequisite math first.
@@ -434,20 +435,30 @@ ggplot() +
   geom_point(data = tinydat_aug, aes(q, p), colour = "gray50") +
   coord_cartesian(xlim = c(0, qinth), ylim = c(0, pinth), expand = FALSE) +
   labs(x = "Tonnes of Dry Maw at Market", y = "USD2018 / Gram") +
-  ggtitle("Observed and Estimated Prices for Totoaba Maw by Maw Production") +
+  #ggtitle("Observed and Estimated Prices for Totoaba Maw by Maw Production") +
   theme(axis.text.x = element_text(size = 8),
         axis.text.y = element_text(size = 8),
         legend.text = element_text(size = 8),
         axis.title.x = element_text(size = 9),
         axis.title.y = element_text(size = 9),
-        legend.title = element_text(size = 9),
-        plot.title = element_text(size = 9)) +
+        legend.title = element_text(size = 9)) +#,
+        #plot.title = element_text(size = 9)) +
   theme_classic()
 
 # Kablify the model.
 nlm_tidy$term = c("Supply (Tonnes)", "Weight (Grams)", "Choke Price")
 colnames(nlm_tidy) = c("", "Coef.", "SE", "t", "p")
 kable(nlm_tidy, format = "html", caption = "Inverse Demand Specification", digits = 3) %>% 
-  kable_styling("striped", full_width = F)
+  kable_styling("striped", full_width = F) #%>
+  #cat(file = "kab_nlm.html"
 
 ```
+
+```{r plotsave}
+
+ggsave("plot_nlm_g.png", plot_nlm_g, width = 4.5, height = 4.5, dpi = 300)
+ggsave("plot_nlm_q.png", plot_nlm_q, width = 4.5, height = 4.5, dpi = 300)
+ggsave("plot_invd.png", plot_invd, width = 4.5, height = 4.5, dpi = 300)
+
+```
+
