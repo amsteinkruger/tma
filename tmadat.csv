@@ -1,0 +1,197 @@
+"","year","price_gram","price_total","kg_buche","kg_total","count_buche","condition_infer","condition","place","source","sp_sci","sp_com","tma","infl","p_g_r","p_t_r","y_dry"
+"1",2013,NA,NA,NA,13.61,NA,"Wet",NA,"United States","CBP","Totoaba macdonaldi","Totoaba",1,1.08,NA,NA,9.56
+"2",2013,NA,NA,0.6,102.06,169,"Wet",NA,"United States","CBP","Totoaba macdonaldi","Totoaba",1,1.08,NA,NA,9.56
+"3",2013,NA,3600000,NA,NA,241,"Wet",NA,"United States","CBP","Totoaba macdonaldi","Totoaba",1,1.08,NA,3888000,9.56
+"4",2013,NA,5e+06,NA,239.95,NA,"Wet",NA,"United States","CBP","Totoaba macdonaldi","Totoaba",1,1.08,NA,5400000,9.56
+"5",2015,NA,NA,NA,602,NA,"Wet",NA,"United States","CBP","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,11.56
+"6",2013,NA,NA,NA,NA,241,"Wet",NA,"United States","CBP","Totoaba macdonaldi","Totoaba",1,1.08,NA,NA,9.56
+"7",2013,NA,NA,0.44,219.08,500,"Wet",NA,"United States","CBP","Totoaba macdonaldi","Totoaba",1,1.08,NA,NA,9.56
+"8",2013,NA,NA,NA,NA,170,"Wet",NA,"United States","CBP","Totoaba macdonaldi","Totoaba",1,1.08,NA,NA,9.56
+"9",2013,NA,NA,NA,NA,11,"Wet",NA,"United States","CBP","Totoaba macdonaldi","Totoaba",1,1.08,NA,NA,9.56
+"10",2014,NA,NA,1.37,8.2,6,"Wet","Wet","Mexico","C4ADS","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,10.51
+"11",2015,5,127500,0.28,25.5,90,"Wet",NA,"Mexico","C4ADS","Totoaba macdonaldi","Totoaba",1,1.06,5.3,135150,11.56
+"12",2015,NA,NA,NA,22.18,NA,"Wet",NA,"Mexico","C4ADS","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,11.56
+"13",2016,NA,NA,NA,NA,3,"Wet","Wet","Mexico","C4ADS","Totoaba macdonaldi","Totoaba",1,1.05,NA,NA,12.72
+"14",2016,NA,NA,NA,NA,6,"Wet","Wet","Mexico","C4ADS","Totoaba macdonaldi","Totoaba",1,1.05,NA,NA,12.72
+"15",2016,NA,150000,0.32,39,121,"Wet","Wet","Mexico","C4ADS","Totoaba macdonaldi","Totoaba",1,1.05,NA,157500,12.72
+"16",2015,NA,NA,0.68,23,34,"Wet","Wet","Mexico","C4ADS","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,11.56
+"17",2016,NA,NA,NA,NA,11,"Wet","Wet","Mexico","C4ADS","Totoaba macdonaldi","Totoaba",1,1.05,NA,NA,12.72
+"18",2017,NA,NA,NA,NA,9,"Wet","Wet","Mexico","C4ADS","Totoaba macdonaldi","Totoaba",1,1.02,NA,NA,14
+"19",2017,NA,NA,0.71,17,24,"Wet","Wet","Mexico","C4ADS","Totoaba macdonaldi","Totoaba",1,1.02,NA,NA,14
+"20",2013,NA,2800000,NA,NA,560,"Dry","Dry","United States","C4ADS","Totoaba macdonaldi","Totoaba",1,1.08,NA,3024000,9.56
+"21",2014,NA,NA,NA,2.74,NA,"Dry","Dry","Mexico","C4ADS","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,10.51
+"22",2013,NA,NA,NA,142.8,NA,"Dry","Dry","Mexico","C4ADS","Totoaba macdonaldi","Totoaba",1,1.08,NA,NA,9.56
+"23",2015,NA,NA,0.21,0.64,3,"Dry","Dry","China","C4ADS","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,11.56
+"24",2015,NA,NA,0.13,34.78,274,"Dry","Dry","Mexico","C4ADS","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,11.56
+"25",2014,NA,NA,NA,NA,385,"Dry","Dry","Mexico","C4ADS","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,10.51
+"26",2013,NA,NA,NA,NA,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.08,NA,NA,9.56
+"27",2013,NA,NA,NA,NA,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.08,NA,NA,9.56
+"28",2013,NA,NA,NA,NA,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.08,NA,NA,9.56
+"29",2013,NA,NA,NA,NA,11,"Wet",NA,"United States","EIA","Totoaba macdonaldi","Totoaba",1,1.08,NA,NA,9.56
+"30",2013,NA,NA,NA,NA,169,"Wet",NA,"United States","EIA","Totoaba macdonaldi","Totoaba",1,1.08,NA,NA,9.56
+"31",2013,NA,NA,0.57,16.02,28,"Wet","Wet","United States","EIA","Totoaba macdonaldi","Totoaba",1,1.08,NA,NA,9.56
+"32",2013,NA,NA,NA,NA,241,"Wet",NA,"United States","EIA","Totoaba macdonaldi","Totoaba",1,1.08,NA,NA,9.56
+"33",2013,NA,NA,NA,NA,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.08,NA,NA,9.56
+"34",2013,NA,NA,NA,NA,9,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.08,NA,NA,9.56
+"35",2013,NA,NA,NA,NA,12,"Dry",NA,"Hong Kong","EIA","Totoaba macdonaldi","Totoaba",1,1.08,NA,NA,9.56
+"36",2013,NA,NA,NA,NA,169,"Wet",NA,"United States","EIA","Totoaba macdonaldi","Totoaba",1,1.08,NA,NA,9.56
+"37",2013,NA,NA,NA,NA,58,"Wet",NA,"United States","EIA","Totoaba macdonaldi","Totoaba",1,1.08,NA,NA,9.56
+"38",2013,NA,NA,NA,0.4,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.08,NA,NA,9.56
+"39",2014,NA,NA,NA,NA,2,"Dry",NA,"Hong Kong","EIA","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,10.51
+"40",2014,NA,NA,NA,NA,NA,"Wet",NA,"United States","EIA","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,10.51
+"41",2014,NA,NA,NA,NA,241,"Wet",NA,"United States","EIA","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,10.51
+"42",2014,NA,NA,NA,NA,8.2,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,10.51
+"43",2014,NA,NA,NA,NA,1,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,10.51
+"44",2014,NA,NA,NA,2.76,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,10.51
+"45",2014,NA,NA,0.68,23,34,"Wet","Wet","Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,10.51
+"46",2014,NA,NA,NA,NA,3,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,10.51
+"47",2014,NA,NA,NA,NA,385,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,10.51
+"48",2015,NA,NA,NA,NA,2,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,11.56
+"49",2015,NA,NA,NA,NA,86,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,11.56
+"50",2015,NA,NA,NA,NA,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,11.56
+"51",2015,NA,NA,NA,NA,14,"Dry",NA,"Hong Kong","EIA","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,11.56
+"52",2015,NA,NA,0.13,34.78,274,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,11.56
+"53",2015,NA,NA,NA,NA,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,11.56
+"54",2015,NA,NA,0.21,0.64,3,"Dry",NA,"Hong Kong","EIA","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,11.56
+"55",2015,NA,NA,NA,22,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,11.56
+"56",2015,NA,NA,NA,NA,58,"Wet",NA,"United States","EIA","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,11.56
+"57",2015,NA,NA,NA,NA,14,"Dry",NA,"Hong Kong","EIA","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,11.56
+"58",2016,NA,NA,NA,NA,6,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.05,NA,NA,12.72
+"59",2016,NA,NA,0.12,7.1,61,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.05,NA,NA,12.72
+"60",2016,NA,NA,0.32,39,121,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.05,NA,NA,12.72
+"61",2016,NA,NA,NA,NA,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.05,NA,NA,12.72
+"62",2016,NA,NA,NA,4,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.05,NA,NA,12.72
+"63",2016,NA,NA,NA,NA,3,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.05,NA,NA,12.72
+"64",2016,NA,NA,NA,NA,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.05,NA,NA,12.72
+"65",2016,NA,NA,1.4,1.4,1,"Wet","Wet","Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.05,NA,NA,12.72
+"66",2017,NA,NA,NA,NA,1,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.02,NA,NA,14
+"67",2017,NA,NA,0.2,2.8,14,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.02,NA,NA,14
+"68",2017,NA,NA,NA,NA,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.02,NA,NA,14
+"69",2017,NA,NA,NA,NA,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.02,NA,NA,14
+"70",2017,NA,NA,NA,NA,1,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.02,NA,NA,14
+"71",2017,NA,NA,NA,NA,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.02,NA,NA,14
+"72",2017,NA,NA,NA,NA,24,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.02,NA,NA,14
+"73",2017,NA,NA,NA,NA,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.02,NA,NA,14
+"74",2017,NA,NA,NA,NA,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.02,NA,NA,14
+"75",2017,NA,NA,NA,NA,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.02,NA,NA,14
+"76",2017,NA,NA,NA,NA,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.02,NA,NA,14
+"77",2017,NA,NA,NA,NA,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.02,NA,NA,14
+"78",2017,NA,NA,NA,NA,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.02,NA,NA,14
+"79",2017,NA,NA,NA,NA,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.02,NA,NA,14
+"80",2017,NA,NA,0.07,26,375,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.02,NA,NA,14
+"81",2017,NA,NA,7,70,10,"Wet","Wet","Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.02,NA,NA,14
+"82",2017,NA,NA,NA,0,0,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1.02,NA,NA,14
+"83",2018,NA,NA,NA,28,NA,"Dry",NA,"Hong Kong","EIA","Totoaba macdonaldi","Totoaba",1,1,NA,NA,15.5
+"84",2018,NA,NA,1.75,7,4,"Wet","Wet","Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1,NA,NA,15.5
+"85",2018,NA,NA,NA,NA,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1,NA,NA,15.5
+"86",2018,NA,NA,0.35,30.5,87,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1,NA,NA,15.5
+"87",2018,NA,NA,NA,NA,1,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1,NA,NA,15.5
+"88",2018,NA,NA,0.49,10.83,22,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1,NA,NA,15.5
+"89",2018,NA,NA,0.7,19,27,"Wet","Wet","Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1,NA,NA,15.5
+"90",2018,NA,NA,NA,NA,1,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1,NA,NA,15.5
+"91",2018,NA,NA,NA,20.9,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1,NA,NA,15.5
+"92",2018,NA,NA,NA,NA,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1,NA,NA,15.5
+"93",2018,NA,NA,NA,NA,32,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1,NA,NA,15.5
+"94",2018,NA,NA,NA,NA,408,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1,NA,NA,15.5
+"95",2018,NA,NA,NA,40,NA,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1,NA,NA,15.5
+"96",2018,NA,NA,NA,NA,417,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1,NA,NA,15.5
+"97",2018,NA,NA,0.44,100,229,"Wet",NA,"Mexico","EIA","Totoaba macdonaldi","Totoaba",1,1,NA,NA,15.5
+"98",2014,34.14,NA,0.46,0.46,1,"Dry",NA,"Hong Kong","WildAid","Totoaba macdonaldi","Totoaba",1,1.06,36.1884,NA,10.51
+"99",2014,42.05,NA,0.37,0.37,1,"Dry",NA,"Hong Kong","WildAid","Totoaba macdonaldi","Totoaba",1,1.06,44.573,NA,10.51
+"100",2014,38.89,NA,0.07,0.07,1,"Dry",NA,"Hong Kong","WildAid","Totoaba macdonaldi","Totoaba",1,1.06,41.2234,NA,10.51
+"101",2014,39,NA,0.72,0.72,1,"Dry",NA,"Hong Kong","WildAid","Totoaba macdonaldi","Totoaba",1,1.06,41.34,NA,10.51
+"102",2014,35.9,NA,0.12,0.12,1,"Dry",NA,"Hong Kong","WildAid","Totoaba macdonaldi","Totoaba",1,1.06,38.054,NA,10.51
+"103",2014,32.56,NA,0.43,0.43,1,"Dry",NA,"Hong Kong","WildAid","Totoaba macdonaldi","Totoaba",1,1.06,34.5136,NA,10.51
+"104",2014,30.77,NA,0.46,0.46,1,"Dry",NA,"Hong Kong","WildAid","Totoaba macdonaldi","Totoaba",1,1.06,32.6162,NA,10.51
+"105",2014,15.5,NA,0.26,0.26,1,"Dry",NA,"Hong Kong","WildAid","Totoaba macdonaldi","Totoaba",1,1.06,16.43,NA,10.51
+"106",2014,27.5,NA,0.4,0.4,1,"Dry",NA,"Hong Kong","WildAid","Totoaba macdonaldi","Totoaba",1,1.06,29.15,NA,10.51
+"107",2014,52.5,NA,0.2,0.2,1,"Dry",NA,"Hong Kong","WildAid","Totoaba macdonaldi","Totoaba",1,1.06,55.65,NA,10.51
+"108",2014,14.14,NA,0.3,0.3,1,"Dry",NA,"Hong Kong","WildAid","Totoaba macdonaldi","Totoaba",1,1.06,14.9884,NA,10.51
+"109",2014,24.66,NA,0.1,0.1,1,"Dry",NA,"Hong Kong","WildAid","Totoaba macdonaldi","Totoaba",1,1.06,26.1396,NA,10.51
+"110",2015,NA,NA,0.24,0.24,1,"Dry",NA,"Hong Kong","Greenpeace","Totoaba macdonaldi","Totoaba",1,1.06,NA,NA,11.56
+"111",2015,37.79,NA,0.09,0.09,1,"Dry",NA,"Hong Kong","Greenpeace","Totoaba macdonaldi","Totoaba",1,1.06,40.0574,NA,11.56
+"112",2015,39.16,NA,0.08,0.08,1,"Dry",NA,"Hong Kong","Greenpeace","Totoaba macdonaldi","Totoaba",1,1.06,41.5096,NA,11.56
+"113",2015,34.82,NA,0.11,0.11,1,"Dry",NA,"Hong Kong","Greenpeace","Totoaba macdonaldi","Totoaba",1,1.06,36.9092,NA,11.56
+"114",2015,47.27,NA,0.39,0.39,1,"Dry",NA,"Hong Kong","Greenpeace","Totoaba macdonaldi","Totoaba",1,1.06,50.1062,NA,11.56
+"115",2015,48.4,NA,0.38,0.38,1,"Dry",NA,"Hong Kong","Greenpeace","Totoaba macdonaldi","Totoaba",1,1.06,51.304,NA,11.56
+"116",2015,49.19,NA,0.37,0.37,1,"Dry",NA,"Hong Kong","Greenpeace","Totoaba macdonaldi","Totoaba",1,1.06,52.1414,NA,11.56
+"117",2015,46.43,NA,0.39,0.39,1,"Dry",NA,"Hong Kong","Greenpeace","Totoaba macdonaldi","Totoaba",1,1.06,49.2158,NA,11.56
+"118",2015,52.7,NA,0.37,0.37,1,"Dry",NA,"Hong Kong","Greenpeace","Totoaba macdonaldi","Totoaba",1,1.06,55.862,NA,11.56
+"119",2015,46.43,NA,0.42,0.42,1,"Dry",NA,"Hong Kong","Greenpeace","Totoaba macdonaldi","Totoaba",1,1.06,49.2158,NA,11.56
+"120",2015,50.47,NA,0.09,0.09,1,"Dry",NA,"Hong Kong","Greenpeace","Totoaba macdonaldi","Totoaba",1,1.06,53.4982,NA,11.56
+"121",2015,83.87,NA,0.37,0.37,1,"Dry",NA,"Hong Kong","Greenpeace","Totoaba macdonaldi","Totoaba",1,1.06,88.9022,NA,11.56
+"122",2015,86.91,NA,0.36,0.36,1,"Dry",NA,"Hong Kong","Greenpeace","Totoaba macdonaldi","Totoaba",1,1.06,92.1246,NA,11.56
+"123",2015,51.49,NA,0.51,0.51,1,"Dry",NA,"Hong Kong","Greenpeace","Totoaba macdonaldi","Totoaba",1,1.06,54.5794,NA,11.56
+"124",2015,50.98,NA,0.51,0.51,1,"Dry",NA,"Hong Kong","Greenpeace","Totoaba macdonaldi","Totoaba",1,1.06,54.0388,NA,11.56
+"125",2015,30.16,NA,0.25,0.25,1,"Dry",NA,"Hong Kong","Greenpeace","Totoaba macdonaldi","Totoaba",1,1.06,31.9696,NA,11.56
+"126",2015,52.35,NA,0.37,0.37,1,"Dry",NA,"Hong Kong","Greenpeace","Totoaba macdonaldi","Totoaba",1,1.06,55.491,NA,11.56
+"127",2015,80.17,NA,0.24,0.24,1,"Dry",NA,"Hong Kong","Greenpeace","Totoaba macdonaldi","Totoaba",1,1.06,84.9802,NA,11.56
+"128",2015,105.41,NA,0.37,0.37,1,"Dry",NA,"Hong Kong","Greenpeace","Totoaba macdonaldi","Totoaba",1,1.06,111.7346,NA,11.56
+"129",2016,23.14,NA,0.46,0.46,1,"Dry",NA,"China","EIA","Totoaba macdonaldi","Totoaba",1,1.05,24.297,NA,12.72
+"130",2016,26.45,NA,0.46,0.46,1,"Dry",NA,"China","EIA","Totoaba macdonaldi","Totoaba",1,1.05,27.7725,NA,12.72
+"131",2016,31.29,NA,0.31,0.31,1,"Dry",NA,"China","EIA","Totoaba macdonaldi","Totoaba",1,1.05,32.8545,NA,12.72
+"132",2016,2.7,NA,0.03,0.05,2,"Dry",NA,"China","EIA","Totoaba macdonaldi","Totoaba",1,1.05,2.835,NA,12.72
+"133",2016,7,NA,0.03,0.1,4,"Dry",NA,"China","EIA","Totoaba macdonaldi","Totoaba",1,1.05,7.35,NA,12.72
+"134",2016,5.7,NA,0.15,0.15,1,"Dry",NA,"China","EIA","Totoaba macdonaldi","Totoaba",1,1.05,5.985,NA,12.72
+"135",2016,6,NA,0.25,0.25,1,"Dry",NA,"China","EIA","Totoaba macdonaldi","Totoaba",1,1.05,6.3,NA,12.72
+"136",2016,15.71,NA,0.31,0.31,1,"Dry",NA,"China","EIA","Totoaba macdonaldi","Totoaba",1,1.05,16.4955,NA,12.72
+"137",2016,21,NA,0.1,0.5,5,"Dry",NA,"China","EIA","Totoaba macdonaldi","Totoaba",1,1.05,22.05,NA,12.72
+"138",2017,23.2,NA,0.01,0.18,20,"Dry",NA,"China","EAL","Totoaba macdonaldi","Totoaba",1,1.02,23.664,NA,14
+"139",2017,6.67,NA,NA,0.1,NA,"Dry",NA,"China","EAL","Totoaba macdonaldi","Totoaba",1,1.02,6.8034,NA,14
+"140",2017,35.85,NA,NA,0.43,NA,"Dry",NA,"China","EAL","Totoaba macdonaldi","Totoaba",1,1.02,36.567,NA,14
+"141",2017,63.09,NA,NA,0.12,NA,"Dry",NA,"China","EAL","Totoaba macdonaldi","Totoaba",1,1.02,64.3518,NA,14
+"142",2017,19.34,NA,0.23,0.23,1,"Dry",NA,"China","EAL","Totoaba macdonaldi","Totoaba",1,1.02,19.7268,NA,14
+"143",2017,16.58,NA,0.09,0.18,2,"Dry",NA,"China","EAL","Totoaba macdonaldi","Totoaba",1,1.02,16.9116,NA,14
+"144",2017,NA,NA,0.21,0.21,1,"Dry",NA,"China","EAL","Totoaba macdonaldi","Totoaba",1,1.02,NA,NA,14
+"145",2017,34.48,NA,0.44,0.44,1,"Dry",NA,"China","EAL","Totoaba macdonaldi","Totoaba",1,1.02,35.1696,NA,14
+"146",2017,25.23,NA,0.32,0.32,1,"Dry",NA,"China","EAL","Totoaba macdonaldi","Totoaba",1,1.02,25.7346,NA,14
+"147",2017,27.21,NA,0.26,0.26,1,"Dry",NA,"China","EAL","Totoaba macdonaldi","Totoaba",1,1.02,27.7542,NA,14
+"148",2017,0.12,NA,NA,NA,NA,"Wet","Wet","Mexico","MC","Totoaba macdonaldi","Totoaba",1,1.02,0.1224,NA,14
+"149",2017,6,NA,2.2,2.2,1,"Wet","Wet","Mexico","MC","Totoaba macdonaldi","Totoaba",1,1.02,6.12,NA,14
+"150",2018,3,NA,1,1,1,"Wet","Wet","Mexico","MC","Totoaba macdonaldi","Totoaba",1,1,3,NA,15.5
+"151",2018,0.1,500,NA,5,100,"Wet","Wet","Mexico","MC","Totoaba macdonaldi","Totoaba",1,1,0.1,500,15.5
+"152",2018,3,NA,0.9,0.9,1,"Wet","Wet","Mexico","MC","Totoaba macdonaldi","Totoaba",1,1,3,NA,15.5
+"153",2018,4.8,NA,1.5,1.5,1,"Wet","Wet","Mexico","MC","Totoaba macdonaldi","Totoaba",1,1,4.8,NA,15.5
+"154",2018,1.13,NA,0.2,0.2,1,"Wet","Wet","Mexico","MC","Totoaba macdonaldi","Totoaba",1,1,1.13,NA,15.5
+"155",2018,1.8,NA,0.5,0.5,1,"Wet","Wet","Mexico","MC","Totoaba macdonaldi","Totoaba",1,1,1.8,NA,15.5
+"156",2018,6.67,NA,1.5,1.5,1,"Wet","Wet","Mexico","MC","Totoaba macdonaldi","Totoaba",1,1,6.67,NA,15.5
+"157",2018,7,NA,0.5,0.5,1,"Wet","Wet","Mexico","MC","Totoaba macdonaldi","Totoaba",1,1,7,NA,15.5
+"158",2018,0.4,NA,0.25,1,4,"Wet","Wet","Mexico","MC","Totoaba macdonaldi","Totoaba",1,1,0.4,NA,15.5
+"159",2018,0.3,NA,0.35,0.35,1,"Wet","Wet","Mexico","MC","Totoaba macdonaldi","Totoaba",1,1,0.3,NA,15.5
+"160",2018,4,NA,0.45,0.45,1,"Wet","Wet","Mexico","MC","Totoaba macdonaldi","Totoaba",1,1,4,NA,15.5
+"161",2018,4.5,NA,0.5,0.5,1,"Wet","Wet","Mexico","MC","Totoaba macdonaldi","Totoaba",1,1,4.5,NA,15.5
+"162",2018,5,NA,NA,NA,1,"Wet","Wet","Mexico","MC","Totoaba macdonaldi","Totoaba",1,1,5,NA,15.5
+"163",2017,4,NA,NA,NA,1,"Wet","Wet","Mexico","MC","Totoaba macdonaldi","Totoaba",1,1.02,4.08,NA,14
+"164",2015,0.522,NA,NA,NA,1,"Dry","Dry","China","Jing et al. 2015","Cynoscion acoupa","Acoupa weakfish",0,1.06,0.55332,NA,11.56
+"165",2015,0.978,NA,NA,NA,1,"Dry","Dry","China","Jing et al. 2015","Hemiarius dioctes","Warrior catfish",0,1.06,1.03668,NA,11.56
+"166",2015,0.522,NA,NA,NA,1,"Dry","Dry","China","Jing et al. 2015","Cynoscion acoupa","Acoupa weakfish",0,1.06,0.55332,NA,11.56
+"167",2015,0.652,NA,NA,NA,1,"Dry","Dry","China","Jing et al. 2015","Cynoscion acoupa","Acoupa weakfish",0,1.06,0.69112,NA,11.56
+"168",2015,0.782,NA,NA,NA,1,"Dry","Dry","China","Jing et al. 2015","Cynoscion acoupa","Acoupa weakfish",0,1.06,0.82892,NA,11.56
+"169",2015,0.522,NA,NA,NA,1,"Dry","Dry","China","Jing et al. 2015","Congesox talabonoides","Indian pike conger",0,1.06,0.55332,NA,11.56
+"170",2015,0.782,NA,NA,NA,1,"Dry","Dry","China","Jing et al. 2015","Congesox talabonoides","Indian pike conger",0,1.06,0.82892,NA,11.56
+"171",2015,0.261,NA,NA,NA,1,"Dry","Dry","China","Jing et al. 2015","Lates niloticus","Nile perch",0,1.06,0.27666,NA,11.56
+"172",2015,0.156,NA,NA,NA,1,"Dry","Dry","China","Jing et al. 2015","Lates niloticus","Nile perch",0,1.06,0.16536,NA,11.56
+"173",2015,0.222,NA,NA,NA,1,"Dry","Dry","China","Jing et al. 2015","Lates niloticus","Nile perch",0,1.06,0.23532,NA,11.56
+"174",2015,0.156,NA,NA,NA,1,"Dry","Dry","China","Jing et al. 2015","Lates niloticus","Nile perch",0,1.06,0.16536,NA,11.56
+"175",2015,0.156,NA,NA,NA,1,"Dry","Dry","China","Jing et al. 2015","Protonibea diacanthus","Blackspotted croaker",0,1.06,0.16536,NA,11.56
+"176",2015,0.179,NA,NA,NA,1,"Dry","Dry","China","Jing et al. 2015","Sciades parkeri","Gillbacker sea catfish",0,1.06,0.18974,NA,11.56
+"177",2015,0.091,NA,NA,NA,1,"Dry","Dry","China","Jing et al. 2015","Sciades proops","Crucifix sea catfish",0,1.06,0.09646,NA,11.56
+"178",2015,0.117,NA,NA,NA,1,"Dry","Dry","China","Jing et al. 2015","Sciades proops","Crucifix sea catfish",0,1.06,0.12402,NA,11.56
+"179",2007,0.04,NA,NA,NA,1,"Dry","Dry","China","Tuuli et al., 2016","Unidentified","Unidentified",0,1.22,0.0488,NA,6.5
+"180",2007,0.09,NA,NA,NA,1,"Dry","Dry","China","Tuuli et al., 2016","Unidentified","Unidentified",0,1.22,0.1098,NA,6.5
+"181",2007,0.5,NA,NA,NA,1,"Dry","Dry","China","Tuuli et al., 2016","Cynoscion acoupa","Acoupa weakfish",0,1.22,0.61,NA,6.5
+"182",2007,0.8,NA,NA,NA,1,"Dry","Dry","China","Tuuli et al., 2016","Cynoscion acoupa","Acoupa weakfish",0,1.22,0.976,NA,6.5
+"183",2007,1.8,NA,NA,NA,1,"Dry","Dry","China","Tuuli et al., 2016","Otolithoides biauritus","Bronze croaker",0,1.22,2.196,NA,6.5
+"184",2007,3,NA,NA,NA,1,"Dry","Dry","China","Tuuli et al., 2016","Otolithoides biauritus","Bronze croaker",0,1.22,3.66,NA,6.5
+"185",2007,0.12,NA,NA,NA,1,"Dry","Dry","China","Tuuli et al., 2016","Lates niloticus","Nile perch",0,1.22,0.1464,NA,6.5
+"186",2007,0.18,NA,NA,NA,1,"Dry","Dry","China","Tuuli et al., 2016","Lates niloticus","Nile perch",0,1.22,0.2196,NA,6.5
+"187",2000,0.02,NA,NA,NA,1,"Dry","Dry","China","Clarke 2002","All","All",0,1.47,0.0294,NA,4.62
+"188",2000,2.2,NA,NA,NA,1,"Dry","Dry","China","Clarke 2002","All","All",0,1.47,3.234,NA,4.62
+"189",2005,0.0007166,NA,NA,NA,1,"Wet","Wet","Mexico","EDF 2014","Cynoscion othonopterus","Curvina golfina",0,1.3,0.00093158,NA,5.9
+"190",2007,0.0017915,NA,NA,NA,1,"Wet","Wet","Mexico","EDF 2014","Cynoscion othonopterus","Curvina golfina",0,1.22,0.00218563,NA,6.5
+"191",2011,0.007166,NA,NA,NA,1,"Wet","Wet","Mexico","EDF 2014","Cynoscion othonopterus","Curvina golfina",0,1.13,0.00809758,NA,7.9
+"192",2012,0.01103564,NA,NA,NA,1,"Wet","Wet","Mexico","EDF 2014","Cynoscion othonopterus","Curvina golfina",0,1.09,0.0120288476,NA,8.69
+"193",2013,0.01160892,NA,NA,NA,1,"Wet","Wet","Mexico","EDF 2014","Cynoscion othonopterus","Curvina golfina",0,1.08,0.0125376336,NA,9.56
+"194",2014,0.0154069,NA,NA,NA,1,"Wet","Wet","Mexico","EDF 2014","Cynoscion othonopterus","Curvina golfina",0,1.06,0.016331314,NA,10.51
+"195",2015,0.01949152,NA,NA,NA,1,"Wet","Wet","Mexico","EDF 2015","Cynoscion othonopterus","Curvina golfina",0,1.06,0.0206610112,NA,11.56
+"196",2016,0.023560292,NA,NA,NA,1,"Wet","Wet","Mexico","EDF 2016","Cynoscion othonopterus","Curvina golfina",0,1.05,0.0247383066,NA,12.72

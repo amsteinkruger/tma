@@ -1,0 +1,515 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={Market Model},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\newcommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{Market Model}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{}
+    \preauthor{}\postauthor{}
+      \predate{\centering\large\emph}
+  \postdate{\par}
+    \date{2018-12-05}
+
+
+\begin{document}
+\maketitle
+
+\subparagraph{Objective: Visualize database of prices for swim bladder
+at first and final
+sale.}\label{objective-visualize-database-of-prices-for-swim-bladder-at-first-and-final-sale.}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  When was data collected?
+\item
+  Where was data collected?
+\item
+  On what species was data collected, and in what volume?
+\item
+  How's the price distribution? 4.1. How's the price distribution over
+  swim bladder weight?
+\item
+  How's the price distribution over time for totoaba?
+\item
+  What does the INAPESCA harvest estimate indicate about export volume?
+\item
+  What do price distributions and estimated export volumes by year
+  suggest about the demand function?
+\end{enumerate}
+
+Bonus: is stockpiling apparent or plausible?
+
+\subparagraph{1. Reading Data}\label{reading-data}
+
+Data has sources, uses, and shortcomings.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# Read data.}
+\NormalTok{dat_other =}\StringTok{ }\KeywordTok{read_csv}\NormalTok{(}\StringTok{'GP_OtherBuchePrices.csv'}\NormalTok{)}
+\NormalTok{dat_tma   =}\StringTok{ }\KeywordTok{read_csv}\NormalTok{(}\StringTok{'GP_TotoabaBuchePrices.csv'}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: Duplicated column names deduplicated: 'Condition (Inferred)' =>
+## 'Condition (Inferred)_1' [13]
+\end{verbatim}
+
+\subparagraph{2. Cleaning Data}\label{cleaning-data}
+
+Everyone loves cleaner data.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# Drop, rename, and rearrange variables for a full join.}
+\NormalTok{dat_tma =}\StringTok{ }\NormalTok{dat_tma }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{select}\NormalTok{(}\OperatorTok{-}\NormalTok{Month, }
+         \OperatorTok{-}\StringTok{`}\DataTypeTok{Price (USD/kg)}\StringTok{`}\NormalTok{, }
+         \OperatorTok{-}\StringTok{`}\DataTypeTok{Price (per lb.)}\StringTok{`}\NormalTok{, }
+         \OperatorTok{-}\StringTok{`}\DataTypeTok{Price (per buche local)}\StringTok{`}\NormalTok{, }
+         \OperatorTok{-}\StringTok{`}\DataTypeTok{Price (per buche Asia)}\StringTok{`}\NormalTok{, }
+         \OperatorTok{-}\StringTok{`}\DataTypeTok{Condition (Inferred)}\StringTok{`}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{rename}\NormalTok{(}\DataTypeTok{year =}\NormalTok{ Year,}
+         \DataTypeTok{price_gram =} \StringTok{"Price (USD/g)"}\NormalTok{, }
+         \StringTok{"price_total"}\NormalTok{ =}\StringTok{ "Total Value (USD)"}\NormalTok{,}
+         \StringTok{"kg_buche"}\NormalTok{ =}\StringTok{ "Mass/Buche (kg)"}\NormalTok{,}
+         \StringTok{"kg_total"}\NormalTok{ =}\StringTok{ "Mass (kg.)"}\NormalTok{,}
+         \StringTok{"count_buche"}\NormalTok{ =}\StringTok{ "Number of buche"}\NormalTok{,}
+         \StringTok{"condition_infer"}\NormalTok{ =}\StringTok{ "Condition (Inferred)_1"}\NormalTok{,}
+         \StringTok{"condition"}\NormalTok{ =}\StringTok{ }\NormalTok{Condition,}
+         \StringTok{"place"}\NormalTok{ =}\StringTok{ }\NormalTok{Country, }
+         \StringTok{"source"}\NormalTok{ =}\StringTok{ }\NormalTok{Source) }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sp_sci =} \StringTok{"Totoaba macdonaldi"}\NormalTok{) }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sp_com =} \StringTok{"Totoaba"}\NormalTok{) }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\KeywordTok{tbl_df}\NormalTok{()}
+
+\NormalTok{dat_other =}\StringTok{ }\NormalTok{dat_other }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{select}\NormalTok{(., }
+         \OperatorTok{-}\NormalTok{Month, }
+         \CommentTok{#-`Species (Scientific)`, }
+         \CommentTok{#-`Species (Common)`, }
+         \OperatorTok{-}\StringTok{`}\DataTypeTok{Price / lb (USD)}\StringTok{`}\NormalTok{, }
+         \OperatorTok{-}\StringTok{`}\DataTypeTok{Price / Buche (USD)}\StringTok{`}\NormalTok{, }
+         \OperatorTok{-}\StringTok{`}\DataTypeTok{Total Volume (lbs)}\StringTok{`}\NormalTok{,}
+         \OperatorTok{-}\StringTok{`}\DataTypeTok{Location (City/Other)}\StringTok{`}\NormalTok{, }
+         \OperatorTok{-}\NormalTok{Notes) }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\KeywordTok{rename}\NormalTok{(.,}
+         \StringTok{"year"}\NormalTok{ =}\StringTok{ }\NormalTok{Year,}
+         \StringTok{"price_gram"}\NormalTok{ =}\StringTok{ "Price / kg (USD)"}\NormalTok{,}
+         \StringTok{"price_total"}\NormalTok{ =}\StringTok{ "Total Value (USD)"}\NormalTok{,}
+         \StringTok{"kg_total"}\NormalTok{ =}\StringTok{ "Total Volume (kg)"}\NormalTok{,}
+         \StringTok{"count_buche"}\NormalTok{ =}\StringTok{ "Buche Count"}\NormalTok{,}
+         \StringTok{"condition_infer"}\NormalTok{ =}\StringTok{ }\NormalTok{Condition,}
+         \StringTok{"condition"}\NormalTok{ =}\StringTok{ }\NormalTok{Condition,}
+         \StringTok{"place"}\NormalTok{ =}\StringTok{ "Location (Country)"}\NormalTok{, }
+         \StringTok{"source"}\NormalTok{ =}\StringTok{ }\NormalTok{Source,}
+         \StringTok{"sp_sci"}\NormalTok{ =}\StringTok{ `}\DataTypeTok{Species (Scientific)}\StringTok{`}\NormalTok{,}
+         \StringTok{"sp_com"}\NormalTok{ =}\StringTok{ `}\DataTypeTok{Species (Common)}\StringTok{`}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(., }\DataTypeTok{condition_infer =}\NormalTok{ condition) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(., }\DataTypeTok{price_gram =}\NormalTok{ price_gram }\OperatorTok{*}\StringTok{ }\FloatTok{0.001}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(., }\DataTypeTok{count_buche =} \DecValTok{1}\NormalTok{) }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\KeywordTok{tbl_df}\NormalTok{(.)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: package 'bindrcpp' was built under R version 3.4.4
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# Fix default types.}
+\NormalTok{dat_other}\OperatorTok{$}\NormalTok{price_total =}\StringTok{ }\KeywordTok{as.double}\NormalTok{(dat_other}\OperatorTok{$}\NormalTok{price_total)}
+\NormalTok{dat_other}\OperatorTok{$}\NormalTok{kg_total =}\StringTok{ }\KeywordTok{as.double}\NormalTok{(dat_other}\OperatorTok{$}\NormalTok{kg_total)}
+
+\CommentTok{# Full join data for totoaba and other species.}
+\NormalTok{dat =}\StringTok{ }\KeywordTok{full_join}\NormalTok{(dat_tma, dat_other)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Joining, by = c("year", "price_gram", "price_total", "kg_total", "count_buche", "condition_infer", "condition", "place", "source", "sp_sci", "sp_com")
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# Distinguish totoaba from other species by a dummy.}
+\NormalTok{dat =}\StringTok{ }\KeywordTok{mutate}\NormalTok{(dat, }\DataTypeTok{tma =} \KeywordTok{ifelse}\NormalTok{(sp_com }\OperatorTok{==}\StringTok{ "Totoaba"}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\subparagraph{3. Adjusting Prices for
+Inflation}\label{adjusting-prices-for-inflation}
+
+Inflation is neat. Thanks, sources!
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# Adjust data for inflation.}
+\CommentTok{# Inflation estimates by the Bureau of Labor Statistics, bls.gov/bls/inflation.htm and bls.gov/data/inflation_calculator.htm}
+\CommentTok{# Accessed 11/3/2018. All inflation adjustments queried for January 20** against January 2018.}
+
+\CommentTok{# Create vectors for years and inflation adjustment by year.}
+\NormalTok{year =}\StringTok{ }\KeywordTok{c}\NormalTok{(}\DecValTok{2000}\OperatorTok{:}\DecValTok{2018}\NormalTok{)}
+\NormalTok{infl =}\StringTok{ }\KeywordTok{c}\NormalTok{(}\FloatTok{1.47}\NormalTok{, }\FloatTok{1.42}\NormalTok{, }\FloatTok{1.40}\NormalTok{, }\FloatTok{1.36}\NormalTok{, }\FloatTok{1.34}\NormalTok{, }\FloatTok{1.30}\NormalTok{, }\FloatTok{1.25}\NormalTok{, }\FloatTok{1.22}\NormalTok{, }\FloatTok{1.17}\NormalTok{, }\FloatTok{1.17}\NormalTok{, }\FloatTok{1.14}\NormalTok{, }\FloatTok{1.13}\NormalTok{, }\FloatTok{1.09}\NormalTok{, }\FloatTok{1.08}\NormalTok{, }\FloatTok{1.06}\NormalTok{, }\FloatTok{1.06}\NormalTok{, }\FloatTok{1.05}\NormalTok{, }\FloatTok{1.02}\NormalTok{, }\FloatTok{1.00}\NormalTok{)}
+
+\CommentTok{# Tibble.}
+\NormalTok{dat_infl =}\StringTok{ }\KeywordTok{tibble}\NormalTok{(year, infl)}
+
+\CommentTok{# Smoosh inflation adjustents up on the database.}
+\NormalTok{dat =}\StringTok{ }\KeywordTok{left_join}\NormalTok{(dat, dat_infl, }\DataTypeTok{by =} \StringTok{"year"}\NormalTok{)}
+
+\CommentTok{# Mutate adjusted prices out of nominal prices and inflation adjustments.}
+\NormalTok{dat =}\StringTok{ }\NormalTok{dat }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(., }\DataTypeTok{p_g_r =}\NormalTok{ price_gram }\OperatorTok{*}\StringTok{ }\NormalTok{infl) }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(., }\DataTypeTok{p_t_r =}\NormalTok{ price_total }\OperatorTok{*}\StringTok{ }\NormalTok{infl)}
+\end{Highlighting}
+\end{Shaded}
+
+\subparagraph{4. Adding Harvest
+Estimates}\label{adding-harvest-estimates}
+
+Totoaba is delicious, but sadly often goes uneaten. Thanks, INAPESCA!
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# Fix arbitrary value for 2018.}
+
+\CommentTok{# Join INAPESCA estimate of totoaba harvest in metric tonnes to database.}
+\NormalTok{year =}\StringTok{ }\KeywordTok{c}\NormalTok{(}\DecValTok{2000}\OperatorTok{:}\DecValTok{2018}\NormalTok{)}
+\NormalTok{y_biomass =}\StringTok{ }\KeywordTok{c}\NormalTok{(}\DecValTok{462}\NormalTok{, }\DecValTok{485}\NormalTok{, }\DecValTok{509}\NormalTok{, }\DecValTok{535}\NormalTok{, }\DecValTok{562}\NormalTok{, }\DecValTok{590}\NormalTok{, }\DecValTok{619}\NormalTok{, }\DecValTok{650}\NormalTok{, }\DecValTok{682}\NormalTok{, }\DecValTok{717}\NormalTok{, }\DecValTok{752}\NormalTok{, }\DecValTok{790}\NormalTok{, }\DecValTok{869}\NormalTok{, }\DecValTok{956}\NormalTok{, }\DecValTok{1051}\NormalTok{, }\DecValTok{1156}\NormalTok{, }\DecValTok{1272}\NormalTok{, }\DecValTok{1400}\NormalTok{, }\DecValTok{1550}\NormalTok{)}
+
+\CommentTok{# Convert estimate of biomass to wet buche from 2.5% estimate (MC Pers. Comm, Ogunja et al. 1988).}
+\NormalTok{y_wet =}\StringTok{ }\NormalTok{y_biomass}\OperatorTok{*}\FloatTok{0.025}
+
+\CommentTok{# Convert wet buche to dry from 40% estimate (Centre for Food Technology 1994, Food Safety Alliance 2018.}
+\NormalTok{y_dry =}\StringTok{ }\NormalTok{y_wet}\OperatorTok{*}\FloatTok{0.400}
+
+\CommentTok{# Tibble.}
+\NormalTok{dat_q =}\StringTok{ }\KeywordTok{tibble}\NormalTok{(year, y_dry)}
+
+\CommentTok{# Smoosh estimated export volume of dry buche up on the database.}
+\NormalTok{dat =}\StringTok{ }\KeywordTok{left_join}\NormalTok{(dat, dat_q, }\DataTypeTok{by =} \StringTok{"year"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\subparagraph{5. Visualizations}\label{visualizations}
+
+All that really matters is graphs.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# Display figures.}
+\NormalTok{tma}
+\NormalTok{tmaplus}
+\NormalTok{pgr_grams}
+\NormalTok{pgr_place}
+\NormalTok{pgr_condition}
+\NormalTok{pgr_quantity}
+\NormalTok{pgr_all}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# Save figures.}
+
+\CommentTok{#ggsave("filename.filetype", ggobject)}
+\end{Highlighting}
+\end{Shaded}
+
+\subparagraph{6. Multiple Regression
+Analysis}\label{multiple-regression-analysis}
+
+OLS suits the question for reasons. Necessary assumptions are several.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# Totoaba only.}
+
+\CommentTok{# Assign specifications for linear models of price.}
+\CommentTok{#  Get a cleaner database.}
+\NormalTok{    minidat =}\StringTok{ }\KeywordTok{select}\NormalTok{(dat, }
+\NormalTok{                     year, }
+\NormalTok{                     p_g_r,}
+\NormalTok{                     y_dry,}
+\NormalTok{                     kg_buche, }
+\NormalTok{                     condition_infer, }
+\NormalTok{                     place, }
+\NormalTok{                     sp_com)}
+    
+\NormalTok{    minidat =}\StringTok{ }\KeywordTok{rename}\NormalTok{(minidat,}
+                    \StringTok{"year"}\NormalTok{ =}\StringTok{ }\NormalTok{year,}
+                    \StringTok{"p"}\NormalTok{ =}\StringTok{ }\NormalTok{p_g_r,}
+                    \StringTok{"q"}\NormalTok{ =}\StringTok{ }\NormalTok{y_dry,}
+                    \StringTok{"kg"}\NormalTok{ =}\StringTok{ }\NormalTok{kg_buche,}
+                    \StringTok{"cond"}\NormalTok{ =}\StringTok{ }\NormalTok{condition_infer,}
+                    \StringTok{"place"}\NormalTok{ =}\StringTok{ }\NormalTok{place,}
+                    \StringTok{"spp"}\NormalTok{ =}\StringTok{ }\NormalTok{sp_com)}
+    
+\NormalTok{    minidat =}\StringTok{ }\KeywordTok{filter}\NormalTok{(minidat, }\OperatorTok{!}\KeywordTok{is.na}\NormalTok{(p))}
+
+\NormalTok{    minidat =}\StringTok{ }\KeywordTok{mutate}\NormalTok{(minidat, }\DataTypeTok{g =}\NormalTok{ kg}\OperatorTok{*}\DecValTok{1000}\NormalTok{)}
+    
+\NormalTok{    minidat =}\StringTok{ }\KeywordTok{mutate}\NormalTok{(minidat, }\DataTypeTok{bicond =} \KeywordTok{ifelse}\NormalTok{(cond }\OperatorTok{==}\StringTok{ "Wet"}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{))}
+    
+\NormalTok{    tinydat =}\StringTok{ }\KeywordTok{filter}\NormalTok{(minidat, spp }\OperatorTok{==}\StringTok{ "Totoaba"} \OperatorTok{&}\StringTok{ }\NormalTok{bicond }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)}
+    
+    \CommentTok{#tinydat = select(filter(minidat, spp == "Totoaba"),}
+                     \CommentTok{#"Price (USD2018)" = p,}
+                     \CommentTok{#"Grams / Unit" = g,}
+                     \CommentTok{#"Quantity Supplied (Tonnes)" = q, }
+                     \CommentTok{#"Processing" = bicond)}
+\NormalTok{    tinydat =}\StringTok{ }\KeywordTok{na.omit}\NormalTok{(tinydat)}
+
+    \CommentTok{# Intuition: for any maw, price follows supply, weight, and processing.}
+\CommentTok{#lm = lm((`Price (USD2018)`) ~ (`Quantity Supplied (Tonnes)`) + (`Grams / Unit`) + (`Processing`), data = tinydat)}
+\CommentTok{#lm = lm(p ~ q + g, data = tinydat)}
+\CommentTok{#lmlog = lm(log(p) ~ log(q) + g, data = tinydat)}
+\NormalTok{nlm =}\StringTok{ }\KeywordTok{nls}\NormalTok{(p }\OperatorTok{~}\StringTok{ }\NormalTok{q }\OperatorTok{*}\StringTok{ }\NormalTok{a }\OperatorTok{+}\StringTok{ }\NormalTok{(g }\OperatorTok{^}\StringTok{ }\NormalTok{b) }\OperatorTok{+}\StringTok{ }\NormalTok{c, }\DataTypeTok{data =}\NormalTok{ tinydat, }\DataTypeTok{start =} \KeywordTok{c}\NormalTok{(}\DataTypeTok{a =} \OperatorTok{-}\FloatTok{5.00}\NormalTok{, }\DataTypeTok{b =} \FloatTok{2.00}\NormalTok{, }\DataTypeTok{c =} \DecValTok{20}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# Display model results.}
+\CommentTok{#stargazer(lm, type = "latex", digits = 2)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{nlm_tidy =}\StringTok{ }\KeywordTok{tidy}\NormalTok{(nlm)}
+\NormalTok{tinydat_aug =}\StringTok{ }\KeywordTok{augment}\NormalTok{(nlm, tinydat)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# Price against grams maw.}
+\NormalTok{plot_nlm_g =}
+\StringTok{  }\KeywordTok{ggplot}\NormalTok{(tinydat_aug) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{geom_point}\NormalTok{(}\KeywordTok{aes}\NormalTok{(g, p), }\DataTypeTok{colour =} \StringTok{"gray50"}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{geom_segment}\NormalTok{(}\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ g, }\DataTypeTok{y =}\NormalTok{ p, }\DataTypeTok{xend =}\NormalTok{ g, }\DataTypeTok{yend =}\NormalTok{ .fitted), }\DataTypeTok{colour =} \StringTok{"gray50"}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{geom_point}\NormalTok{(}\KeywordTok{aes}\NormalTok{(g, .fitted), }\DataTypeTok{colour =} \StringTok{"firebrick"}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{labs}\NormalTok{(}\DataTypeTok{x =} \StringTok{"Grams of Dry Maw"}\NormalTok{, }\DataTypeTok{y =} \StringTok{"USD2018 / Gram"}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{scale_y_continuous}\NormalTok{(}\DataTypeTok{breaks =} \KeywordTok{seq}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{100}\NormalTok{, }\DataTypeTok{by =} \DecValTok{50}\NormalTok{), }\DataTypeTok{limits =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{100}\NormalTok{), }\DataTypeTok{expand =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{)) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{ggtitle}\NormalTok{(}\StringTok{"Observed and Estimated Prices for Totoaba Maw by Maw Weight"}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{theme}\NormalTok{(}\DataTypeTok{axis.text.x =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{size =} \DecValTok{8}\NormalTok{),}
+        \DataTypeTok{axis.text.y =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{size =} \DecValTok{8}\NormalTok{),}
+        \DataTypeTok{legend.text =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{size =} \DecValTok{8}\NormalTok{),}
+        \DataTypeTok{axis.title.x =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{size =} \DecValTok{9}\NormalTok{),}
+        \DataTypeTok{axis.title.y =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{size =} \DecValTok{9}\NormalTok{),}
+        \DataTypeTok{legend.title =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{size =} \DecValTok{9}\NormalTok{),}
+        \DataTypeTok{plot.title =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{size =} \DecValTok{9}\NormalTok{)) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{theme_classic}\NormalTok{()}
+
+\CommentTok{# Price against tonnes maw.}
+\NormalTok{plot_nlm_q =}\StringTok{ }
+\StringTok{  }\KeywordTok{ggplot}\NormalTok{(tinydat_aug) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{geom_boxplot}\NormalTok{(}\KeywordTok{aes}\NormalTok{(}\KeywordTok{as.factor}\NormalTok{(q), .fitted), }\DataTypeTok{colour =} \StringTok{"firebrick"}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{geom_jitter}\NormalTok{(}\KeywordTok{aes}\NormalTok{(}\KeywordTok{as.factor}\NormalTok{(q), p), }\DataTypeTok{colour =} \StringTok{"gray50"}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{labs}\NormalTok{(}\DataTypeTok{x =} \StringTok{"Tonnes of Dry Maw at Market"}\NormalTok{, }\DataTypeTok{y =} \StringTok{"USD2018 / Gram"}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{scale_y_continuous}\NormalTok{(}\DataTypeTok{breaks =} \KeywordTok{seq}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{100}\NormalTok{, }\DataTypeTok{by =} \DecValTok{50}\NormalTok{), }\DataTypeTok{limits =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{100}\NormalTok{), }\DataTypeTok{expand =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{)) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{ggtitle}\NormalTok{(}\StringTok{"Observed and Estimated Prices for Totoaba Maw by Maw Production"}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{theme}\NormalTok{(}\DataTypeTok{axis.text.x =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{size =} \DecValTok{8}\NormalTok{),}
+        \DataTypeTok{axis.text.y =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{size =} \DecValTok{8}\NormalTok{),}
+        \DataTypeTok{legend.text =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{size =} \DecValTok{8}\NormalTok{),}
+        \DataTypeTok{axis.title.x =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{size =} \DecValTok{9}\NormalTok{),}
+        \DataTypeTok{axis.title.y =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{size =} \DecValTok{9}\NormalTok{),}
+        \DataTypeTok{legend.title =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{size =} \DecValTok{9}\NormalTok{),}
+        \DataTypeTok{plot.title =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{size =} \DecValTok{9}\NormalTok{)) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{theme_classic}\NormalTok{()}
+
+\CommentTok{# Price against quantity, with some prerequisite math first.}
+\NormalTok{pintl =}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(nlm_tidy[}\DecValTok{3}\NormalTok{, }\DecValTok{2}\NormalTok{])}
+\NormalTok{qintl =}\StringTok{ }\OperatorTok{-}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(nlm_tidy[}\DecValTok{3}\NormalTok{, }\DecValTok{2}\NormalTok{]) }\OperatorTok{/}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(nlm_tidy[}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{])}
+\NormalTok{pinth =}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(nlm_tidy[}\DecValTok{3}\NormalTok{, }\DecValTok{2}\NormalTok{]) }\OperatorTok{+}\StringTok{ }\DecValTok{1000}\OperatorTok{^}\KeywordTok{as.numeric}\NormalTok{(nlm_tidy[}\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{])}
+\NormalTok{qinth =}\StringTok{ }\OperatorTok{-}\StringTok{ }\NormalTok{(}\KeywordTok{as.numeric}\NormalTok{(nlm_tidy[}\DecValTok{3}\NormalTok{, }\DecValTok{2}\NormalTok{]) }\OperatorTok{+}\StringTok{ }\DecValTok{1000}\OperatorTok{^}\KeywordTok{as.numeric}\NormalTok{(nlm_tidy[}\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{])) }\OperatorTok{/}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(nlm_tidy[}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{])}
+\NormalTok{pintll=}\StringTok{ }\NormalTok{pintl }\OperatorTok{+}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(nlm_tidy[}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{]) }\OperatorTok{*}\StringTok{ }\NormalTok{qinth}
+\NormalTok{pinthm=}\StringTok{ }\NormalTok{pinth }\OperatorTok{+}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(nlm_tidy[}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{]) }\OperatorTok{*}\StringTok{ }\NormalTok{qintl}
+
+\CommentTok{# Throw intercepts into a data frame.}
+\NormalTok{invd  =}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, qintl, qinth), }\KeywordTok{c}\NormalTok{(pintl, }\DecValTok{0}\NormalTok{, pintll), }\KeywordTok{c}\NormalTok{(pinth, pinthm,}\DecValTok{0}\NormalTok{)) }
+\KeywordTok{colnames}\NormalTok{(invd) =}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"q"}\NormalTok{, }\StringTok{"pl"}\NormalTok{, }\StringTok{"ph"}\NormalTok{)}
+
+\NormalTok{plot_invd =}
+\KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}
+\StringTok{  }\KeywordTok{geom_ribbon}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ invd, }\KeywordTok{aes}\NormalTok{(q, }\DataTypeTok{ymin =}\NormalTok{ pl, }\DataTypeTok{ymax =}\NormalTok{ ph), }\DataTypeTok{alpha =} \FloatTok{0.5}\NormalTok{, }\DataTypeTok{colour =} \StringTok{"firebrick"}\NormalTok{, }\DataTypeTok{fill =} \StringTok{"firebrick"}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{geom_point}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ tinydat_aug, }\KeywordTok{aes}\NormalTok{(q, p), }\DataTypeTok{colour =} \StringTok{"gray50"}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{coord_cartesian}\NormalTok{(}\DataTypeTok{xlim =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, qinth), }\DataTypeTok{ylim =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, pinth), }\DataTypeTok{expand =} \OtherTok{FALSE}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{labs}\NormalTok{(}\DataTypeTok{x =} \StringTok{"Tonnes of Dry Maw at Market"}\NormalTok{, }\DataTypeTok{y =} \StringTok{"USD2018 / Gram"}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{ggtitle}\NormalTok{(}\StringTok{"Observed and Estimated Prices for Totoaba Maw by Maw Production"}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{theme}\NormalTok{(}\DataTypeTok{axis.text.x =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{size =} \DecValTok{8}\NormalTok{),}
+        \DataTypeTok{axis.text.y =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{size =} \DecValTok{8}\NormalTok{),}
+        \DataTypeTok{legend.text =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{size =} \DecValTok{8}\NormalTok{),}
+        \DataTypeTok{axis.title.x =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{size =} \DecValTok{9}\NormalTok{),}
+        \DataTypeTok{axis.title.y =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{size =} \DecValTok{9}\NormalTok{),}
+        \DataTypeTok{legend.title =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{size =} \DecValTok{9}\NormalTok{),}
+        \DataTypeTok{plot.title =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{size =} \DecValTok{9}\NormalTok{)) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{theme_classic}\NormalTok{()}
+
+\CommentTok{# Kablify the model.}
+\NormalTok{nlm_tidy}\OperatorTok{$}\NormalTok{term =}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"Supply (Tonnes)"}\NormalTok{, }\StringTok{"Weight (Grams)"}\NormalTok{, }\StringTok{"Choke Price"}\NormalTok{)}
+\KeywordTok{colnames}\NormalTok{(nlm_tidy) =}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{""}\NormalTok{, }\StringTok{"Coef."}\NormalTok{, }\StringTok{"SE"}\NormalTok{, }\StringTok{"t"}\NormalTok{, }\StringTok{"p"}\NormalTok{)}
+\KeywordTok{kable}\NormalTok{(nlm_tidy, }\DataTypeTok{format =} \StringTok{"html"}\NormalTok{, }\DataTypeTok{caption =} \StringTok{"Inverse Demand Specification"}\NormalTok{, }\DataTypeTok{digits =} \DecValTok{3}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Inverse Demand Specification
+
+Coef.
+
+SE
+
+t
+
+p
+
+Supply (Tonnes)
+
+-5.283
+
+2.895
+
+-1.825
+
+0.075
+
+Weight (Grams)
+
+0.525
+
+0.071
+
+7.406
+
+0.000
+
+Choke Price
+
+82.992
+
+36.993
+
+2.243
+
+0.030
+
+
+\end{document}
