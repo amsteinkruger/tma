@@ -64,6 +64,24 @@ a = seq(1, 20)
 l = fn_vb(vb_linf, vb_k, a, vb_t0)
 plot(a, l)
 
+# Better graph for Goto.
+ggvb =
+ggplot() +
+  geom_path(aes(a, l), colour = "firebrick") +
+    labs(x = "Age (Years)", y = "Length (Centimeters)") +
+  scale_y_continuous(expand = c(0, 0)) +
+  ggtitle("Estimated Length-at-Age Function") +
+  theme(axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        legend.text = element_text(size = 8),
+        axis.title.x = element_text(size = 9),
+        axis.title.y = element_text(size = 9),
+        legend.title = element_text(size = 9),
+        plot.title = element_text(size = 9)) +
+  theme_classic()
+
+ggsave("ggvb.png", ggvb, width = 5.5, height = 3, dpi = 300)
+
 ```
 
 #####Age to Mortality
@@ -97,6 +115,26 @@ kable(am_reg_tidy)
 ggplot(dat_m_est) +
   geom_point(aes(a_months, m_months)) +
   geom_path(aes(a_months, .fitted))
+
+# Better graph for Goto.
+ggam =
+ggplot(dat_m_est) +
+  geom_point(aes(a_months, m_months), colour = "gray50") +
+  geom_segment(aes(x = a_months, y = m_months, xend = a_months, yend = .fitted), colour = "gray50") +
+  geom_point(aes(a_months, .fitted), colour = "firebrick") +
+  labs(x = "Age (Months)", y = "Cohort Mortality (%)") +
+  scale_y_continuous(expand = c(0, 0)) +
+  ggtitle("Estimated Mortality-at-Age Function") +
+  theme(axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        legend.text = element_text(size = 8),
+        axis.title.x = element_text(size = 9),
+        axis.title.y = element_text(size = 9),
+        legend.title = element_text(size = 9),
+        plot.title = element_text(size = 9)) +
+  theme_classic()
+
+ggsave("ggam.png", ggam, width = 5.5, height = 3, dpi = 300)
 
 ```
 
@@ -154,6 +192,24 @@ wl_b = 3.24674
 l = seq(1, 180, by = 10)
 w = fn_lw(wl_a, l, wl_b)
 plot(l, w)
+
+# Better graph for Goto.
+gglw =
+ggplot() +
+  geom_path(aes(l, w), colour = "firebrick") +
+    labs(x = "Length (Centimeters)", y = "Weight (Kilograms)") +
+  scale_y_continuous(expand = c(0, 0)) +
+  ggtitle("Estimated Weight-at-Length Function") +
+  theme(axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        legend.text = element_text(size = 8),
+        axis.title.x = element_text(size = 9),
+        axis.title.y = element_text(size = 9),
+        legend.title = element_text(size = 9),
+        plot.title = element_text(size = 9)) +
+  theme_classic()
+
+ggsave("gglw.png", gglw, width = 5.5, height = 3, dpi = 300)
 
 ```
 
@@ -297,6 +353,26 @@ ggplot(dat_fcr_est) +
   geom_point(aes(weight, feed)) +
   geom_point(aes(weight, .fitted, colour = "red"))
 
+# Better graph for Goto.
+ggfcr =
+ggplot(dat_fcr_est) +
+  geom_point(aes(weight, feed), colour = "gray50") +
+  geom_segment(aes(x = weight, y = feed, xend = weight, yend = .fitted), colour = "gray50") +
+  geom_point(aes(weight, .fitted), colour = "firebrick") +
+  labs(x = "Weight (Kilograms)", y = "Feed Requirement (Kilograms)") +
+  scale_y_continuous(expand = c(0, 0)) +
+  ggtitle("Estimated Feed-at-Weight Function") +
+  theme(axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        legend.text = element_text(size = 8),
+        axis.title.x = element_text(size = 9),
+        axis.title.y = element_text(size = 9),
+        legend.title = element_text(size = 9),
+        plot.title = element_text(size = 9)) +
+  theme_classic()
+
+ggsave("ggfcr.png", ggfcr, width = 5.5, height = 3, dpi = 300)
+
 ```
 
 Those results plug into a feed-at-weight function:
@@ -341,8 +417,8 @@ ch0_cf = 1.545
 o = 87500
 
 # Demo.
-w = seq(0, 40)
-n = seq(4200, 4000, by = -5)
+w = seq(0, 200)
+n = seq(4200, 4000)
 
 ch0_demo = fn_ch0(w, f_b1, f_b2, ch0_cf, n, o)
 
