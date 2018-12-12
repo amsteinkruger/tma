@@ -37,7 +37,7 @@ pkg <- c("readr",
          "kableExtra")
 
 # Install packages.
-#install.packages(pkg, verbose = FALSE, quiet = TRUE)
+install.packages(pkg, verbose = FALSE, quiet = TRUE)
 
   
 # Update packages.
@@ -456,9 +456,9 @@ kable(nlm_tidy, format = "html", caption = "Inverse Demand Specification", digit
 
 ```{r plotsave}
 
-ggsave("plot_nlm_g.png", plot_nlm_g, width = 4.5, height = 4.5, dpi = 300)
-ggsave("plot_nlm_q.png", plot_nlm_q, width = 4.5, height = 4.5, dpi = 300)
-ggsave("plot_invd.png", plot_invd, width = 4.5, height = 4.5, dpi = 300)
+ggsave("plot_nlm_g.png", plot_nlm_g, width = 6.5, height = 4.5, dpi = 300)
+ggsave("plot_nlm_q.png", plot_nlm_q, width = 6.5, height = 4.5, dpi = 300)
+ggsave("plot_invd.png", plot_invd, width = 6.5, height = 4.5, dpi = 300)
 
 ```
 
