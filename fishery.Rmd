@@ -37,7 +37,7 @@ lapply(pkg, library, character.only = TRUE)
 #####Objective: Step through optimal aggregate harvest in an open access fishery.
 Swap out toy model for INAPESCA's age-structured model. Sort out selectivity and dam problems.
 
-Toy Model (Conrad):
+#####Toy Model (Conrad):
 
 Stock
 
@@ -225,7 +225,7 @@ demo_19_p_long = cbind(demo_19_p_long, rep(seq(1950, 1975), times = 11))
 colnames(demo_19_p_long)[1:3] = c("p", "x", "t")
 
 # Plot. Abomination stops here.
-plot19 = ggplot(demo_x_log_p_long, aes(t, x, color = p, group = p)) + 
+plot19 = ggplot(demo_19_p_long, aes(t, x, color = p, group = p)) + 
   geom_path() +
   theme(legend.position = "none")
 
@@ -263,3 +263,155 @@ plot20 = ggplot(demo_20_p_long, aes(t, x, color = p, group = p)) +
 #ggplot(demo_x_log_p, aes(t, ))
 
 ```
+
+#####Pig
+
+Looking for:
+Matrices:
+Numbers at Age by Year
+Total Weights at Age by Year
+Total Fecundities at Age by Year
+
+Vectors:
+Initial Numbers at Age
+Individual Lengths at Age
+Individual Weights at Age
+Individual Fecundities at Age
+Proportional Natural Mortalities at Age
+Proportional Poaching Selectivities at Age
+Proportional Bycatch Selectivities at Age
+
+
+Toy Version:
+
+```{r age_struct_toy}
+
+# Matrix of numbers at age by year.
+mat_a = matrix(nrow = 10, ncol = 5)
+
+# Vector for initial n at a.
+v_init = seq(5, 1)
+
+# Vectors for proportional mortalities by age. NB: Survival, not mortality.
+v_mort_first = 0.5
+v_mort_rest = c(0.85, 0.875, 0.90, 1)
+
+# Vector for proportional fecundities at age. Each fecund fish returns two fish. 
+v_fec_rest = rep(0.25, 4)
+
+# Plug initial numbers into the matrix.
+mat_a[1,] = v_init
+
+# Run one-shot test.
+mat_a[2, 2:5] = mat_a[1, 1:4] * v_mort_rest
+mat_a[2, 1] = sum(mat_a[1, 2:5] * v_fec_rest * 3)
+
+# Set up first test.
+fun_test = function(nrow, ncol){
+                                mat_a = matrix(nrow = nrow, ncol = ncol)
+                                v_init = seq(5, 1)
+                                v_mort_first = 0.5
+                                v_mort_rest = c(0.85, 0.875, 0.90, 1)
+                                v_fec_rest = rep(0.25, 4)
+                                mat_a[1,] = v_init
+                                for(i in 2:nrow){mat_a[i, 2:5] = mat_a[i - 1, 1:4] * v_mort_rest
+                                                 mat_a[i, 1] = sum(mat_a[i - 1, 2:5] * v_fec_rest * 3)/(1 + mat_a[i - 1, 1] / 250)}
+                                  
+                                return(mat_a)}
+
+# Run first test.
+uh = fun_test(50, 5)
+
+duh = data.frame(uh)
+
+mut = mutate(duh, t = seq(0, 49))
+
+melt = melt(mut, id.vars = "t")
+
+ggplot(melt, aes(t, value, color = variable)) +
+  geom_line()
+
+```
+
+Totoaba Version:
+
+```{r age_struct_tma}
+
+# Matrix of numbers at age by year.
+mat_a = matrix(nrow = 50, ncol = 30)
+
+# Vector for initial n at a.
+#  Assign initial biomass from INAPESCA estimate.
+#  Try the lower bound on the 95% CI of INAPESCA's 2017 estimate from surveys.
+biomass_init = 25709000 # kilograms.
+
+#  Assign functional form for frequencies at age from True (2018). See notes on symposium presentation. Check whether curve describes numbers at age.
+fun_a_n = function(a){121.99 * 10 ^ (-0.214 * a)}
+
+#  Convert numbers at age to sums of weights at age to work from total biomass back to numbers at age.
+fun_a_l = function(a, linf, k, t0){l = linf * (1 - exp(-k * (a - t0)))} # INAPESCA (2018): 200, 0.155, -0.65. See notes for alternatives.
+fun_l_w = function(a, l, b){w = a * l ^ b} # INAPESCA (2018) / Anda-Montañez et al. (2013): 0.000005, 3.0635. See notes for alternatives.
+
+# Calculations:
+#  Vector of ages.
+a = seq(0, 29)
+#  Vector of lengths.
+l = fun_a_l(a, 200, 0.155, -0.65)
+#  Vector of weights.
+w = fun_l_w(0.000005, l, 3.0635)
+#  Numbers at age.
+afreq = fun_a_n(a)
+#  Weights at age.
+wfreq = afreq * w
+#  Weights at age, but useful.
+winit = wfreq * (1 / sum(wfreq)) * biomass_init
+#  Numbers at age to seed the model. That wasn't so hard, right?
+ninit = winit / w
+plot(ninit)
+
+# Vectors for proportional natural mortalities at age. NB: Survival, not mortality. From INAPESCA (2018) / Cisneros-Mata et al. (1995).
+v_mort_first = 0.73
+v_mort_rest = rep(0.73, 28)
+
+# Vectors for proportional poaching mortalities at age.
+
+# Vectors for proportional bycatch mortalities at age.
+
+# Vector for proportional fecundities at age. Each fish older than 7 years returns 5 fish. PLACEHOLDER PLACEHOLDER PLACEHOLDER
+v_fec_rest = rep(20, 22)
+
+# Plug initial numbers into the matrix.
+mat_a[1,] = ninit
+
+# Run one-shot test.
+mat_a[2, 2:30] = mat_a[1, 1:29] * v_mort_rest
+mat_a[2, 1] = sum(mat_a[1, 8:30] * v_fec_rest)
+
+# Set up first test.
+fun_test = function(nrow, ncol, ninit, mort_rate, mort_cols, fec_rate, fec_cols, k){
+                                mat_a = matrix(nrow = nrow, ncol = ncol)
+                                v_init = ninit
+                                v_mort_first = mort_rate
+                                v_mort_rest = rep(mort_rate, mort_cols)
+                                v_fec_rest = rep(fec_rate, fec_cols)
+                                mat_a[1,] = v_init
+                                for(i in 2:nrow){mat_a[i, 2:30] = mat_a[i - 1, 1:29] * v_mort_rest
+                                                 mat_a[i, 1] = sum(mat_a[i - 1, 8:30] * v_fec_rest)/(1 + mat_a[i - 1, 1] / k)}
+                                  
+                                return(mat_a)}
+
+# Run first test.
+uh = fun_test(25, 30, ninit, 0.73, 28, 5, 22, 5000000)
+
+duh = data.frame(uh)
+
+mut = mutate(duh, t = seq(0, 24))
+
+melt = melt(mut, id.vars = "t")
+
+try =
+ggplot(melt, aes(t, value, color = variable)) +
+  geom_line()
+
+```
+
