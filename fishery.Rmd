@@ -369,39 +369,48 @@ winit = wfreq * (1 / sum(wfreq)) * biomass_init
 ninit = winit / w
 plot(ninit)
 
-# Vectors for proportional natural mortalities at age. NB: Survival, not mortality. From INAPESCA (2018) / Cisneros-Mata et al. (1995).
-v_mort_first = 0.73
-v_mort_rest = rep(0.73, 28)
+# Vector for proportional natural mortalities at age. NB: Survival, not mortality. From INAPESCA (2018) / Cisneros-Mata et al. (1995).
+v_mort_rest = rep(0.73, 29)
 
-# Vectors for proportional poaching mortalities at age.
+# Vector for proportional poaching mortalities at age.
 
-# Vectors for proportional bycatch mortalities at age.
+# Vector for proportional bycatch mortalities at age.
 
-# Vector for proportional fecundities at age. Each fish older than 7 years returns 5 fish. PLACEHOLDER PLACEHOLDER PLACEHOLDER
-v_fec_rest = rep(20, 22)
+# Vector for proportional fecundities at age. From INAPESCA (2018) / Valenzuela-Quiñonez (2014).
+#  Set function.
+fun_fec = function(l){1 / ( 1 + exp(-0.0099 * ((l - 133.331) * 10)))}
+#  Transform vector of lengths at age to fecundities.
+v_fec = fun_fec(l)
+
+# Vector for production of fecund hembras at age by way of length.
+#  Set function for eggs per kilogram of total weight of mature fish.
+fun_eggs = function(l){221.76 * exp(0.0047 * l)} # Valenzuela-Quiñonez (2014); used with Anda-Montañez et al. (2013) for mean by INAPESCA (2018).
+
+#  Get values corresponding to vector of lengths.
+v_eggs_l = fun_eggs(l)
+
+#  Get values corresponding to vector of weights - this works out to be egg production at age before accounting for maturation.
+v_eggs_w = v_eggs_l * w
+
+# So account for maturation and survival, dummy. Survival from egg to juvenile from INAPESCA (2018). Reference against True (2018).
+v_eggs_surv = 0.3 * 0.9 * 0.95 * 0.1
+v_eggs = v_eggs_w * v_fec * v_eggs_surv
 
 # Plug initial numbers into the matrix.
 mat_a[1,] = ninit
 
-# Run one-shot test.
-mat_a[2, 2:30] = mat_a[1, 1:29] * v_mort_rest
-mat_a[2, 1] = sum(mat_a[1, 8:30] * v_fec_rest)
-
 # Set up first test.
-fun_test = function(nrow, ncol, ninit, mort_rate, mort_cols, fec_rate, fec_cols, k){
+fun_test = function(nrow, ncol, ninit, mort_rate, mort_cols, v_eggs, k){
                                 mat_a = matrix(nrow = nrow, ncol = ncol)
-                                v_init = ninit
-                                v_mort_first = mort_rate
                                 v_mort_rest = rep(mort_rate, mort_cols)
-                                v_fec_rest = rep(fec_rate, fec_cols)
-                                mat_a[1,] = v_init
+                                mat_a[1,] = ninit
                                 for(i in 2:nrow){mat_a[i, 2:30] = mat_a[i - 1, 1:29] * v_mort_rest
-                                                 mat_a[i, 1] = sum(mat_a[i - 1, 8:30] * v_fec_rest)/(1 + mat_a[i - 1, 1] / k)}
+                                                 mat_a[i, 1] = sum(mat_a[i - 1, 1:30] * v_eggs)/(1 + mat_a[i - 1, 1] / k)}
                                   
                                 return(mat_a)}
 
 # Run first test.
-uh = fun_test(25, 30, ninit, 0.73, 28, 5, 22, 5000000)
+uh = fun_test(25, 30, ninit, 0.73, 29, v_eggs, 5000000)
 
 duh = data.frame(uh)
 
@@ -409,9 +418,20 @@ mut = mutate(duh, t = seq(0, 24))
 
 melt = melt(mut, id.vars = "t")
 
-try =
+try2 =
 ggplot(melt, aes(t, value, color = variable)) +
   geom_line()
+
+melt$variable = str_remove(melt$variable, "X")
+melt$variable = as.numeric(melt$variable)
+
+try3 = 
+ggplot(melt, aes(x = variable, z = value, y = t, color = variable)) + 
+  theme_void() + 
+  #axes_3D() + 
+  stat_3D(geom = "line", phi = 5, theta = 90) +
+  #labs_3D() +
+  scale_color_distiller(palette = "Spectral")
 
 ```
 
