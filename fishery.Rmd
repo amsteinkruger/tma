@@ -370,11 +370,64 @@ ninit = winit / w
 plot(ninit)
 
 # Vector for proportional natural mortalities at age. NB: Survival, not mortality. From INAPESCA (2018) / Cisneros-Mata et al. (1995).
-v_mort_rest = rep(0.73, 29)
+v_mort = rep(0.73, 30)
 
 # Vector for proportional poaching mortalities at age.
+#  Read in values for size-selective poaching from INAPESCA (2018); n = 1147 from 9 periods, 1963 - 2017.
+v_select_data = 
+  c(6, 9, 15, 60, 191, 281, 165, 133, 82, 33, 27, 21, 17, 10, 12, 16, 8, 15, 9, 12, 7, 9, 5, 2, 2, 0) %>% 
+  data.frame() %>% 
+  mutate(age = seq(1, 26)) %>% 
+  rename(n = ".")
 
-# Vector for proportional bycatch mortalities at age.
+#  Estimate fit for a Weibull probability density function, because the internet said so. Try weibull.com/hotwire/issue14/relbasics14.htm
+nls_select = nls(v_select_data$n ~ ifelse(is.na(x * (a / b) * ((v_select_data$age - c) / b) ^ (a - 1) * exp(-((v_select_data$age - c) / b ) ^ a)),
+                                          0,
+                                          x * (a / b) * ((v_select_data$age - c) / b) ^ (a - 1) * exp(-((v_select_data$age - c) / b ) ^ a)),
+                 v_select_data, 
+                 start = list(x = 3000, a = 2.5, b = 10, c = -3), 
+                 lower = list(0, 0, 0, -Inf),
+                 algorithm = "port")
+
+#  Tibbulate nonlinear estimation.
+nls_tidy = tidy(nls_select)
+
+#  Plot fit against actual values.
+fun_select = function(x, a, b, c, t){n = ifelse(is.na(x * (a / b) * ((t - c) / b) ^ (a - 1) * exp(-((t - c) / b ) ^ a)),
+                                                0,
+                                                x * (a / b) * ((t - c) / b) ^ (a - 1) * exp(-((t - c) / b ) ^ a))
+                                     return(n)}
+
+v_select_fit = fun_select(nls_tidy$estimate[1], nls_tidy$estimate[2], nls_tidy$estimate[3], nls_tidy$estimate[4], seq(1, 26))
+
+ggplot() + 
+  geom_point(aes(seq(1, 26), v_select_fit), color = "Red") + 
+  geom_point(aes(seq(1, 26), v_select_data$n), color = "Green")
+
+#  Consider fixing the upper tail. Those residuals probably matter.
+
+#  Use parameters to restate the function on a single dimension (age) for integration.
+simple_fun_select = function(t){n = 
+                                ifelse(is.na(nls_tidy$estimate[1] * (nls_tidy$estimate[2] / nls_tidy$estimate[3]) * ((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3]) ^ (nls_tidy$estimate[2] - 1) * exp(-((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3] ) ^ nls_tidy$estimate[2])),
+                                0,
+                                nls_tidy$estimate[1] * (nls_tidy$estimate[2] / nls_tidy$estimate[3]) * ((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3]) ^ (nls_tidy$estimate[2] - 1) * exp(-((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3] ) ^ nls_tidy$estimate[2]))
+                                return(n)}
+
+#  Integrate over ages of interest. Those should probably be a universal parameter at this point. Consider fixing.
+int_select = integrate(simple_fun_select, lower = 0, upper = 29)
+
+#  Transform fitted values for poaching selectivity into a probability distribution function using the integral of the unidimensional function.
+v_select_pdf = fun_select(nls_tidy$estimate[1], nls_tidy$estimate[2], nls_tidy$estimate[3], nls_tidy$estimate[4], seq(0, 29)) * 1 / int_select$value
+
+#  Transform 2017 catch into 2017 catch-at-age in weight, then transform that sucker into catch-at-age in numbers, then make it proportions again.
+#  Make this comment better.
+catch = 1400000 # kilograms from tonnes. INAPESCA (2018).
+v_select_n = catch * v_select_pdf / w # Check your conversion! You did this in the middle of the night, check it!
+v_select_use = v_select_n/ninit # Diagnostic plot indicates you should really, really fix the residuals on the selectivity estimation.
+
+# Value for proportional bycatch mortalities at age.
+bymort_init = 80000 # INAPESCA (2018) - estimated for 2011 - 2017 by some sort of credible method, probably.
+bymort = 1 - bymort_init / ninit[2] # Instead of distributing bycatch mortalities, we concentrate them on one age (1) for lack of length-at-age resolution.
 
 # Vector for proportional fecundities at age. From INAPESCA (2018) / Valenzuela-Quiñonez (2014).
 #  Set function.
@@ -400,17 +453,17 @@ v_eggs = v_eggs_w * v_fec * v_eggs_surv
 mat_a[1,] = ninit
 
 # Set up first test.
-fun_test = function(nrow, ncol, ninit, mort_rate, mort_cols, v_eggs, k){
+fun_test = function(nrow, ncol, ninit, v_mort, bymort, v_select_use, v_eggs, k){
                                 mat_a = matrix(nrow = nrow, ncol = ncol)
-                                v_mort_rest = rep(mort_rate, mort_cols)
                                 mat_a[1,] = ninit
-                                for(i in 2:nrow){mat_a[i, 2:30] = mat_a[i - 1, 1:29] * v_mort_rest
+                                for(i in 2:nrow){mat_a[i, 3:30] = mat_a[i - 1, 2:29] * v_mort[3:30] * (1 - v_select_use[3:30])
+                                                 mat_a[i, 2] = mat_a[i - 1, 2] * v_mort[2] * bymort * (1 - v_select_use[2])
                                                  mat_a[i, 1] = sum(mat_a[i - 1, 1:30] * v_eggs)/(1 + mat_a[i - 1, 1] / k)}
                                   
                                 return(mat_a)}
 
 # Run first test.
-uh = fun_test(25, 30, ninit, 0.73, 29, v_eggs, 5000000)
+uh = fun_test(25, 30, ninit, v_mort, bymort, v_select_use, v_eggs, 5000000)
 
 duh = data.frame(uh)
 
@@ -429,9 +482,9 @@ try3 =
 ggplot(melt, aes(x = variable, z = value, y = t, color = variable)) + 
   theme_void() + 
   #axes_3D() + 
-  stat_3D(geom = "line", phi = 5, theta = 90) +
+  stat_3D(geom = "point", phi = 45, theta = 135) +
   #labs_3D() +
-  scale_color_distiller(palette = "Spectral")
+  scale_color_distiller(palette = "RdBu")
 
 ```
 
