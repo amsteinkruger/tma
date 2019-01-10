@@ -57,7 +57,7 @@ fn_vb = function(linf, k, t, t_0){l = linf * ( 1 - exp( - k * ( t - t_0)))
 # Set parameter values for future reference.
 vb_linf = 180
 vb_k    = 0.289291
-vb_t0   = 0
+vb_t0   = 0.015
 
 # Parameterization demo.
 a = seq(1, 20)
@@ -80,7 +80,7 @@ ggplot() +
         plot.title = element_text(size = 9)) +
   theme_classic()
 
-ggsave("ggvb.png", ggvb, width = 5.5, height = 3, dpi = 300)
+#ggsave("ggvb.png", ggvb, width = 5.5, height = 3, dpi = 300)
 
 ```
 
@@ -134,7 +134,7 @@ ggplot(dat_m_est) +
         plot.title = element_text(size = 9)) +
   theme_classic()
 
-ggsave("ggam.png", ggam, width = 5.5, height = 3, dpi = 300)
+#ggsave("ggam.png", ggam, width = 5.5, height = 3, dpi = 300)
 
 ```
 
@@ -189,7 +189,7 @@ wl_a = 0.000004128
 wl_b = 3.24674
 
 # Parameterization demo.
-l = seq(1, 180, by = 10)
+l = seq(0, 180, by = 10)
 w = fn_lw(wl_a, l, wl_b)
 plot(l, w)
 
@@ -209,7 +209,7 @@ ggplot() +
         plot.title = element_text(size = 9)) +
   theme_classic()
 
-ggsave("gglw.png", gglw, width = 5.5, height = 3, dpi = 300)
+#ggsave("gglw.png", gglw, width = 5.5, height = 3, dpi = 300)
 
 ```
 
@@ -371,7 +371,7 @@ ggplot(dat_fcr_est) +
         plot.title = element_text(size = 9)) +
   theme_classic()
 
-ggsave("ggfcr.png", ggfcr, width = 5.5, height = 3, dpi = 300)
+#ggsave("ggfcr.png", ggfcr, width = 5.5, height = 3, dpi = 300)
 
 ```
 
@@ -451,7 +451,7 @@ pmaw = fn_mp(w, mp_b0, mp_b1)
 rmaw = fn_mr(ymaw, pmaw)
 rround = fn_fr(w, 1500, pround)
 r = rround + rmaw 
-c =  fn_ch0(w, f_b1, f_b2, ch0_cf, 1500, o)
+c =  fn_ch0(w, f_b1, f_b2, ch0_cf, 1500, o)# + 25 * w ^ 2.5 # Note suffix for corrective shift up. Fix it.
 
 demo_h0 = data.frame(t, r, c)
 
@@ -460,15 +460,13 @@ demo_h0 = melt(demo_h0, id = 1)
 noh = ggplot(demo_h0, aes(t, value, colour = variable)) +
               geom_path()
 
-noh
-
 # Save no-harvest plot to working directory.
-ggsave("nohplot.png", plot = noh, dpi = 300, width = 6.5, height = 4.5)
+#ggsave("nohplot.png", plot = noh, dpi = 300, width = 6.5, height = 4.5)
 
 # Save no-harvest table to working directory.
-kable(demo_h0, digits = 2) %>%
-  kable_styling() %>%
-  save_kable(file = "nohtab.html", self_contained = T)
+#kable(demo_h0, digits = 2) %>%
+#  kable_styling() %>%
+#  save_kable(file = "nohtab.html", self_contained = T)
 
 ```
 
@@ -538,9 +536,9 @@ num = seq(1, length(var))
 tab = data.frame(num, fun, var, par)
 
 # Save parameters to working directory.
-kable(tab, digits = 2) %>%
-  kable_styling() %>%
-  save_kable(file = "partab.html", self_contained = T)
+#kable(tab, digits = 2) %>%
+#  kable_styling() %>%
+#  save_kable(file = "partab.html", self_contained = T)
 
 
 # Define a function for dynamic harvests over time.
@@ -641,7 +639,7 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                      
                      }
                     
-                    output = tibble(t, c, r) #tibble(t, h, r, c)
+                    output = tibble(t, c, r, h)
 
                   return(output)}
 
@@ -654,44 +652,42 @@ colnames(tibble_rc) = c("t", "var", "val")
 
 # Plot cumulative revenues and costs through harvest cycles.
 h = ggplot(tibble_rc, aes(t, val, colour = var)) +
-            geom_area(aes(fill = var), alpha = 0.5)
+            geom_point(aes(fill = var), alpha = 0.5)
 
-h
-
-# Save no-harvest plot to working directory.
-ggsave("hplot.png", plot = h, dpi = 300, width = 6.5, height = 4.5)
+# Save harvest plot to working directory.
+#ggsave("hplot.png", plot = h, dpi = 300, width = 6.5, height = 4.5)
 
 # Save output to working directory.
-kable(output) %>%
-  kable_styling() %>%
-  save_kable(file = "htab.html", self_contained = T)
+#kable(output) %>%
+#  kable_styling() %>%
+#  save_kable(file = "htab.html", self_contained = T)
 
 # Calculate and plot profit.
-#tbl_pi = output %>% 
-  #mutate(., c1 = lead(c)) %>% 
-  #mutate(., mc = ifelse(c1 - c > 0, c1 - c, 0)) %>% 
-  #mutate(., rsale = r * h) %>% 
-  #mutate(., pi = rsale - mc)
+tbl_pi = output %>% 
+  mutate(., c1 = lead(c)) %>% 
+  mutate(., mc = ifelse(c1 - c > 0, c1 - c, 0)) %>% 
+  mutate(., rsale = r * h) %>% 
+  mutate(., pi = rsale - mc)
 
-#plot(tbl_pi$t, tbl_pi$pi)
+plot(tbl_pi$t, tbl_pi$pi)
 
 # Calculate and plot cumulative profit.
-#pi_sum = as.numeric(vector(length = par[2]))
-#pi_sum[1] = 0
+pi_sum = as.numeric(vector(length = par[2]))
+pi_sum[1] = 0
 
-#for(i in 2:par[2]){pi_sum[i] = tbl_pi$r[i] * tbl_pi$h[i] - tbl_pi$mc[i] + pi_sum[i - 1]}
+for(i in 2:par[2]){pi_sum[i] = tbl_pi$r[i] * tbl_pi$h[i] - tbl_pi$mc[i] + pi_sum[i - 1]}
 
-#tbl_pi = cbind(tbl_pi, pi_sum)
+tbl_pi = cbind(tbl_pi, pi_sum)
 
 # Add a column for color by vertical position.
-#tbl_pi =  mutate(tbl_pi, color = ifelse(pi_sum > 0, 1, 0))
+tbl_pi = mutate(tbl_pi, color = ifelse(pi_sum > 0, 1, 0))
 
 # Basic plot.  
-#plot(tbl_pi$t, tbl_pi$pi_sum)
+plot(tbl_pi$t, tbl_pi$pi_sum)
 
-# Area plot.
+# Better plot.
 #ggplot(tbl_pi, aes(t, pi_sum)) +
-  #geom_area()
+#  geom_point()
 
 ```
 
