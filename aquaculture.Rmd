@@ -95,7 +95,7 @@ m_months = c(rep(5.00, 2), rep(2.40, 2), rep(1.60, 2), rep(1.15, 2), rep(1.00, 3
 
 dat_m = tibble(a_months, m_months)
 
-#plot(dat_m$a_months, dat_m$m_months)
+plot(dat_m$a_months, dat_m$m_months)
 
 ```
  
@@ -155,11 +155,13 @@ $M = \frac{\beta_1 * e^{\beta_2a}}{\beta_2}$
 
 ```{r am_function}
 
+# Note conversion from months to years for ease of use later.
+
 # Set marginal mortality.
-fn_am_marg = function(a, b1, b2){m = b1 * exp(b2 * a)} 
+fn_am_marg = function(a, b1, b2){m = b1 * exp(b2 * a * 12)} 
 
 # Set cumulative mortality.
-fn_am_cumu = function(a, b1, b2){M = (b1 * exp(b2 * a)) / b2}
+fn_am_cumu = function(a, b1, b2){M = (b1 * exp(b2 * a * 12)) / b2 - (b1 * exp(b2 * 0)) / b2} # Note y-intercept adjustment. Check integration.
 
 # Set parameters for reference.
 am_b1 = am_reg_tidy$estimate[1]
@@ -215,42 +217,38 @@ ggplot() +
 
 #####Age to Count
 
-After mortality, any biomass in excess of optimal stocking density is harvested. Optimal density is 140,000 kilograms per cage at and after first salable size.
-
-First salable size is set to 2 kilograms.
+After mortality, any biomass in excess of optimal stocking density is harvested. Optimal density is 140,000 kilograms per cage at and after first salable size. First salable size is 2 kilograms.
 
 $T = n_t^* - n_{t-1}^* * m_{t-1}$
 
 ```{r ac_calc}
 
 # Density is highest possible kilograms per cubic meter without density-dependence slowing growth.
-density = 160000
+density = 140000
 
 # Size is first saleable size in kilograms.
 size = 2
 
-am = seq(1, 240)
-ay = seq(1/12, 20, by = 1/12)
-amlag = am - 1
-w = fn_lw(wl_a, fn_vb(vb_linf, vb_k, ay, vb_t0), wl_b)
-n = density / w * (1 - 0.01 * fn_am_marg(amlag, am_b1, am_b2))
-
-# Hard-coding mortality yields a unidimensional function for integration below.
+a = seq(0, 30)
+w = fn_lw(wl_a, fn_vb(vb_linf, vb_k, a, vb_t0), wl_b)
+nstock = density / w * (1 - 0.01 * fn_am_marg(a, am_b1, am_b2)) # Note lag on age to get last year's mortality.
 
 # Cohort count at first saleable size is the ratio of density in kgm^-3 to size in kg.
 nsale = density / size
 
-# Initial cohort count is cohort count at first saleable size, plus cumulative mortality at first saleable age.
+# Initial cohort count is density at first saleable size, plus cumulative mortality at first saleable age.
 # Casually, nstart = nsale + mort(a(l(wsale)))
 # Cumulative mortality to first saleable age:
-a_sale = (vb_t0 - 1 / vb_k * (log(1 - ((size / wl_a) ^ (1 / wl_b))/vb_linf))) * 12
-m_sale = integrate(fn_am_marg, lower = 0, upper = a_sale, b1 = am_b1, b2 = am_b2)
+a_sale = (vb_t0 - 1 / vb_k * (log(1 - ((size / wl_a) ^ (1 / wl_b))/vb_linf))) # Inverse Von Bertalanffy.
+m_sale = fn_am_cumu(a_sale, am_b1, am_b2)
+nstart = nsale / (1 - m_sale * 0.01)
 
-# Initial cohort count:
-nstart = nsale + nsale * ((m_sale$value) * 0.01)
+# Trimming is individuals harvested each year to keep stocking density below maximum after mortality.
+# Here, trimming is cumulative. The iterative implementation is more useful.
+nmort = nstart * (1 - 0.01 * fn_am_cumu(a, am_b1, am_b2))
+ntrim = ifelse(nmort - nstock > 0, nmort - nstock, 0)
 
-# Trimming experiment:
-
+plot(a, ntrim)
 
 ```
 
@@ -442,16 +440,18 @@ Without a harvest mechanism, this series of functions and vectors just demonstra
 
 ```{r demo_noharvest}
 
-t = seq(1, 25)
+t = seq(0, 30)
 l = fn_vb(vb_linf, vb_k, t, vb_t0)
 w = fn_lw(wl_a, l, wl_b)
-#n = nstart - nstart * (100 + fn_am_cumu(t * 12, am_b1, am_b2)) * 0.01
-ymaw = fn_wm(w, 1500, wm_c, wm_k)
+# This implementation trims stock for optimal density, but does not reflect revenue from trimming. Also, there's a mystery NA in n[1].
+n = nmort - ntrim
+n[1] = nstart
+ymaw = fn_wm(w, n, wm_c, wm_k)
 pmaw = fn_mp(w, mp_b0, mp_b1)
 rmaw = fn_mr(ymaw, pmaw)
-rround = fn_fr(w, 1500, pround)
+rround = fn_fr(w, n, pround)
 r = rround + rmaw 
-c =  fn_ch0(w, f_b1, f_b2, ch0_cf, 1500, o)# + 25 * w ^ 2.5 # Note suffix for corrective shift up. Fix it.
+c =  fn_ch0(w, f_b1, f_b2, ch0_cf, n, o)
 
 demo_h0 = data.frame(t, r, c)
 
@@ -499,14 +499,14 @@ var = c("start",
         "disc")
 
 
-par = c(1, 
-        25, 
+par = c(0, 
+        30, 
         vb_linf, 
         vb_k, 
         vb_t0,
         wl_a,
         wl_b,
-        1500,
+        nstart,
         wm_c,
         wm_k,
         mp_b0,
@@ -593,7 +593,7 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
 
                    l1[1] = fn_vb(par[3], par[4], 2, par[5])
                    w1[1] = fn_lw(par[6], l1[1], par[7])
-                   n1[1] = par[8]
+                   n1[1] = par[8] # Fix this to reflect change from constant n to n with mortality and trimming.
                    y1[1] = fn_wm(w1[1], n1[1], par[9], par[10])
                    p1[1] = fn_mp(w1[1], par[11], par[12])
                    rmaw1[1] = y1[1] * p1[1]
@@ -612,7 +612,7 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                      
                      l0[i] = fn_vb(par[3], par[4], a0[i], par[5])
                      w0[i] = fn_lw(par[6], l0[i], par[7])
-                     n0[i] = par[8]
+                     n0[i] = n[i] # Fix mortality and trimming.
                      y0[i] = fn_wm(w0[i], n0[i], par[9], par[10])
                      p0[i] = fn_mp(w0[i], par[11], par[12])
                      rmaw0[i] = y0[i] * p0[i]                         # Fix yield-revenue function for maw.
@@ -622,7 +622,7 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                      
                      l1[i] = fn_vb(par[3], par[4], a1[i], par[5])
                      w1[i] = fn_lw(par[6], l1[i], par[7])
-                     n1[i] = par[8]
+                     n1[i] = n[i - 1] # Fix mortality and trimming.
                      y1[i] = fn_wm(w1[i], n1[i], par[9], par[10])
                      p1[i] = fn_mp(w1[i], par[11], par[12])
                      rmaw1[i] = y1[i] * p1[i]                         # Fix yield-revenue function for maw.

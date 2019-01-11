@@ -475,16 +475,16 @@ try2 =
 ggplot(filter(melt, variable != "X1"), aes(t, value, color = variable)) +
   geom_line()
 
-#melt$variable = str_remove(melt$variable, "X")
-#melt$variable = as.numeric(melt$variable)
+melt$variable = str_remove(melt$variable, "X")
+melt$variable = as.numeric(melt$variable)
 
-#try3 = 
-#ggplot(melt, aes(x = variable, z = value, y = t, color = variable)) + 
-#  theme_void() + 
-#  #axes_3D() + 
-#  stat_3D(geom = "point", phi = 45, theta = 135) +
-#  #labs_3D() +
-#  scale_color_distiller(palette = "RdBu")
+try3 = 
+ggplot(melt, aes(x = variable, z = value, y = t, color = variable)) + 
+  theme_void() + 
+  #axes_3D() + 
+  stat_3D(geom = "point", phi = 45, theta = 135) +
+  #labs_3D() +
+  scale_color_distiller(palette = "RdBu")
 
 ```
 
