@@ -375,8 +375,8 @@ nlm = nls(p ~ q * a + (g ^ b) + c, data = tinydat, start = c(a = -5.00, b = 2.00
 
 ```{r nlm_tidy}
 
-nlm_tidy = tidy(nlm)
-tinydat_aug = augment(nlm, tinydat)
+#nlm_tidy = tidy(nlm)
+#nlm_aug = augment(nlm_tidy, tinydat)
 
 ```
 
