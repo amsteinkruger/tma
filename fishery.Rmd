@@ -1,12 +1,12 @@
 ---
 title: "Fishery Model"
 date: "`r Sys.Date()`"
-output: pdf_document
+output: html_document
 ---
 
 ```{r pkg_ins, include = FALSE}
 
-# rm(list=ls())
+rm(list=ls())
 
 # Check out knitr for knitr::read_chunk.
 library(knitr)
@@ -24,7 +24,7 @@ pkg <- c("readr",
          "reshape2")
 
 # Install packages.
-#install.packages(pkg, verbose = FALSE, quiet = TRUE)
+install.packages(pkg, verbose = FALSE, quiet = TRUE)
   
 # Update packages.
 #update.packages(pkg, verbose = FALSE, quiet = TRUE)
@@ -37,11 +37,11 @@ lapply(pkg, library, character.only = TRUE)
 #####Objective: Step through optimal aggregate harvest in an open access fishery.
 Swap out toy model for INAPESCA's age-structured model. Sort out selectivity and dam problems.
 
-Toy Model (Conrad):
+#####Toy Model (Conrad):
 
 Stock
 
-$X_{t+1} = X_t (1 + r - r X_t / K - qE_t)$
+$X_{t+1} = X_t (1 + r - \frac{rX_t}{K} - qE_t)$
 
 Yield-Effort
 
@@ -51,17 +51,69 @@ Dynamic Effort
 
 $E_{t+1} =  E_t ( 1 + \eta (p q X_t - c ))$
 
-Variable  | Definition
---------- | ---------------------------
-*t*       | Timestep (Year)
-*X*       | Stock (Tons)
-*r*       | Growth (%)
-*K*       | Carrying Capacity (Tons)
-*q*       | Catchability (Parameter)
-*E*       | Effort (Vessel Days)
-$\eta$    | Adjustability (Parameter)
-*p*       | Price (USD2018 / Ton)
-*c*       | Cost (USD2018 / Vessel Day)
+```{r placeholder_parameterization}
+
+k = 50217
+
+y_50 = 687
+x0_50= 38820
+x1_50= 38938
+
+y_60 = 731
+x0_60= 41829
+x1_60= 41785
+
+y_70 = 471
+x0_70= 40617
+x1_70= 40900
+
+r_50 = (k * (y_50 - x0_50 + x1_50)) / (x0_50 * (k - x0_50))
+r_60 = (k * (y_60 - x0_60 + x1_60)) / (x0_60 * (k - x0_60))
+r_70 = (k * (y_70 - x0_70 + x1_70)) / (x0_70 * (k - x0_70))
+
+r = (r_50 + r_60 + r_70) / 3
+
+qe_50 = - r * x0_50 / k + r - x1_50 / k + 1
+qe_60 = - r * x0_60 / k + r - x1_60 / k + 1
+qe_70 = - r * x0_70 / k + r - x1_70 / k + 1
+
+q = 0.001
+n = 0.0001
+
+e_50 = qe_50 / q
+e_60 = qe_60 / q
+e_70 = qe_70 / q
+
+p = 10
+c = p / 5
+
+# Final parameterization:
+y_10 = 752
+x0_10= 18243
+x1_10= 17756
+
+r_10 = (k * (y_10 - x0_10 + x1_10)) / (x0_10 * (k - x0_10))
+
+e_10 = ( - r_10 * x0_10 / k + r_10 - x1_10 / k + 1 ) / q
+
+p_10 = 50
+c_10 = p / 10
+
+n_10 = 0.005
+
+```
+
+Variable  | Definition                  | Value
+--------- | --------------------------- | ----------------------
+*t*       | Timestep (Year)             |
+*X*       | Stock (Tonnes)              |
+*r*       | Growth (%)                  | `r r`
+*K*       | Carrying Capacity (Tonnes)  | `r k`
+*q*       | Catchability (Parameter)    | 
+*E*       | Effort (Vessel Days)        |
+$\eta$    | Adjustability (Parameter)   | `r n`
+*p*       | Price (USD2018 / Ton)       | `r p`
+*c*       | Cost (USD2018 / Vessel Day) | `r c`
 
 #####1. Logistic Growth Demo
 
@@ -72,9 +124,9 @@ $\eta$    | Adjustability (Parameter)
 # Growth / Stock, i.e. F(X)/X. NB: Not dynamic, just a demo of growth from different stocks.
 fx_log = function(r, k, x){ fx = r * x * ( 1 - x / k )}
 
-demo_x = seq(0, 50)
+demo_x = seq(0, k, by = 1000)
 
-demo_fx = fx_log(0.25, 50, demo_x)
+demo_fx = fx_log(r, k, demo_x)
 
 plot(demo_x, demo_fx)
 
@@ -87,9 +139,9 @@ x_log = function(r, k, x0, start, end){
                      return(v_n)}
 
 
-demo_x_log = x_log(0.25, 50, 10, 2000, 2025)
+demo_x_log = x_log(r, k, x0_50, 1950, 1975)
 
-t = seq(2000, 2025)
+t = seq(1950, 1975)
 
 plot(t, demo_x_log)
 
@@ -99,26 +151,19 @@ plot(t, demo_x_log)
 
 # Function for Effort at MSY:
 #  Conrad pp87
-demo_e = function(r, k, q, p, c, eta){ e = ( r * ( p * q * k - c )) / ( p * q ^ 2 * k)}
-
-# Effort / Carrying Capacity.
-demo_k = seq(0, 50)
-
-demo_e_k = demo_e(0.25, demo_k, 0.05, 50, 1, 1)
-
-plot(demo_k, demo_e_k)
+demo_e = function(r, k, q, p, c){ e = ( r * ( p * q * k - c )) / ( p * q ^ 2 * k)}
 
 # Effort / Price, Y = FX = MSY.
-demo_p = seq(0, 50)
+demo_p = seq(0.5 * p, 1.5 * p)
 
-demo_e_p = demo_e(0.25, 50, 0.05, demo_p, 1, 1)
+demo_e_p = demo_e(r, k, q, demo_p, c)
 
 plot(demo_p, demo_e_p)
 
 # Effort / Cost, Y = FX = MSY.
-demo_c = seq(0, 50)
+demo_c = seq(0.5 * c, 1.5 * c)
 
-demo_e_c = demo_e(0.25, 50, 0.05, 50, demo_c, 1)
+demo_e_c = demo_e(r, k, q, p, demo_c)
 
 plot(demo_c, demo_e_c)
 
@@ -127,55 +172,87 @@ plot(demo_c, demo_e_c)
 ``` {r dynamic}
 # Effort / Time.
 # x_log modified to only return x for handy use in x_log_p - revert and make fresh function for x_log_p.
-x_log = function(r, k, q, p, c, eta, x0, e0, start, end){
+x_log = function(r, k, q, p, c, n, x0, e0, start, end){
                      x = as.numeric(vector(length = (end - start)))
                      x[1] = x0
                      e = as.numeric(vector(length = (end - start)))
-                     e[1] = e0
+                     e[1] = e_50
                      T = length(seq(start, end))
                      t = seq(start, end)
-            for (i in 2:T){x[i] = x[i-1] * ( 1 + r - r * x[i-1] / k - q * e[i-1])
-                           e[i] = e[i-1] * ( 1 + eta * ( p * q * x[i-1] - c))}
+                     for (i in 2:T){x[i] = ifelse(x[i-1] * ( 1 + r - r * x[i-1] / k - q * e[i-1]) > 2,
+                                                  x[i-1] * ( 1 + r - r * x[i-1] / k - q * e[i-1]),
+                                                  2)
+                                    e[i] = ifelse(e[i-1] * ( 1 + n * ( p * q * x[i-1] - c)) > 0,
+                                                  e[i-1] * ( 1 + n * ( p * q * x[i-1] - c)),
+                                                  0)}
+                     #demo = tibble(t, x, e)
+                     
                      return(x)}
 
+# Model test for 1950 - 1975.
+#demo_19 = x_log(r, k, q, p, c, n, x0_50, e_50, 1950, 1975)
 
-#demo_x_log = x_log(0.1, 1, 0.01, 200, 1, 0.3, 0.50, 1.00, 0, 100)
+#plot(demo_19$t, demo_19$x)
+#plot(demo_19$t, demo_19$e)
+#demo_19
 
-#plot(demo_x_log$x, demo_x_log$e)
+# Model test for period of interest.
+#demo_20 = x_log(r_10, k, n, p_10, c_10, 0.005, x0_10, e_10, 2010, 2020)
 
-#plot(demo_x_log$t, demo_x_log$x)
+#plot(demo_20$t, demo_20$x)
+#plot(demo_20$t, demo_20$e)
+#demo_20
 
 # Function for multiple runs stored in a matrix.
-x_log_p = function(r, k, q, c, eta, x0, e0, start, end, p_lwr, p_upr){
+x_log_p = function(r, k, q, c, n, x0, e0, start, end, p_lwr, p_upr){
                       t = seq(start, end)
                       p = seq(p_lwr, p_upr)
-                      mat_x_p = matrix(, nrow = length(t), ncol = length(p), dimnames = list(NULL, (paste("p_",p_lwr:p_upr, sep = ""))))
-                        for(j in 1:length(p)){mat_x_p[, j] = x_log(r, k, q, (j+p_lwr-1), c, eta, x0, e0, start, end)}
+                      mat_x_p = matrix(, nrow = length(t), ncol = length(p), dimnames = list(NULL, (paste("p_", p, sep = ""))))
+                        for(j in 1:length(p)){mat_x_p[, j] = x_log(r, k, q, p_lwr + j, c, n, x0, e0, start, end)}
                       return(mat_x_p)}
 
+# 1950 - 1975.
 # Cough up a matrix and reformat it as a data frame with a time variable.
-demo_x_log_p = x_log_p(0.1, 1, 0.01, 1, 0.3, 0.50, 1.00, 0, 250, 50, 150) %>% 
+demo_19_p = x_log_p(r, k, q, c, n, x0_50, e_50, 1950, 1975, 5, 15) %>% 
   data.frame(.) #%>% 
   #mutate(., t = seq(0, 100)) #%>% 
 
 # Fix this abomination.
-demo_x_log_p_long = reshape2::melt(demo_x_log_p)
+demo_19_p_long = reshape2::melt(demo_19_p)
 
 # This is part of the abomination.
-demo_x_log_p_long = cbind(demo_x_log_p_long, rep(seq(0, 250), times = 101))
-colnames(demo_x_log_p_long)[1:3] = c("p", "x", "t")
+demo_19_p_long = cbind(demo_19_p_long, rep(seq(1950, 1975), times = 11))
+colnames(demo_19_p_long)[1:3] = c("p", "x", "t")
 
 # Plot. Abomination stops here.
-fish = ggplot(demo_x_log_p_long, aes(t, x, color = p, group = p)) + 
+plot19 = ggplot(demo_19_p_long, aes(t, x, color = p, group = p)) + 
+  geom_path() +
+  theme(legend.position = "none")
+
+# 2010 - 2020.
+# Cough up a matrix and reformat it as a data frame with a time variable.
+demo_20_p = x_log_p(r_10, k, q, c_10, n_10, x0_10, e_10, 2010, 2020, 45, 55) %>% 
+  data.frame(.) #%>% 
+  #mutate(., t = seq(0, 100)) #%>% 
+
+# Fix this abomination.
+demo_20_p_long = reshape2::melt(demo_20_p)
+
+# This is part of the abomination.
+demo_20_p_long = cbind(demo_20_p_long, rep(seq(2010, 2020), times = 11))
+colnames(demo_20_p_long)[1:3] = c("p", "x", "t")
+
+# Plot. Abomination stops here.
+plot20 = ggplot(demo_20_p_long, aes(t, x, color = p, group = p)) + 
   geom_path() +
   theme(legend.position = "none")
 
 # Plot by status. Thresholds are arbitrary. This gets you a flag effect, but not a path-dependency illustration.
 #demo_x_log_p_long = mutate(demo_x_log_p_long, status = ifelse(x < 0.7, "bad", ifelse(x < 0.8, "meh", "good")))
 
-ggplot(demo_x_log_p_long, aes(t, x, group = p)) + 
-  geom_path() +
-  theme(legend.position = "none")
+#ggplot(demo_x_log_p_long, aes(t, x, group = p)) + 
+  #geom_path() +
+  #theme(legend.position = "none")
 
 # Group by p, mutate status, ungroup?, plot with status by group.
 #group_by
@@ -186,3 +263,228 @@ ggplot(demo_x_log_p_long, aes(t, x, group = p)) +
 #ggplot(demo_x_log_p, aes(t, ))
 
 ```
+
+#####Pig
+
+Looking for:
+Matrices:
+Numbers at Age by Year
+Total Weights at Age by Year
+Total Fecundities at Age by Year
+
+Vectors:
+Initial Numbers at Age
+Individual Lengths at Age
+Individual Weights at Age
+Individual Fecundities at Age
+Proportional Natural Mortalities at Age
+Proportional Poaching Selectivities at Age
+Proportional Bycatch Selectivities at Age
+
+
+Toy Version:
+
+```{r age_struct_toy}
+
+# Matrix of numbers at age by year.
+mat_a = matrix(nrow = 10, ncol = 5)
+
+# Vector for initial n at a.
+v_init = seq(5, 1)
+
+# Vectors for proportional mortalities by age. NB: Survival, not mortality.
+v_mort_first = 0.5
+v_mort_rest = c(0.85, 0.875, 0.90, 1)
+
+# Vector for proportional fecundities at age. Each fecund fish returns two fish. 
+v_fec_rest = rep(0.25, 4)
+
+# Plug initial numbers into the matrix.
+mat_a[1,] = v_init
+
+# Run one-shot test.
+mat_a[2, 2:5] = mat_a[1, 1:4] * v_mort_rest
+mat_a[2, 1] = sum(mat_a[1, 2:5] * v_fec_rest * 3)
+
+# Set up first test.
+fun_test = function(nrow, ncol){
+                                mat_a = matrix(nrow = nrow, ncol = ncol)
+                                v_init = seq(5, 1)
+                                v_mort_first = 0.5
+                                v_mort_rest = c(0.85, 0.875, 0.90, 1)
+                                v_fec_rest = rep(0.25, 4)
+                                mat_a[1,] = v_init
+                                for(i in 2:nrow){mat_a[i, 2:5] = mat_a[i - 1, 1:4] * v_mort_rest
+                                                 mat_a[i, 1] = sum(mat_a[i - 1, 2:5] * v_fec_rest * 3)/(1 + mat_a[i - 1, 1] / 250)}
+                                  
+                                return(mat_a)}
+
+# Run first test.
+uh = fun_test(50, 5)
+
+duh = data.frame(uh)
+
+mut = mutate(duh, t = seq(0, 49))
+
+melt = melt(mut, id.vars = "t")
+
+ggplot(melt, aes(t, value, color = variable)) +
+  geom_line()
+
+```
+
+Totoaba Version:
+
+```{r age_struct_tma}
+
+# Matrix of numbers at age by year.
+mat_a = matrix(nrow = 50, ncol = 30)
+
+# Vector for initial n at a.
+#  Assign initial biomass from INAPESCA estimate.
+#  Try the lower bound on the 95% CI of INAPESCA's 2017 estimate from surveys.
+biomass_init = 25709000 # kilograms.
+
+#  Assign functional form for frequencies at age from True (2018). See notes on symposium presentation. Check whether curve describes numbers at age.
+fun_a_n = function(a){121.99 * 10 ^ (-0.214 * a)}
+
+#  Convert numbers at age to sums of weights at age to work from total biomass back to numbers at age.
+fun_a_l = function(a, linf, k, t0){l = linf * (1 - exp(-k * (a - t0)))} # INAPESCA (2018): 200, 0.155, -0.65. See notes for alternatives.
+fun_l_w = function(a, l, b){w = a * l ^ b} # INAPESCA (2018) / Anda-Montañez et al. (2013): 0.000005, 3.0635. See notes for alternatives.
+
+# Calculations:
+#  Vector of ages.
+a = seq(0, 29)
+#  Vector of lengths.
+l = fun_a_l(a, 200, 0.155, -0.65)
+#  Vector of weights.
+w = fun_l_w(0.000005, l, 3.0635)
+#  Numbers at age.
+afreq = fun_a_n(a)
+#  Weights at age.
+wfreq = afreq * w
+#  Weights at age, but useful.
+winit = wfreq * (1 / sum(wfreq)) * biomass_init
+#  Numbers at age to seed the model. That wasn't so hard, right?
+ninit = winit / w
+plot(ninit)
+
+# Vector for proportional natural mortalities at age. NB: Survival, not mortality. From INAPESCA (2018) / Cisneros-Mata et al. (1995).
+v_mort = rep(0.73, 30)
+
+# Vector for proportional poaching mortalities at age.
+#  Read in values for size-selective poaching from INAPESCA (2018); n = 1147 from 9 periods, 1963 - 2017.
+v_select_data = 
+  c(6, 9, 15, 60, 191, 281, 165, 133, 82, 33, 27, 21, 17, 10, 12, 16, 8, 15, 9, 12, 7, 9, 5, 2, 2, 0) %>% 
+  data.frame() %>% 
+  mutate(age = seq(1, 26)) %>% 
+  rename(n = ".")
+
+#  Estimate fit for a Weibull probability density function, because the internet said so. Try weibull.com/hotwire/issue14/relbasics14.htm
+nls_select = nls(v_select_data$n ~ ifelse(is.na(x * (a / b) * ((v_select_data$age - c) / b) ^ (a - 1) * exp(-((v_select_data$age - c) / b ) ^ a)),
+                                          0,
+                                          x * (a / b) * ((v_select_data$age - c) / b) ^ (a - 1) * exp(-((v_select_data$age - c) / b ) ^ a)),
+                 v_select_data, 
+                 start = list(x = 3000, a = 2.5, b = 10, c = -3), 
+                 lower = list(0, 0, 0, -Inf),
+                 algorithm = "port")
+
+#  Tibbulate nonlinear estimation.
+nls_tidy = tidy(nls_select)
+
+#  Plot fit against actual values.
+fun_select = function(x, a, b, c, t){n = ifelse(is.na(x * (a / b) * ((t - c) / b) ^ (a - 1) * exp(-((t - c) / b ) ^ a)),
+                                                0,
+                                                x * (a / b) * ((t - c) / b) ^ (a - 1) * exp(-((t - c) / b ) ^ a))
+                                     return(n)}
+
+v_select_fit = fun_select(nls_tidy$estimate[1], nls_tidy$estimate[2], nls_tidy$estimate[3], nls_tidy$estimate[4], seq(1, 26))
+
+ggplot() + 
+  geom_point(aes(seq(1, 26), v_select_fit), color = "Red") + 
+  geom_point(aes(seq(1, 26), v_select_data$n), color = "Green")
+
+#  Consider fixing the upper tail. Those residuals probably matter.
+
+#  Use parameters to restate the function on a single dimension (age) for integration.
+simple_fun_select = function(t){n = 
+                                ifelse(is.na(nls_tidy$estimate[1] * (nls_tidy$estimate[2] / nls_tidy$estimate[3]) * ((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3]) ^ (nls_tidy$estimate[2] - 1) * exp(-((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3] ) ^ nls_tidy$estimate[2])),
+                                0,
+                                nls_tidy$estimate[1] * (nls_tidy$estimate[2] / nls_tidy$estimate[3]) * ((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3]) ^ (nls_tidy$estimate[2] - 1) * exp(-((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3] ) ^ nls_tidy$estimate[2]))
+                                return(n)}
+
+#  Integrate over ages of interest. Those should probably be a universal parameter at this point. Consider fixing.
+int_select = integrate(simple_fun_select, lower = 0, upper = 29)
+
+#  Transform fitted values for poaching selectivity into a probability distribution function using the integral of the unidimensional function.
+v_select_pdf = fun_select(nls_tidy$estimate[1], nls_tidy$estimate[2], nls_tidy$estimate[3], nls_tidy$estimate[4], seq(0, 29)) * 1 / int_select$value
+
+#  Transform 2017 catch into 2017 catch-at-age in weight, then transform that sucker into catch-at-age in numbers, then make it proportions again.
+#  Make this comment better.
+catch = 1400000 # kilograms from tonnes. INAPESCA (2018).
+v_select_n = catch * v_select_pdf / w # Check your conversion! You did this in the middle of the night, check it!
+v_select_use = v_select_n/ninit # Diagnostic plot indicates you should really, really fix the residuals on the selectivity estimation.
+
+# Value for proportional bycatch mortalities at age.
+bymort_init = 80000 # INAPESCA (2018) - estimated for 2011 - 2017 by some sort of credible method, probably.
+bymort = 1 - bymort_init / ninit[2] # Instead of distributing bycatch mortalities, we concentrate them on one age (1) for lack of length-at-age resolution.
+
+# Vector for proportional fecundities at age. From INAPESCA (2018) / Valenzuela-Quiñonez (2014).
+#  Set function.
+fun_fec = function(l){1 / ( 1 + exp(-0.0099 * ((l - 133.331) * 10)))}
+#  Transform vector of lengths at age to fecundities.
+v_fec = fun_fec(l)
+
+# Vector for production of fecund hembras at age by way of length.
+#  Set function for eggs per kilogram of total weight of mature fish.
+fun_eggs = function(l){221.76 * exp(0.0047 * l)} # Valenzuela-Quiñonez (2014); used with Anda-Montañez et al. (2013) for mean by INAPESCA (2018).
+
+#  Get values corresponding to vector of lengths.
+v_eggs_l = fun_eggs(l)
+
+#  Get values corresponding to vector of weights - this works out to be egg production at age before accounting for maturation.
+v_eggs_w = v_eggs_l * w
+
+# So account for maturation and survival, dummy. Survival from egg to juvenile from INAPESCA (2018). Reference against True (2018).
+v_eggs_surv = 0.3 * 0.9 * 0.95 * 0.1
+v_eggs = v_eggs_w * v_fec * v_eggs_surv
+
+# Plug initial numbers into the matrix.
+mat_a[1,] = ninit
+
+# Set up first test.
+fun_test = function(nrow, ncol, ninit, v_mort, bymort, v_select_use, v_eggs, k){
+                                mat_a = matrix(nrow = nrow, ncol = ncol)
+                                mat_a[1,] = ninit
+                                for(i in 2:nrow){mat_a[i, 3:30] = mat_a[i - 1, 2:29] * v_mort[3:30] * (1 - v_select_use[3:30])
+                                                 mat_a[i, 2] = mat_a[i - 1, 2] * v_mort[2] * bymort * (1 - v_select_use[2])
+                                                 mat_a[i, 1] = sum(mat_a[i - 1, 1:30] * v_eggs)/(1 + mat_a[i - 1, 1] / k)}
+                                  
+                                return(mat_a)}
+
+# Run first test.
+uh = fun_test(25, 30, ninit, v_mort, bymort, v_select_use, v_eggs, 5000000)
+
+duh = data.frame(uh)
+
+mut = mutate(duh, t = seq(0, 24))
+
+melt = melt(mut, id.vars = "t")
+
+try2 =
+ggplot(filter(melt, variable != "X1"), aes(t, value, color = variable)) +
+  geom_line()
+
+melt$variable = str_remove(melt$variable, "X")
+melt$variable = as.numeric(melt$variable)
+
+try3 = 
+ggplot(melt, aes(x = variable, z = value, y = t, color = variable)) + 
+  theme_void() + 
+  #axes_3D() + 
+  stat_3D(geom = "point", phi = 45, theta = 135) +
+  #labs_3D() +
+  scale_color_distiller(palette = "RdBu")
+
+```
+

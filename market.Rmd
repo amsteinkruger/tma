@@ -1,7 +1,7 @@
 ---
 title: "Market Model"
 date: "`r Sys.Date()`"
-output: pdf_document
+output: html_document
 ---
 
 #####Objective: Visualize database of prices for swim bladder at first and final sale.
@@ -19,6 +19,8 @@ Bonus: is stockpiling apparent or plausible?
 
 ```{r pkg_ins, include = FALSE}
 
+rm(list=ls())
+
 # Check out knitr for knitr::read_chunk.
 library(knitr)
 
@@ -30,10 +32,12 @@ pkg <- c("readr",
          "sandwich",
          "broom",
          "stargazer",
-         "cowplot")
+         "pander",
+         "cowplot",
+         "kableExtra")
 
 # Install packages.
-#install.packages(pkg, verbose = FALSE, quiet = TRUE)
+install.packages(pkg, verbose = FALSE, quiet = TRUE)
 
   
 # Update packages.
@@ -62,16 +66,14 @@ Everyone loves cleaner data.
 
 # Drop, rename, and rearrange variables for a full join.
 dat_tma = dat_tma %>%
-  select(., 
-         -Month, 
+  select(-Month, 
          -`Price (USD/kg)`, 
          -`Price (per lb.)`, 
          -`Price (per buche local)`, 
          -`Price (per buche Asia)`, 
          -`Condition (Inferred)`) %>%
-  rename(., 
-         "year" = Year,
-         "price_gram" = "Price (USD/g)",
+  rename(year = Year,
+         price_gram = "Price (USD/g)", 
          "price_total" = "Total Value (USD)",
          "kg_buche" = "Mass/Buche (kg)",
          "kg_total" = "Mass (kg.)",
@@ -80,9 +82,9 @@ dat_tma = dat_tma %>%
          "condition" = Condition,
          "place" = Country, 
          "source" = Source) %>% 
-  mutate(., sp_sci = "Totoaba macdonaldi") %>% 
-  mutate(., sp_com = "Totoaba") %>% 
-  tbl_df(.)
+  mutate(sp_sci = "Totoaba macdonaldi") %>% 
+  mutate(sp_com = "Totoaba") %>% 
+  tbl_df()
 
 dat_other = dat_other %>%
   select(., 
@@ -177,7 +179,7 @@ dat = left_join(dat, dat_q, by = "year")
 #####5. Visualizations
 All that really matters is graphs.
 
-```{r figs, echo = FALSE, width = 6.5, height = 4.5, dpi = 300}
+```{r figs, echo = FALSE, width = 6.5, height = 4.5, dpi = 300, eval = FALSE}
 
 # break this up by group of figures ; add captions for each group, or for each as necessary
 
@@ -293,7 +295,7 @@ ggsave("pgr_all.pdf", dpi = 300, pgr_all)
 
 ```
 
-```{r show}
+```{r show, eval = FALSE}
 
 # Display figures.
 tma
@@ -310,7 +312,7 @@ pgr_all
 
 # Save figures.
 
-ggsave("filename.filetype", ggobject)
+#ggsave("filename.filetype", ggobject)
 
 ```
 
@@ -358,8 +360,8 @@ OLS suits the question for reasons. Necessary assumptions are several.
 
     # Intuition: for any maw, price follows supply, weight, and processing.
 #lm = lm((`Price (USD2018)`) ~ (`Quantity Supplied (Tonnes)`) + (`Grams / Unit`) + (`Processing`), data = tinydat)
-lm = lm(p ~ q + g, data = tinydat)
-lmlog = lm(log(p) ~ log(q) + g, data = tinydat)
+#lm = lm(p ~ q + g, data = tinydat)
+#lmlog = lm(log(p) ~ log(q) + g, data = tinydat)
 nlm = nls(p ~ q * a + (g ^ b) + c, data = tinydat, start = c(a = -5.00, b = 2.00, c = 20))
 
 ```
@@ -367,29 +369,96 @@ nlm = nls(p ~ q * a + (g ^ b) + c, data = tinydat, start = c(a = -5.00, b = 2.00
 ```{r star, results='asis'}
 
 # Display model results.
-stargazer(lm, type = "latex", digits = 2)
+#stargazer(lm, type = "latex", digits = 2)
 
 ```
 
-#####7. Model Comparison
-Some models are better than others, but who's to say which?
+```{r nlm_tidy}
 
-```{r test, eval = FALSE}
-
-#AIC(models)
+#nlm_tidy = tidy(nlm)
+#nlm_aug = augment(nlm_tidy, tinydat)
 
 ```
 
+```{r nlm_plots}
 
-#####8. Model Visualization
-Again, graphs.
+# Price against grams maw.
+plot_nlm_g =
+  ggplot(tinydat_aug) +
+  geom_point(aes(g, p), colour = "gray50") +
+  geom_segment(aes(x = g, y = p, xend = g, yend = .fitted), colour = "gray50") +
+  geom_point(aes(g, .fitted), colour = "firebrick") +
+  labs(x = "Grams of Dry Maw", y = "USD2018 / Gram") +
+  scale_y_continuous(breaks = seq(0, 100, by = 50), limits = c(0, 100), expand = c(0, 0)) +
+  #ggtitle("Observed and Estimated Prices for Totoaba Maw by Maw Weight") +
+  theme(axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        legend.text = element_text(size = 8),
+        axis.title.x = element_text(size = 9),
+        axis.title.y = element_text(size = 9),
+        legend.title = element_text(size = 9)) +#,
+        #plot.title = element_text(size = 9)) +
+  theme_classic()
 
-```{r}
+# Price against tonnes maw.
+plot_nlm_q = 
+  ggplot(tinydat_aug) +
+  geom_boxplot(aes(as.factor(q), .fitted), colour = "firebrick") +
+  geom_jitter(aes(as.factor(q), p), colour = "gray50") +
+  labs(x = "Tonnes of Dry Maw at Market", y = "USD2018 / Gram") +
+  scale_y_continuous(breaks = seq(0, 100, by = 50), limits = c(0, 100), expand = c(0, 0)) +
+  #ggtitle("Observed and Estimated Prices for Totoaba Maw by Maw Production") +
+  theme(axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        legend.text = element_text(size = 8),
+        axis.title.x = element_text(size = 9),
+        axis.title.y = element_text(size = 9),
+        legend.title = element_text(size = 9)) +#,
+        #plot.title = element_text(size = 9)) +
+  theme_classic()
+
+# Price against quantity, with some prerequisite math first.
+pintl = as.numeric(nlm_tidy[3, 2])
+qintl = - as.numeric(nlm_tidy[3, 2]) / as.numeric(nlm_tidy[1, 2])
+pinth = as.numeric(nlm_tidy[3, 2]) + 1000^as.numeric(nlm_tidy[2, 2])
+qinth = - (as.numeric(nlm_tidy[3, 2]) + 1000^as.numeric(nlm_tidy[2, 2])) / as.numeric(nlm_tidy[1, 2])
+pintll= pintl + as.numeric(nlm_tidy[1, 2]) * qinth
+pinthm= pinth + as.numeric(nlm_tidy[1, 2]) * qintl
+
+# Throw intercepts into a data frame.
+invd  = data.frame(c(0, qintl, qinth), c(pintl, 0, pintll), c(pinth, pinthm,0)) 
+colnames(invd) = c("q", "pl", "ph")
+
+plot_invd =
+ggplot() +
+  geom_ribbon(data = invd, aes(q, ymin = pl, ymax = ph), alpha = 0.5, colour = "firebrick", fill = "firebrick") +
+  geom_point(data = tinydat_aug, aes(q, p), colour = "gray50") +
+  coord_cartesian(xlim = c(0, qinth), ylim = c(0, pinth), expand = FALSE) +
+  labs(x = "Tonnes of Dry Maw at Market", y = "USD2018 / Gram") +
+  #ggtitle("Observed and Estimated Prices for Totoaba Maw by Maw Production") +
+  theme(axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        legend.text = element_text(size = 8),
+        axis.title.x = element_text(size = 9),
+        axis.title.y = element_text(size = 9),
+        legend.title = element_text(size = 9)) +#,
+        #plot.title = element_text(size = 9)) +
+  theme_classic()
+
+# Kablify the model.
+nlm_tidy$term = c("Supply (Tonnes)", "Weight (Grams)", "Choke Price")
+colnames(nlm_tidy) = c("", "Coef.", "SE", "t", "p")
+kable(nlm_tidy, format = "html", caption = "Inverse Demand Specification", digits = 3) %>% 
+  kable_styling("striped", full_width = F) #%>
+  #cat(file = "kab_nlm.html"
 
 ```
 
+```{r plotsave}
 
-#####Appendix: LaTeX Demo
+ggsave("plot_nlm_g.png", plot_nlm_g, width = 6.5, height = 4.5, dpi = 300)
+ggsave("plot_nlm_q.png", plot_nlm_q, width = 6.5, height = 4.5, dpi = 300)
+ggsave("plot_invd.png", plot_invd, width = 6.5, height = 4.5, dpi = 300)
 
-$$ d_i = \alpha_{0, i} - \alpha_{1, i} * x_{emissions} + u_i$$
+```
 
