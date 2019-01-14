@@ -255,12 +255,56 @@ melt$variable = str_remove(melt$variable, "X")
 melt$variable = as.numeric(melt$variable)
 
 try3 = 
-ggplot(melt, aes(x = variable, z = value, y = t, color = variable)) + 
+ggplot(melt, aes(x = variable, z = value, y = t, color = variable)) +
+  ggtitle("Numbers at Age for 25 Years, Ages 1 - 30") +
   theme_void() + 
+  theme(legend.position = "none") +
   #axes_3D() + 
   stat_3D(geom = "point", phi = 45, theta = 135) +
-  #labs_3D() +
   scale_color_distiller(palette = "RdBu")
+
+tryfirst = 
+ggplot(filter(melt, variable == 1), aes(x = variable, z = value, y = t, color = variable)) +
+  ggtitle("Numbers at Age for 25 Years, Ages 1 - 30") +
+  theme_void() + 
+  theme(legend.position = "none") +
+  #axes_3D() + 
+  stat_3D(geom = "point", phi = 45, theta = 135) +
+  scale_color_distiller(palette = "RdBu")
+
+trysecond = 
+ggplot(filter(melt, variable < 11 & variable > 1), aes(x = variable, z = value, y = t, color = variable)) +
+  ggtitle("Numbers at Age for 25 Years, Ages 2 - 10") +
+  theme_void() + 
+  theme(legend.position = "none",
+        plot.title = element_text(size = 8)) +
+  #axes_3D() + 
+  stat_3D(geom = "point", phi = 45, theta = 135) +
+  scale_color_distiller(palette = "Purples")
+
+trythird = 
+ggplot(filter(melt, variable < 21 & variable > 10), aes(x = variable, z = value, y = t, color = variable)) +
+  ggtitle("Numbers at Age for 25 Years, Ages 11 - 20") +
+  theme_void() + 
+  theme(legend.position = "none",
+        plot.title = element_text(size = 8)) +
+  #axes_3D() + 
+  stat_3D(geom = "point", phi = 45, theta = 135) +
+  scale_color_distiller(palette = "Reds")
+
+tryfourth = 
+ggplot(filter(melt, variable < 31 & variable > 20), aes(x = variable, z = value, y = t, color = variable)) +
+  ggtitle("Numbers at Age for 25 Years, Ages 21 - 30") +
+  theme_void() + 
+  theme(legend.position = "none",
+        plot.title = element_text(size = 8)) +
+  #axes_3D() + 
+  stat_3D(geom = "point", phi = 45, theta = 135) +
+  scale_color_distiller(palette = "Oranges")
+
+ggsave("f1plot.png", plot = trysecond, dpi = 300, width = 3.25, height = 4.5)
+ggsave("f2plot.png", plot = trythird, dpi = 300, width = 3.25, height = 4.5)
+ggsave("f3plot.png", plot = tryfourth, dpi = 300, width = 3.25, height = 4.5)
 
 ```
 

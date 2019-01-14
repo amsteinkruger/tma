@@ -20,7 +20,8 @@ pkg <- c("readr",
          "cowplot",
          "reshape2",
          "broom",
-         "kableExtra")
+         "kableExtra",
+         "scales")
 
 # Install packages.
 #install.packages(pkg, verbose = FALSE, quiet = TRUE)
@@ -433,44 +434,7 @@ ch1 = nstart * 2 + o
 
 ```
 
-
-#####No-Harvest Demo
-
-Without a harvest mechanism, this series of functions and vectors just demonstrates revenue and cost curves driving harvest in the next step.
-
-```{r demo_noharvest}
-
-#t = seq(1, 25)
-#l = fn_vb(vb_linf, vb_k, t, vb_t0)
-#w = fn_lw(wl_a, l, wl_b)
-# This implementation trims stock for optimal density, but does not reflect revenue from trimming.
-#n = nstart - fn_nt(density, w, a, am_b1, am_b2, nstart) #* (1 - fn_am_marg(t, am_b1, am_b2)) # Fix mortality.
-#ymaw = fn_wm(w, n, wm_c, wm_k)
-#pmaw = fn_mp(w, mp_b0, mp_b1, mp_b2, mp_q)
-#rmaw = fn_mr(ymaw, pmaw)
-#rround = fn_fr(w, n, pround)
-#r = rround + rmaw 
-#c =  fn_ch0(w, f_b1, f_b2, ch0_cf, n, o)
-
-#demo_h0 = data.frame(t, r, c)
-
-#demo_h0 = melt(demo_h0, id = 1)
-
-#noh = ggplot(demo_h0, aes(t, value, colour = variable)) +
-#              geom_path()
-
-# Save no-harvest plot to working directory.
-#ggsave("nohplot.png", plot = noh, dpi = 300, width = 6.5, height = 4.5)
-
-# Save no-harvest table to working directory.
-#kable(demo_h0, digits = 2) %>%
-#  kable_styling() %>%
-#  save_kable(file = "nohtab.html", self_contained = T)
-
-```
-
-
-#####Single Run, Harvest Demo
+#####Single-Run Harvest
 
 ```{r demo_harvest}
 
@@ -680,23 +644,37 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                      
                      }
                     
-                    output = tibble(t, c, r)
+                    output = tibble(t, c, r, h)
 
                   return(output)}
 
 # Run the dynamic harvest demo from parameters.
 output = aq(par)
 
-tibble_rc = melt(output, id = 1)
-
-colnames(tibble_rc) = c("t", "var", "val")
+tibble_rc = output %>% 
+  select(-h) %>% 
+  melt(id = 1) %>% 
+  rename(t = t, var = variable, val = value)
 
 # Plot cumulative revenues and costs through harvest cycles.
-h = ggplot(tibble_rc, aes(t, val, colour = var)) +
-            geom_point(aes(fill = var), alpha = 0.5)
+h = ggplot(tibble_rc, aes(t, val, color = var)) +
+      geom_path() +
+      labs(x = "Years", y = "USD2018") +
+      scale_x_continuous(expand = c(0, 0), limits = c(1, 25)) +
+      scale_y_continuous(expand = c(0, 0), limits = c(0, 300000000), labels = scales::comma) +
+      ggtitle("Costs and Revenues for One Cage - Trimming and Harvest") +
+      theme_classic() +
+      theme(axis.text.x = element_text(size = 8),
+          axis.text.y = element_text(size = 8),
+          #legend.text = element_text(size = 8),
+          axis.title.x = element_text(size = 9),
+          axis.title.y = element_text(size = 9),
+          #legend.title = element_text(size = 9),
+          plot.title = element_text(size = 9),
+          legend.position = "none")
 
 # Save harvest plot to working directory.
-#ggsave("hplot.png", plot = h, dpi = 300, width = 6.5, height = 4.5)
+ggsave("h1plot.png", plot = h, dpi = 300, width = 6.5, height = 4.5)
 
 # Save output to working directory.
 #kable(output) %>%
@@ -705,18 +683,19 @@ h = ggplot(tibble_rc, aes(t, val, colour = var)) +
 
 # Calculate and plot profit.
 tbl_pi = output %>% 
-  mutate(., c1 = lead(c)) %>% 
-  mutate(., mc = ifelse(c1 - c > 0, c1 - c, 0)) %>% 
-  mutate(., rsale = r * h) %>% 
-  mutate(., pi = rsale - mc)
+  mutate(c1 = lead(c)) %>% 
+  filter(!is.na(c1)) %>% 
+  mutate(mc = ifelse(c1 - c > 0, c1 - c, 0)) %>% 
+  mutate(rsale = r * h) %>% 
+  mutate(pi = rsale - mc)
 
 plot(tbl_pi$t, tbl_pi$pi)
 
 # Calculate and plot cumulative profit.
-pi_sum = as.numeric(vector(length = par[2]))
+pi_sum = as.numeric(vector(length = par[2] - 1))
 pi_sum[1] = 0
 
-for(i in 2:par[2]){pi_sum[i] = tbl_pi$r[i] * tbl_pi$h[i] - tbl_pi$mc[i] + pi_sum[i - 1]}
+for(i in 2:24){pi_sum[i] = tbl_pi$r[i] * tbl_pi$h[i] - tbl_pi$mc[i] + pi_sum[i - 1]} # par[2] for length
 
 tbl_pi = cbind(tbl_pi, pi_sum)
 
@@ -726,9 +705,45 @@ tbl_pi = mutate(tbl_pi, color = ifelse(pi_sum > 0, 1, 0))
 # Basic plot.  
 plot(tbl_pi$t, tbl_pi$pi_sum)
 
-# Better plot.
-#ggplot(tbl_pi, aes(t, pi_sum)) +
-#  geom_point()
+# Better plots.
+pimargplot =
+ggplot(tbl_pi, aes(t, pi)) +
+  geom_path() +
+  labs(x = "Years", y = "USD2018") +
+      scale_x_continuous(expand = c(0, 0), limits = c(1, 24)) +
+      scale_y_continuous(expand = c(0, 0), limits = c(-200000000, 600000000), labels = scales::comma) +
+      ggtitle("Annual Profit for One Cage - Harvest and Trimming, No Trimming Revenue") +
+      theme_classic() +
+      theme(axis.text.x = element_text(size = 8),
+          axis.text.y = element_text(size = 8),
+          #legend.text = element_text(size = 8),
+          axis.title.x = element_text(size = 9),
+          axis.title.y = element_text(size = 9),
+          #legend.title = element_text(size = 9),
+          plot.title = element_text(size = 9),
+          legend.position = "none")
+
+picumuplot =
+ggplot(tbl_pi, aes(t, pi_sum)) +
+  geom_path() +
+  labs(x = "Years", y = "USD2018") +
+      scale_x_continuous(expand = c(0, 0), limits = c(1, 24)) +
+      scale_y_continuous(expand = c(0, 0), limits = c(-200000000, 600000000), labels = scales::comma) +
+      ggtitle("Cumulative Profit for One Cage - Harvest and Trimming, No Trimming Revenue") +
+      theme_classic() +
+      theme(axis.text.x = element_text(size = 8),
+          axis.text.y = element_text(size = 8),
+          #legend.text = element_text(size = 8),
+          axis.title.x = element_text(size = 9),
+          axis.title.y = element_text(size = 9),
+          #legend.title = element_text(size = 9),
+          plot.title = element_text(size = 9),
+          legend.position = "none")
+
+# Save!
+
+ggsave("pimplot.png", plot = pimargplot, dpi = 300, width = 6.5, height = 4.5)
+ggsave("picplot.png", plot = picumuplot, dpi = 300, width = 6.5, height = 4.5)
 
 ```
 
