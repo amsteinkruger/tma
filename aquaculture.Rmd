@@ -501,7 +501,11 @@ var = c("start",
         "ch0_cf", 
         "o",
         "c_restock",
-        "disc")
+        "disc",
+        "density",
+        "am_b1",
+        "am_b2",
+        "nstart")
 
 
 par = c(0, 
@@ -526,7 +530,11 @@ par = c(0,
         ch0_cf, 
         o,
         ch1,
-        0.95)
+        0.95,
+        density,
+        am_b1,
+        am_b2,
+        nstart)
 
 fun = c(rep("All", 2), 
         rep("Age-Length", 3),
@@ -536,7 +544,8 @@ fun = c(rep("All", 2),
         "Weight-Revenue (Round)",
         rep("No-Harvest Cost", 4),
         "Harvest Cost",
-        "Discount Factor")
+        "Discount Factor",
+        rep("Density-Optimal Stocking", 4))
 
 num = seq(1, length(var))
 
@@ -561,6 +570,8 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                    n0 = as.numeric(vector(length = par[2]))
                    y0 = as.numeric(vector(length = par[2]))
                    n0 = as.numeric(vector(length = par[2]))
+                   nt0 = as.numeric(vector(length = par[2]))
+                   rt0 = as.numeric(vector(length = par[2]))
                    p0 = as.numeric(vector(length = par[2]))
                    rmaw0 = as.numeric(vector(length = par[2]))
                    rround0 = as.numeric(vector(length = par[2]))
@@ -572,6 +583,8 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                    n1 = as.numeric(vector(length = par[2]))
                    y1 = as.numeric(vector(length = par[2]))
                    n1 = as.numeric(vector(length = par[2]))
+                   nt1 = as.numeric(vector(length = par[2]))
+                   rt1 = as.numeric(vector(length = par[2]))
                    p1 = as.numeric(vector(length = par[2]))
                    rmaw1 = as.numeric(vector(length = par[2]))
                    rround1 = as.numeric(vector(length = par[2]))
@@ -590,7 +603,9 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                    
                    l0[1] = fn_vb(par[3], par[4], t[1], par[5])
                    w0[1] = fn_lw(par[6], l0[1], par[7])
-                   n0[1] = par[8]
+                   n0[1] = nstart
+                   nt0[1] = 0
+                   rt0[1] = 0
                    y0[1] = fn_wm(w0[1], n0[1], par[9], par[10])
                    p0[1] = fn_mp(w0[1], par[11], par[12], par[13], par[14])
                    rmaw0[1] = y0[1] * p0[1]
@@ -600,7 +615,9 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
 
                    l1[1] = fn_vb(par[3], par[4], 2, par[5])
                    w1[1] = fn_lw(par[6], l1[1], par[7])
-                   n1[1] = par[8]
+                   n1[1] = nstart - fn_nt(par[22], w1[1], a1[1], par[23], par[24], par[25])
+                   nt1[1] = fn_nt(par[22], w1[1], a1[1], par[23], par[24], par[25])
+                   rt1[1] = fn_fr(w1[1], nt1[1], par[15])
                    y1[1] = fn_wm(w1[1], n1[1], par[9], par[10])
                    p1[1] = fn_mp(w1[1], par[11], par[12], par[13], par[14])
                    rmaw1[1] = y1[1] * p1[1]
@@ -619,34 +636,38 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                      
                      l0[i] = fn_vb(par[3], par[4], a0[i], par[5])
                      w0[i] = fn_lw(par[6], l0[i], par[7])
-                     n0[i] = n[i] # Fix mortality and trimming.
+                     n0[i] = nstart - fn_nt(par[22], w0[i], a0[i], par[23], par[24], par[25])
+                     nt0[i] = fn_nt(par[22], w0[i], a0[i], par[23], par[24], par[25]) - fn_nt(par[22], w0[i - 1], a0[i - 1], par[23], par[24], par[25])
+                     rt0[i] = fn_fr(w0[i], nt0[i], par[15])
                      y0[i] = fn_wm(w0[i], n0[i], par[9], par[10])
                      p0[i] = fn_mp(w0[i], par[11], par[12], par[13], par[14])
-                     rmaw0[i] = y0[i] * p0[i]                         # Fix yield-revenue function for maw.
+                     rmaw0[i] = y0[i] * p0[i]
                      rround0[i] = fn_fr(w0[i], n0[i], par[15])
                      r0[i] = rmaw0[i] + rround0[i]
                      c0[i] = fn_ch0(w0[i], par[16], par[17], par[18], n0[i], par[19])
                      
                      l1[i] = fn_vb(par[3], par[4], a1[i], par[5])
                      w1[i] = fn_lw(par[6], l1[i], par[7])
-                     n1[i] = n[i - 1] # Fix mortality and trimming.
+                     n1[i] = nstart - fn_nt(par[22], w1[i], a1[i], par[23], par[24], par[25])
+                     nt1[i] = fn_nt(par[22], w1[i], a1[i], par[23], par[24], par[25]) - fn_nt(par[22], w1[i - 1], a1[i - 1], par[23], par[24], par[25])
+                     rt1[i] = fn_fr(w1[i], nt1[i], par[15])
                      y1[i] = fn_wm(w1[i], n1[i], par[9], par[10])
                      p1[i] = fn_mp(w1[i], par[11], par[12], par[13], par[14])
-                     rmaw1[i] = y1[i] * p1[i]                         # Fix yield-revenue function for maw.
+                     rmaw1[i] = y1[i] * p1[i]
                      rround1[i] = fn_fr(w1[i], n1[i], par[15])
                      r1[i] = rmaw1[i] + rround1[i]
                      c1[i] = fn_ch0(w1[i], par[16], par[17], par[18], n1[i], par[19])
                      
                      # Mind wrapper for hard-coding lower bound age at harvest.
-                     h[i] = ifelse(a0[i] > 6, ifelse((r0[i] - c0[i]) > (par[19] * (r1[i] - c1[i])), 1, 0), 0)
+                     h[i] = ifelse(a0[i] > 6, ifelse((r0[i] - c0[i]) > (par[19] * (r1[i] - c1[i] + rt0[i])), 1, 0), 0)
                      hinv[i] = (h[i] - 1) ^ 2
                      
-                     r[i] = r0[i]
+                     r[i] = r0[i] + rt0[i] * hinv[i]
                      c[i] = c0[i] 
                      
                      }
                     
-                    output = tibble(t, c, r, h)
+                    output = tibble(t, c, r, h, n0, nt0, rt0)
 
                   return(output)}
 
