@@ -55,12 +55,12 @@ fn_vb = function(linf, k, t, t_0){l = linf * ( 1 - exp( - k * ( t - t_0)))
                                   return(l)}
 
 # Set parameter values for future reference.
-vb_linf = 180
+vb_linf = 200 # From 180 to 200.
 vb_k    = 0.289291
 vb_t0   = 0.015
 
 # Parameterization demo.
-a = seq(1, 30)
+a = seq(1, 25)
 l = fn_vb(vb_linf, vb_k, a, vb_t0)
 plot(a, l)
 
@@ -158,10 +158,9 @@ $M = \frac{\beta_1 * e^{\beta_2a}}{\beta_2}$
 # Note conversion from months to years for ease of use later.
 
 # Set marginal mortality.
-fn_am_marg = function(a, b1, b2){m = b1 * exp(b2 * a * 12)} 
+fn_am_marg = function(a, b1, b2){m = b1 * exp(b2 * a * 12) + 2.5} 
 
-# Set cumulative mortality.
-fn_am_cumu = function(a, b1, b2){M = (b1 * exp(b2 * a * 12)) / b2 - (b1 * exp(b2 * 0)) / b2} # Note y-intercept adjustment. Check integration.
+# Cumulative mortality doesn't work the way you think it does - reconsider and work out a new functional form.
 
 # Set parameters for reference.
 am_b1 = am_reg_tidy$estimate[1]
@@ -191,7 +190,7 @@ wl_a = 0.000004128
 wl_b = 3.24674
 
 # Parameterization demo.
-l = seq(0, 180, by = 10)
+l = seq(0, 200, by = 10)
 w = fn_lw(wl_a, l, wl_b)
 plot(l, w)
 
@@ -224,14 +223,14 @@ $T = n_t^* - n_{t-1}^* * m_{t-1}$
 ```{r ac_calc}
 
 # Density is highest possible kilograms per cubic meter without density-dependence slowing growth.
-density = 140000
+density = 80000 # Goto.
 
 # Size is first saleable size in kilograms.
 size = 2
 
-a = seq(1, 30)
+a = seq(1, 25)
 w = fn_lw(wl_a, fn_vb(vb_linf, vb_k, a, vb_t0), wl_b)
-fn_ns = function(density, w, a, am_b1, am_b2){ns = density / w * (1 - 0.01 * fn_am_marg(a, am_b1, am_b2))} # Note lag on age to get last year's mortality.
+fn_ns = function(density, w){ns = density / w} # Note lag on age to get last year's mortality.
 
 # Cohort count at first saleable size is the ratio of density in kgm^-3 to size in kg.
 nsale = density / size
@@ -240,19 +239,19 @@ nsale = density / size
 # Casually, nstart = nsale + mort(a(l(wsale)))
 # Cumulative mortality to first saleable age:
 a_sale = (vb_t0 - 1 / vb_k * (log(1 - ((size / wl_a) ^ (1 / wl_b))/vb_linf))) # Inverse Von Bertalanffy.
-m_sale = fn_am_cumu(a_sale, am_b1, am_b2)
-nstart = nsale / (1 - m_sale * 0.01)
+nstart = nsale * (100 / (100 - fn_am_marg(a_sale, am_b1, am_b2))) * (100 / (100 - fn_am_marg(1, am_b1, am_b2))) * (100 / (100 - fn_am_marg(1, am_b1, am_b2)))
+#nstart = nsale / (1 - m_sale * 0.01)
 
 # Trimming is individuals harvested each year to keep stocking density below maximum after mortality.
 # Here, trimming is cumulative. The iterative implementation is more useful.
-fn_nm = function(nstart, a, am_b1, am_b2){nm = nstart * (1 - 0.01 * fn_am_marg(a, am_b1, am_b2))}
-fn_nt = function(density, w, a, am_b1, am_b2, nstart){nt = ifelse(fn_nm(nstart, a, am_b1, am_b2) - fn_ns(density, w, a, am_b1, am_b2) > 0, 
-                                                                  fn_nm(nstart, a, am_b1, am_b2) - fn_ns(density, w, a, am_b1, am_b2), 
-                                                                  0)}
+#fn_nm = function(nstart, a, am_b1, am_b2){nm = nstart * (1 - 0.01 * fn_am_cumu(a, am_b1, am_b2))}
+#fn_nt = function(density, w, a, am_b1, am_b2, nstart){nt = ifelse(fn_nm(nstart, a, am_b1, am_b2) - fn_ns(density, w) > 0, 
+#                                                                  fn_nm(nstart, a, am_b1, am_b2) - fn_ns(density, w), 
+#                                                                  0)}
 
-ntrim = fn_nt(density, w, a, am_b1, am_b2, nstart)
+#ntrim = fn_nt(density, w, a, am_b1, am_b2, nstart)
 
-plot(a, ntrim)
+#plot(a, ntrim)
 
 ```
 
@@ -275,8 +274,8 @@ $k^{maw}$  | Yield of dry maw from wet maw.
 fn_wm = function(w, n, c, k){ymaw = w * n * c * k}
 
 # Parameters from literature:
-wm_c = 0.02
-wm_k = 0.40
+wm_c = 0.0175
+wm_k = 0.4000
 
 ```
 
@@ -320,15 +319,17 @@ $R^{round}_{a, t} = w_{a, t} * n_{a, t} * p^{round}$
 fn_fr = function(w, n, pround){rround = w * n * pround}
 
 # Parameter from market research:
-pround = 6.50
+pround = 6.50 # Source? Miguel?
 
 ```
 
 #####Feed Conversion Function
 
-Thanks, Goto!
+Note placeholder assumption of constant marginal feed requirement.
 
-```{r fcr_data}
+~~Thanks, Goto!~~
+
+```{r fcr_data, eval = FALSE}
 
 dat_fcr = read.csv("fcr.csv")
 
@@ -338,9 +339,9 @@ dat_fcr$feed = dat_fcr$feed / 1000
 
 ```
 
-For reasons, we assume functional form $F = \beta_1 * w^{\beta_2}$
+~~For reasons, we assume functional form $F = \beta_1 * w^{\beta_2}$~~
 
-```{r fcr_results}
+```{r fcr_results, eval = FALSE}
 
 # Specification for nonlinear regression:
 fcr_reg = nls(feed ~ b1 * weight ^ b2, dat_fcr, start = list(b1 = 0.0268, b2 = - 1.855))
@@ -391,15 +392,18 @@ $f = \beta_1 \beta_2 w^{\beta_{1}-1}$
 
 ```{r fcr_function}
 
+# Note placeholder shift from regression to constant marginal feed requirement.
+
 # Set cumulative feed requirement.
-fn_f_cumu = function(w, b1, b2){F = b1 * w ^ b2}
+#fn_f_cumu = function(w, b1, b2){F = b1 * w ^ b2}
 
 # Set marginal feed requirement.
-fn_f_marg = function(w, b1, b2){f = b1 * b2 * w ^ (b2 - 1)} 
+#fn_f_marg = function(w, b1, b2){f = b1 * b2 * w ^ (b2 - 1)}
+fn_f_marg = function(w, b1, b2){f = b1 * b2 * w}
 
 # Set parameters for reference.
-f_b1 = fcr_reg_tidy$estimate[1]
-f_b2 = fcr_reg_tidy$estimate[2]
+f_b1 = 0.01 #fcr_reg_tidy$estimate[1]
+f_b2 = 1.00 #fcr_reg_tidy$estimate[2]
 
 ```
 
@@ -414,17 +418,9 @@ fn_ch0 = function(w, b1, b2, cf, n, o){ch0 = n * cf * fn_f_marg(w, b1, b2) + o}
 
 # Parameters.
 #  Cost, USD/kg.
-ch0_cf = 1.545
+ch0_cf = 2.50
 # Overhead, from eight cages for ten years down to one cage for one year.
 o = 87500
-
-# Demo.
-w = seq(0, 200)
-n = seq(4200, 4000)
-
-ch0_demo = fn_ch0(w, f_b1, f_b2, ch0_cf, n, o)
-
-plot(w, ch0_demo)
 
 ```
 
@@ -444,24 +440,24 @@ Without a harvest mechanism, this series of functions and vectors just demonstra
 
 ```{r demo_noharvest}
 
-t = seq(1, 30)
-l = fn_vb(vb_linf, vb_k, t, vb_t0)
-w = fn_lw(wl_a, l, wl_b)
+#t = seq(1, 25)
+#l = fn_vb(vb_linf, vb_k, t, vb_t0)
+#w = fn_lw(wl_a, l, wl_b)
 # This implementation trims stock for optimal density, but does not reflect revenue from trimming.
-n = nstart - fn_nt(density, w, a, am_b1, am_b2, nstart)
-ymaw = fn_wm(w, n, wm_c, wm_k)
-pmaw = fn_mp(w, mp_b0, mp_b1, mp_b2, mp_q)
-rmaw = fn_mr(ymaw, pmaw)
-rround = fn_fr(w, n, pround)
-r = rround + rmaw 
-c =  fn_ch0(w, f_b1, f_b2, ch0_cf, n, o)
+#n = nstart - fn_nt(density, w, a, am_b1, am_b2, nstart) #* (1 - fn_am_marg(t, am_b1, am_b2)) # Fix mortality.
+#ymaw = fn_wm(w, n, wm_c, wm_k)
+#pmaw = fn_mp(w, mp_b0, mp_b1, mp_b2, mp_q)
+#rmaw = fn_mr(ymaw, pmaw)
+#rround = fn_fr(w, n, pround)
+#r = rround + rmaw 
+#c =  fn_ch0(w, f_b1, f_b2, ch0_cf, n, o)
 
-demo_h0 = data.frame(t, r, c)
+#demo_h0 = data.frame(t, r, c)
 
-demo_h0 = melt(demo_h0, id = 1)
+#demo_h0 = melt(demo_h0, id = 1)
 
-noh = ggplot(demo_h0, aes(t, value, colour = variable)) +
-              geom_path()
+#noh = ggplot(demo_h0, aes(t, value, colour = variable)) +
+#              geom_path()
 
 # Save no-harvest plot to working directory.
 #ggsave("nohplot.png", plot = noh, dpi = 300, width = 6.5, height = 4.5)
@@ -508,8 +504,8 @@ var = c("start",
         "nstart")
 
 
-par = c(0, 
-        30, 
+par = c(1, 
+        25, 
         vb_linf, 
         vb_k, 
         vb_t0,
@@ -567,11 +563,12 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                    
                    l0 = as.numeric(vector(length = par[2]))
                    w0 = as.numeric(vector(length = par[2]))
-                   n0 = as.numeric(vector(length = par[2]))
-                   y0 = as.numeric(vector(length = par[2]))
-                   n0 = as.numeric(vector(length = par[2]))
+                   nm0 = as.numeric(vector(length = par[2]))
+                   ns0 = as.numeric(vector(length = par[2]))
                    nt0 = as.numeric(vector(length = par[2]))
+                   n0 = as.numeric(vector(length = par[2]))
                    rt0 = as.numeric(vector(length = par[2]))
+                   y0 = as.numeric(vector(length = par[2]))
                    p0 = as.numeric(vector(length = par[2]))
                    rmaw0 = as.numeric(vector(length = par[2]))
                    rround0 = as.numeric(vector(length = par[2]))
@@ -580,11 +577,12 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                    
                    l1 = as.numeric(vector(length = par[2]))
                    w1 = as.numeric(vector(length = par[2]))
-                   n1 = as.numeric(vector(length = par[2]))
-                   y1 = as.numeric(vector(length = par[2]))
-                   n1 = as.numeric(vector(length = par[2]))
+                   nm1 = as.numeric(vector(length = par[2]))
+                   ns1 = as.numeric(vector(length = par[2]))
                    nt1 = as.numeric(vector(length = par[2]))
+                   n1 = as.numeric(vector(length = par[2]))
                    rt1 = as.numeric(vector(length = par[2]))
+                   y1 = as.numeric(vector(length = par[2]))
                    p1 = as.numeric(vector(length = par[2]))
                    rmaw1 = as.numeric(vector(length = par[2]))
                    rround1 = as.numeric(vector(length = par[2]))
@@ -603,26 +601,37 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                    
                    l0[1] = fn_vb(par[3], par[4], t[1], par[5])
                    w0[1] = fn_lw(par[6], l0[1], par[7])
-                   n0[1] = nstart
-                   nt0[1] = 0
-                   rt0[1] = 0
+                   nm0[1] = nstart * (0.01 * fn_am_marg(a0[1], par[23], par[24]))
+                   ns0[1] = nstart * (1 - 0.01 * fn_am_marg(a0[1], par[23], par[24])) # Note leading mortality.
+                   nt0[1] = ifelse(ns0[1] - fn_ns(par[22], w0[1]) > 0, ns0[1] - fn_ns(par[22], w0[1]), 0)
+                   n0[1] = nstart - nm0[1] - nt0[1]
+                   rt0[1] = fn_fr(w0[1], nt0[1], par[15])
                    y0[1] = fn_wm(w0[1], n0[1], par[9], par[10])
                    p0[1] = fn_mp(w0[1], par[11], par[12], par[13], par[14])
                    rmaw0[1] = y0[1] * p0[1]
                    rround0[1] = w0[1] * par[15]
-                   r0[1] = (rmaw0[1] + rround0[1]) # * h[1]
+                   r0[1] = (rmaw0[1] + rround0[1])
                    c0[1] = fn_ch0(w0[1], par[16], par[17], par[18], par[8], par[19])
 
                    l1[1] = fn_vb(par[3], par[4], 2, par[5])
                    w1[1] = fn_lw(par[6], l1[1], par[7])
-                   n1[1] = nstart - fn_nt(par[22], w1[1], a1[1], par[23], par[24], par[25])
-                   nt1[1] = fn_nt(par[22], w1[1], a1[1], par[23], par[24], par[25])
+                   # Since this implementation of mortality/survival and trimming require iteration to work, the corresponding lead variables are spaghetti.
+                   nm1[1] = (nstart * (1 - 0.01 * fn_am_marg(a1[1] - 1, par[23], par[24])) - 
+                               ifelse(nstart * (1 - 0.01 * fn_am_marg(a1[1] - 1, par[23], par[24]) - fn_ns(par[22], w1[1])) > 0, 
+                                      nstart * (1 - 0.01 * fn_am_marg(a1[1] - 1, par[23], par[24]) - fn_ns(par[22], w1[1])), 
+                                      0)) * (0.01 * fn_am_marg(a1[1], par[23], par[24]))
+                   ns1[1] = (nstart * (1 - 0.01 * fn_am_marg(a1[1] - 1, par[23], par[24])) - 
+                               ifelse(nstart * (1 - 0.01 * fn_am_marg(a1[1] - 1, par[23], par[24]) - fn_ns(par[22], w1[1])) > 0, 
+                                      nstart * (1 - 0.01 * fn_am_marg(a1[1] - 1, par[23], par[24]) - fn_ns(par[22], w1[1])), 
+                                      0)) * (1 - 0.01 * fn_am_marg(a1[1], par[23], par[24])) # Note leading mortality
+                   nt1[1] = ifelse(ns1[1] - fn_ns(par[22], w1[1]), ns1[1] - fn_ns(par[22], w1[1]), 0)
+                   n1[1] = fn_ns(density, w1[1])
                    rt1[1] = fn_fr(w1[1], nt1[1], par[15])
                    y1[1] = fn_wm(w1[1], n1[1], par[9], par[10])
                    p1[1] = fn_mp(w1[1], par[11], par[12], par[13], par[14])
                    rmaw1[1] = y1[1] * p1[1]
                    rround1[1] = w1[1] * par[15]
-                   r1[1] = (rmaw1[1] + rround1[1]) # * h[1]
+                   r1[1] = (rmaw1[1] + rround1[1])
                    c1[1] = fn_ch0(w1[1], par[16], par[17], par[18], par[8], par[19])
                    
                    r[1] = r0[1]
@@ -636,30 +645,34 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                      
                      l0[i] = fn_vb(par[3], par[4], a0[i], par[5])
                      w0[i] = fn_lw(par[6], l0[i], par[7])
-                     n0[i] = nstart - fn_nt(par[22], w0[i], a0[i], par[23], par[24], par[25])
-                     nt0[i] = fn_nt(par[22], w0[i], a0[i], par[23], par[24], par[25]) - fn_nt(par[22], w0[i - 1], a0[i - 1], par[23], par[24], par[25])
+                     nm0[i] = (nstart * h[i - 1] + n0[i - 1] * hinv[i - 1]) * (0.01 * fn_am_marg(a0[i], par[23], par[24])) # Note leading mortality.
+                     ns0[i] = (nstart * h[i - 1] + n0[i - 1] * hinv[i - 1]) * (1 - 0.01 * fn_am_marg(a0[i], par[23], par[24])) # Note leading mortality.
+                     nt0[i] = ifelse(ns0[i] - fn_ns(par[22], w0[i]) > 0, ns0[i] - fn_ns(par[22], w0[i]), 0)
+                     n0[i] = (nstart * h[i - 1] + n0[i - 1] * hinv[i - 1]) - nm0[i] - nt0[i]
                      rt0[i] = fn_fr(w0[i], nt0[i], par[15])
                      y0[i] = fn_wm(w0[i], n0[i], par[9], par[10])
                      p0[i] = fn_mp(w0[i], par[11], par[12], par[13], par[14])
                      rmaw0[i] = y0[i] * p0[i]
                      rround0[i] = fn_fr(w0[i], n0[i], par[15])
                      r0[i] = rmaw0[i] + rround0[i]
-                     c0[i] = fn_ch0(w0[i], par[16], par[17], par[18], n0[i], par[19])
+                     c0[i] = fn_ch0(w0[i], par[16], par[17], par[18], n0[i], par[19]) + 10000 * w0[i] ^ 2
                      
                      l1[i] = fn_vb(par[3], par[4], a1[i], par[5])
                      w1[i] = fn_lw(par[6], l1[i], par[7])
-                     n1[i] = nstart - fn_nt(par[22], w1[i], a1[i], par[23], par[24], par[25])
-                     nt1[i] = fn_nt(par[22], w1[i], a1[i], par[23], par[24], par[25]) - fn_nt(par[22], w1[i - 1], a1[i - 1], par[23], par[24], par[25])
+                     nm1[i] = (nstart * h[i - 1] + n1[i - 1]) * hinv[i - 1] * (0.01 * fn_am_marg(a1[i], par[23], par[24])) # Note leading mortality.
+                     ns1[i] = (nstart * h[i - 1] + n1[i - 1]) * hinv[i - 1] * (1 - 0.01 * fn_am_marg(a1[i], par[23], par[24])) # Note leading mortality.
+                     nt1[i] = ifelse(ns1[i] - fn_ns(par[22], w1[i]) > 0, ns1[i] - fn_ns(par[22], w1[i]), 0)
+                     n1[i] = (nstart * h[i - 1] + n1[i - 1] * hinv[i - 1]) - nm1[i] - nt1[i]
                      rt1[i] = fn_fr(w1[i], nt1[i], par[15])
                      y1[i] = fn_wm(w1[i], n1[i], par[9], par[10])
                      p1[i] = fn_mp(w1[i], par[11], par[12], par[13], par[14])
                      rmaw1[i] = y1[i] * p1[i]
                      rround1[i] = fn_fr(w1[i], n1[i], par[15])
                      r1[i] = rmaw1[i] + rround1[i]
-                     c1[i] = fn_ch0(w1[i], par[16], par[17], par[18], n1[i], par[19])
+                     c1[i] = fn_ch0(w1[i], par[16], par[17], par[18], n1[i], par[19]) + 10000 * w1[i] ^ 2
                      
                      # Mind wrapper for hard-coding lower bound age at harvest.
-                     h[i] = ifelse(a0[i] > 6, ifelse((r0[i] - c0[i]) > (par[19] * (r1[i] - c1[i] + rt0[i])), 1, 0), 0)
+                     h[i] = ifelse(a0[i] > 2, ifelse((r0[i] - c0[i]) > (par[21] * (r1[i] - c1[i] + rt0[i])), 1, 0), 0)
                      hinv[i] = (h[i] - 1) ^ 2
                      
                      r[i] = r0[i] + rt0[i] * hinv[i]
@@ -667,7 +680,7 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                      
                      }
                     
-                    output = tibble(t, c, r, h, n0, nt0, rt0)
+                    output = tibble(t, c, r)
 
                   return(output)}
 
