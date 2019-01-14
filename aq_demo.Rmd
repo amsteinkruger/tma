@@ -163,6 +163,20 @@ Check in with Goto. Fix.
 
 ```{r fcr_function}
 
+library(readr)
+library(ggplot2)
+fcr <- read_csv("~/Bren School Work/Buche Brothers/Bioenergetics/fcr.csv")
+
+fcr$weight <- as.factor(fcr$weight)
+fcr$feed <- as.factor(fcr$feed)
+head(fcr)
+
+ggplot(fcr, aes(x=weight, y=feed)) + 
+  geom_point(aes(size=3)) +
+  stat_smooth(method = 'nls', formula = 'y~a*x^b', start = list(a = 1,b=1), se=FALSE)
+
+
+
 #fn_fcr = function(w, fcr){}
 
 ```
