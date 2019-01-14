@@ -184,3 +184,233 @@ ggplot(demo_x_log_p_long, aes(t, x, group = p)) +
 #ggplot(demo_x_log_p, aes(t, ))
 
 ```
+
+### Insert from first draft of fishery.Rmd:
+
+#####Toy Model (Conrad):
+
+Stock
+
+$X_{t+1} = X_t (1 + r - \frac{rX_t}{K} - qE_t)$
+
+Yield-Effort
+
+$Y_t = q X_t E_t$
+
+Dynamic Effort
+
+$E_{t+1} =  E_t ( 1 + \eta (p q X_t - c ))$
+
+```{r placeholder_parameterization}
+
+k = 50217
+
+y_50 = 687
+x0_50= 38820
+x1_50= 38938
+
+y_60 = 731
+x0_60= 41829
+x1_60= 41785
+
+y_70 = 471
+x0_70= 40617
+x1_70= 40900
+
+r_50 = (k * (y_50 - x0_50 + x1_50)) / (x0_50 * (k - x0_50))
+r_60 = (k * (y_60 - x0_60 + x1_60)) / (x0_60 * (k - x0_60))
+r_70 = (k * (y_70 - x0_70 + x1_70)) / (x0_70 * (k - x0_70))
+
+r = (r_50 + r_60 + r_70) / 3
+
+qe_50 = - r * x0_50 / k + r - x1_50 / k + 1
+qe_60 = - r * x0_60 / k + r - x1_60 / k + 1
+qe_70 = - r * x0_70 / k + r - x1_70 / k + 1
+
+q = 0.001
+n = 0.0001
+
+e_50 = qe_50 / q
+e_60 = qe_60 / q
+e_70 = qe_70 / q
+
+p = 10
+c = p / 5
+
+# Final parameterization:
+y_10 = 752
+x0_10= 18243
+x1_10= 17756
+
+r_10 = (k * (y_10 - x0_10 + x1_10)) / (x0_10 * (k - x0_10))
+
+e_10 = ( - r_10 * x0_10 / k + r_10 - x1_10 / k + 1 ) / q
+
+p_10 = 50
+c_10 = p / 10
+
+n_10 = 0.005
+
+```
+
+Variable  | Definition                  | Value
+--------- | --------------------------- | ----------------------
+*t*       | Timestep (Year)             |
+*X*       | Stock (Tonnes)              |
+*r*       | Growth (%)                  | `r r`
+*K*       | Carrying Capacity (Tonnes)  | `r k`
+*q*       | Catchability (Parameter)    | 
+*E*       | Effort (Vessel Days)        |
+$\eta$    | Adjustability (Parameter)   | `r n`
+*p*       | Price (USD2018 / Ton)       | `r p`
+*c*       | Cost (USD2018 / Vessel Day) | `r c`
+
+#####1. Logistic Growth Demo
+
+```{r stock_function}
+
+# Workflow: build function, run function over some parameters, plot output.
+
+# Growth / Stock, i.e. F(X)/X. NB: Not dynamic, just a demo of growth from different stocks.
+fx_log = function(r, k, x){ fx = r * x * ( 1 - x / k )}
+
+demo_x = seq(0, k, by = 1000)
+
+demo_fx = fx_log(r, k, demo_x)
+
+plot(demo_x, demo_fx)
+
+# Growth / Time, w/o mortality.
+x_log = function(r, k, x0, start, end){
+                     v_n = as.numeric(vector(length=(end - start)))
+                     v_n[1] = x0
+                     t = length(seq(start, end))
+            for (i in 2:t){v_n[i] = v_n[i - 1] + r * v_n[i - 1] * (1 - v_n[i - 1] / k)}
+                     return(v_n)}
+
+
+demo_x_log = x_log(r, k, x0_50, 1950, 1975)
+
+t = seq(1950, 1975)
+
+plot(t, demo_x_log)
+
+```
+
+```{r effort_function}
+
+# Function for Effort at MSY:
+#  Conrad pp87
+demo_e = function(r, k, q, p, c){ e = ( r * ( p * q * k - c )) / ( p * q ^ 2 * k)}
+
+# Effort / Price, Y = FX = MSY.
+demo_p = seq(0.5 * p, 1.5 * p)
+
+demo_e_p = demo_e(r, k, q, demo_p, c)
+
+plot(demo_p, demo_e_p)
+
+# Effort / Cost, Y = FX = MSY.
+demo_c = seq(0.5 * c, 1.5 * c)
+
+demo_e_c = demo_e(r, k, q, p, demo_c)
+
+plot(demo_c, demo_e_c)
+
+``` 
+
+``` {r dynamic}
+# Effort / Time.
+# x_log modified to only return x for handy use in x_log_p - revert and make fresh function for x_log_p.
+x_log = function(r, k, q, p, c, n, x0, e0, start, end){
+                     x = as.numeric(vector(length = (end - start)))
+                     x[1] = x0
+                     e = as.numeric(vector(length = (end - start)))
+                     e[1] = e_50
+                     T = length(seq(start, end))
+                     t = seq(start, end)
+                     for (i in 2:T){x[i] = ifelse(x[i-1] * ( 1 + r - r * x[i-1] / k - q * e[i-1]) > 2,
+                                                  x[i-1] * ( 1 + r - r * x[i-1] / k - q * e[i-1]),
+                                                  2)
+                                    e[i] = ifelse(e[i-1] * ( 1 + n * ( p * q * x[i-1] - c)) > 0,
+                                                  e[i-1] * ( 1 + n * ( p * q * x[i-1] - c)),
+                                                  0)}
+                     #demo = tibble(t, x, e)
+                     
+                     return(x)}
+
+# Model test for 1950 - 1975.
+#demo_19 = x_log(r, k, q, p, c, n, x0_50, e_50, 1950, 1975)
+
+#plot(demo_19$t, demo_19$x)
+#plot(demo_19$t, demo_19$e)
+#demo_19
+
+# Model test for period of interest.
+#demo_20 = x_log(r_10, k, n, p_10, c_10, 0.005, x0_10, e_10, 2010, 2020)
+
+#plot(demo_20$t, demo_20$x)
+#plot(demo_20$t, demo_20$e)
+#demo_20
+
+# Function for multiple runs stored in a matrix.
+x_log_p = function(r, k, q, c, n, x0, e0, start, end, p_lwr, p_upr){
+                      t = seq(start, end)
+                      p = seq(p_lwr, p_upr)
+                      mat_x_p = matrix(, nrow = length(t), ncol = length(p), dimnames = list(NULL, (paste("p_", p, sep = ""))))
+                        for(j in 1:length(p)){mat_x_p[, j] = x_log(r, k, q, p_lwr + j, c, n, x0, e0, start, end)}
+                      return(mat_x_p)}
+
+# 1950 - 1975.
+# Cough up a matrix and reformat it as a data frame with a time variable.
+demo_19_p = x_log_p(r, k, q, c, n, x0_50, e_50, 1950, 1975, 5, 15) %>% 
+  data.frame(.) #%>% 
+  #mutate(., t = seq(0, 100)) #%>% 
+
+# Fix this abomination.
+demo_19_p_long = reshape2::melt(demo_19_p)
+
+# This is part of the abomination.
+demo_19_p_long = cbind(demo_19_p_long, rep(seq(1950, 1975), times = 11))
+colnames(demo_19_p_long)[1:3] = c("p", "x", "t")
+
+# Plot. Abomination stops here.
+plot19 = ggplot(demo_19_p_long, aes(t, x, color = p, group = p)) + 
+  geom_path() +
+  theme(legend.position = "none")
+
+# 2010 - 2020.
+# Cough up a matrix and reformat it as a data frame with a time variable.
+demo_20_p = x_log_p(r_10, k, q, c_10, n_10, x0_10, e_10, 2010, 2020, 45, 55) %>% 
+  data.frame(.) #%>% 
+  #mutate(., t = seq(0, 100)) #%>% 
+
+# Fix this abomination.
+demo_20_p_long = reshape2::melt(demo_20_p)
+
+# This is part of the abomination.
+demo_20_p_long = cbind(demo_20_p_long, rep(seq(2010, 2020), times = 11))
+colnames(demo_20_p_long)[1:3] = c("p", "x", "t")
+
+# Plot. Abomination stops here.
+plot20 = ggplot(demo_20_p_long, aes(t, x, color = p, group = p)) + 
+  geom_path() +
+  theme(legend.position = "none")
+
+# Plot by status. Thresholds are arbitrary. This gets you a flag effect, but not a path-dependency illustration.
+#demo_x_log_p_long = mutate(demo_x_log_p_long, status = ifelse(x < 0.7, "bad", ifelse(x < 0.8, "meh", "good")))
+
+#ggplot(demo_x_log_p_long, aes(t, x, group = p)) + 
+  #geom_path() +
+  #theme(legend.position = "none")
+
+# Group by p, mutate status, ungroup?, plot with status by group.
+#group_by
+#mutate
+
+#plot(demo_x_log_p$t, demo_x_log_p$p_150)
+
+#ggplot(demo_x_log_p, aes(t, ))
+
+```
+
