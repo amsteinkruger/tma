@@ -419,9 +419,9 @@ fn_ch0 = function(w, b1, b2, cf, n, o){ch0 = n * cf * fn_f_marg(w, b1, b2) * 365
 
 # Parameters.
 #  Cost, USD/kg.
-ch0_cf = 2.50
+ch0_cf = 2
 # Overhead, from eight cages for ten years down to one cage for one year.
-o = 87500 * 12
+o = 4100000
 
 ```
 
