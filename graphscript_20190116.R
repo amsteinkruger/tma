@@ -60,7 +60,7 @@ gg_rc =
   labs(x = "Years", y = "Costs and Revenues (USD2018)") +
   scale_x_continuous(expand = c(0, 0), limits = c(1, 15)) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 40000), labels = scales::comma) +
-  ggtitle("Costs and Revenues at Age for Wild and Aquacultured Totoaba") +
+  ggtitle("Costs and Revenues at Age for Individual Totoaba in Aquaculture") +
   theme_classic() +
   theme(axis.text.x = element_text(size = 8),
         axis.text.y = element_text(size = 8),
