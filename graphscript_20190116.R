@@ -42,21 +42,23 @@ ggsave("gg_aw.png", plot = gg_aw, width = 8.5, height = 11, dpi = 300)
 
 # Read in revenues/costs-at-age data.
 dat_rc = read.csv("aq_rc.csv")
-dat_rc = select(dat_rc, -X)
 
 # Graph.
 gg_rc = 
   ggplot(dat_rc) +
-  geom_path(aes(t, r.n0)) + 
-  geom_path(aes(t, c.n0))
+  geom_path(aes(t, rmeat)) +
+  geom_path(aes(t, r)) +
+  geom_path(aes(t, c))
 
 # Graph with some aesthetics to taste.
 # To change colors, replace "Red" with "Whatever Color You Want." I would suggest identifying an exact hexadecimal HTML code for your preferred color.
 gg_rc = 
   ggplot(dat_rc) +
-  geom_ribbon(aes(t, ymin = c.n0, ymax = r.n0), alpha = 0.25, fill = "Red") +
-  geom_path(aes(t, r.n0), color = "Red") + 
-  geom_path(aes(t, c.n0), color = "Red") +
+  geom_ribbon(aes(t, ymin = c, ymax = r), alpha = 0.25, fill = "Green") +
+  geom_ribbon(aes(t, ymin = rmeat, ymax = c), alpha = 0.25, fill = "Red") +
+  geom_path(aes(t, r), color = "Green") + 
+  geom_path(aes(t, c), color = "Black") +
+  geom_path(aes(t, rmeat), color = "Red") +
   labs(x = "Years", y = "Costs and Revenues (USD2018)") +
   scale_x_continuous(expand = c(0, 0), limits = c(1, 15)) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 40000), labels = scales::comma) +

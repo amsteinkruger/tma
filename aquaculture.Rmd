@@ -618,7 +618,7 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                      p0[i] = fn_mp(w0[i], par[11], par[12], par[13], par[14]) * 0.10 # Note price transformation.
                      rmaw0[i] = y0[i] * p0[i]
                      rround0[i] = fn_fr(w0[i], n0[i], par[15])
-                     r0[i] = rmaw0[i] + rround0[i]
+                     r0[i] = 0 * rmaw0[i] + rround0[i] # Note the null on maw value.
                      c0[i] = fn_ch0(w0[i], par[16], par[17], par[18], n0[i], par[19]) #+ 10000 * w0[i] ^ 2  | Extra costs for a pretty cost function.
                      
                      l1[i] = fn_vb(par[3], par[4], a1[i], par[5])
