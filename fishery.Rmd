@@ -25,8 +25,8 @@ pkg <- c("readr",
          "devtools")
 
 # Install packages.
-install.packages(pkg, verbose = FALSE, quiet = TRUE)
-devtools::install_github("AckerDWM/gg3D")
+#install.packages(pkg, verbose = FALSE, quiet = TRUE)
+#devtools::install_github("AckerDWM/gg3D")
   
 # Update packages.
 #update.packages(pkg, verbose = FALSE, quiet = TRUE)

@@ -415,13 +415,13 @@ Thanks, Goto!
 ```{r c_stock}
 
 # Marginal cohort cost.
-fn_ch0 = function(w, b1, b2, cf, n, o){ch0 = n * cf * fn_f_marg(w, b1, b2) + o}
+fn_ch0 = function(w, b1, b2, cf, n, o){ch0 = n * cf * fn_f_marg(w, b1, b2) * 365 + o}
 
 # Parameters.
 #  Cost, USD/kg.
 ch0_cf = 2.50
 # Overhead, from eight cages for ten years down to one cage for one year.
-o = 87500
+o = 87500 * 12
 
 ```
 
@@ -469,7 +469,7 @@ var = c("start",
 
 
 par = c(1, 
-        25, 
+        16, 
         vb_linf, 
         vb_k, 
         vb_t0,
@@ -619,7 +619,7 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                      rmaw0[i] = y0[i] * p0[i]
                      rround0[i] = fn_fr(w0[i], n0[i], par[15])
                      r0[i] = rmaw0[i] + rround0[i]
-                     c0[i] = fn_ch0(w0[i], par[16], par[17], par[18], n0[i], par[19]) + 10000 * w0[i] ^ 2
+                     c0[i] = fn_ch0(w0[i], par[16], par[17], par[18], n0[i], par[19]) #+ 10000 * w0[i] ^ 2
                      
                      l1[i] = fn_vb(par[3], par[4], a1[i], par[5])
                      w1[i] = fn_lw(par[6], l1[i], par[7])
@@ -633,18 +633,18 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                      rmaw1[i] = y1[i] * p1[i]
                      rround1[i] = fn_fr(w1[i], n1[i], par[15])
                      r1[i] = rmaw1[i] + rround1[i]
-                     c1[i] = fn_ch0(w1[i], par[16], par[17], par[18], n1[i], par[19]) + 10000 * w1[i] ^ 2
+                     c1[i] = fn_ch0(w1[i], par[16], par[17], par[18], n1[i], par[19]) #+ 10000 * w1[i] ^ 2 Extra costs for a pretty cost function.
                      
                      # Mind wrapper for hard-coding lower bound age at harvest.
-                     h[i] = ifelse(a0[i] > 2, ifelse((r0[i] - c0[i]) > (par[21] * (r1[i] - c1[i] + rt0[i])), 1, 0), 0)
+                     h[i] = 0 #ifelse(a0[i] > 2, ifelse((r0[i] - c0[i]) > (par[21] * (r1[i] - c1[i] + rt0[i])), 1, 0), 0)
                      hinv[i] = (h[i] - 1) ^ 2
                      
-                     r[i] = r0[i] + rt0[i] * hinv[i]
-                     c[i] = c0[i] 
+                     r[i] = (r0[i] + rt0[i] * hinv[i])
+                     c[i] = c0[i]
                      
                      }
                     
-                    output = tibble(t, c, r, h)
+                    output = tibble(t, c / n0, r / n0)
 
                   return(output)}
 
