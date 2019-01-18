@@ -1,30 +1,48 @@
 # Script for Presentation Graphics: Weights-at-Age and Revenues/Costs-at-Age
-# 1/16/2019
+# 1/17/2019
 
 # Run libraries.
 library(tidyverse)
 
+# Set up functions and parameters for two sets of lengths-at-age, then weights-at-age.
+fun_al = function(a, linf, k, t0){l = linf * (1 - exp(-k * (a - t0)))} # INAPESCA (2018): 200, 0.155, -0.65. # BB (2019): 200, 0.22856, -0.65.
+
+a = seq(1, 15)
+linf = 200
+ka = 0.22856
+kw = 0.155
+t0 = -0.65
+
+fun_aw =  function(a, l, b){w = a * l ^ b} # BB (2019): 0.000004128, 3.24674
+
+awa = 0.000004128
+awb = 3.24674
+
+aw_aq = fun_aw(awa, fun_al(a, linf, ka, t0), awb)
+aw_fi = fun_aw(awa, fun_al(a, linf, kw, t0), awb)
+
+
 # Read in weights-at-age output.
-dat_aw = read.csv("aw.csv") 
-dat_aw = select(dat_aw, -X)
-dat_aw = slice(dat_aw, 2:16)
+#dat_aw = read.csv("aw.csv") 
+#dat_aw = select(dat_aw, -X)
+#dat_aw = slice(dat_aw, 2:16)
 
 # Graph.
 gg_aw = 
-  ggplot(dat_aw) + 
+  ggplot() + 
   geom_path(aes(a, aw_aq)) + 
   geom_path(aes(a, aw_fi))
 
 # Graph with some aesthetics to taste. 
 # To change colors, replace "Red" with "Whatever Color You Want." I would suggest identifying an exact hexadecimal HTML code for your preferred color.
 gg_aw = 
-  ggplot(dat_aw) + 
+  ggplot() + 
   geom_ribbon(aes(a, ymin = aw_fi, ymax = aw_aq), alpha = 0.25, fill = "Red") +
   geom_path(aes(a, aw_aq), color = "Red") + 
   geom_path(aes(a, aw_fi), color = "Red") +
   labs(x = "Years", y = "Round Weight (Kilograms)") +
   scale_x_continuous(expand = c(0, 0), limits = c(1, 15)) +
-  scale_y_continuous(expand = c(0, 0), limits = c(0, 117), labels = scales::comma) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 125), labels = scales::comma) +
   ggtitle("Weights at Age for Wild and Aquacultured Totoaba") +
   theme_classic() +
   theme(axis.text.x = element_text(size = 8),
