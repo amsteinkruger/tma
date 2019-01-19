@@ -57,8 +57,8 @@ fn_vb = function(linf, k, t, t_0){l = linf * ( 1 - exp( - k * ( t - t_0)))
 
 # Set parameter values for future reference.
 vb_linf = 200 # From 180 to 200.
-vb_k    = 0.289291
-vb_t0   = 0.015
+vb_k    = 0.22856
+vb_t0   = -0.65
 
 # Parameterization demo.
 a = seq(1, 25)
@@ -415,13 +415,13 @@ Thanks, Goto!
 ```{r c_stock}
 
 # Marginal cohort cost.
-fn_ch0 = function(w, b1, b2, cf, n, o){ch0 = n * cf * fn_f_marg(w, b1, b2) * 365 + o}
+fn_ch0 = function(w, b1, b2, cf, n, o){ch0 = n * cf * fn_f_marg(w, b1, b2) * 365 + o} # FCR is daily, so multiply by days.
 
 # Parameters.
 #  Cost, USD/kg.
 ch0_cf = 2
 # Overhead, from eight cages for ten years down to one cage for one year.
-o = 4100000
+o = 170000
 
 ```
 
@@ -467,9 +467,8 @@ var = c("start",
         "am_b2",
         "nstart")
 
-
 par = c(1, 
-        16, 
+        6, 
         vb_linf, 
         vb_k, 
         vb_t0,
