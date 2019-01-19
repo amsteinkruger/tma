@@ -56,8 +56,8 @@ gg_rc =
   ggplot(dat_rc) +
   #geom_ribbon(aes(t, ymin = c, ymax = r), alpha = 0.25, fill = "Green") +
   #geom_ribbon(aes(t, ymin = rmeat, ymax = c), alpha = 0.25, fill = "Red") +
-  geom_path(aes(t, r), color = "darkgreen") + 
-  geom_path(aes(t, c), color = "firebrick4") +
+  geom_path(aes(t, r), color = "Green") + 
+  geom_path(aes(t, c), color = "Red") +
   #geom_path(aes(t, rmeat), color = "Red") +
   labs(x = "Years", y = "Costs and Revenues (USD2018)") +
   scale_x_continuous(expand = c(0, 0), limits = c(1, 15)) +
