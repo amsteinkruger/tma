@@ -111,10 +111,14 @@ ggplot(melt, aes(t, value, color = variable)) +
 
 Totoaba Version:
 
-```{r age_struct_tma}
+```{r age_struct_tma_mat}
 
 # Matrix of numbers at age by year.
 mat_a = matrix(nrow = 50, ncol = 30)
+
+```
+
+```{r age_struct_tma_ninit}
 
 # Vector for initial n at a.
 #  Assign initial biomass from INAPESCA estimate.
@@ -145,9 +149,17 @@ winit = wfreq * (1 / sum(wfreq)) * biomass_init
 ninit = winit / w
 plot(ninit)
 
-# Vector for proportional natural mortalities at age. NB: Survival, not mortality. From INAPESCA (2018) / Cisneros-Mata et al. (1995).
-v_mort = rep(0.73, 30)
+```
 
+```{r age_struct_tma_natmort}
+
+# Vector for proportional natural mortalities at age. NB: Survival, not mortality. From INAPESCA (2018) / Cisneros-Mata et al. (1995).
+v_mort = rep(0.73, 30) # FIX
+
+```
+
+
+```{r age_struct_tma_fismort}
 # Vector for proportional poaching mortalities at age.
 #  Read in values for size-selective poaching from INAPESCA (2018); n = 1147 from 9 periods, 1963 - 2017.
 v_select_data = 
@@ -201,9 +213,17 @@ catch = 1400000 # kilograms from tonnes. INAPESCA (2018).
 v_select_n = catch * v_select_pdf / w # Check your conversion! You did this in the middle of the night, check it!
 v_select_use = v_select_n/ninit # Diagnostic plot indicates you should really, really fix the residuals on the selectivity estimation.
 
+```
+
+```{r age_struct_tma_bycmort}
+
 # Value for proportional bycatch mortalities at age.
 bymort_init = 80000 # INAPESCA (2018) - estimated for 2011 - 2017 by some sort of credible method, probably.
 bymort = 1 - bymort_init / ninit[2] # Instead of distributing bycatch mortalities, we concentrate them on one age (1) for lack of length-at-age resolution.
+
+```
+
+```{r age_struct_tma_fec}
 
 # Vector for proportional fecundities at age. From INAPESCA (2018) / Valenzuela-Quiñonez (2014).
 #  Set function.
@@ -225,6 +245,9 @@ v_eggs_w = v_eggs_l * w
 v_eggs_surv = 0.3 * 0.9 * 0.95 * 0.1
 v_eggs = v_eggs_w * v_fec * v_eggs_surv
 
+```
+
+```{r age_struct_tma_ENTER_THE_MATRIX}
 # Plug initial numbers into the matrix.
 mat_a[1,] = ninit
 
@@ -238,8 +261,16 @@ fun_test = function(nrow, ncol, ninit, v_mort, bymort, v_select_use, v_eggs, k){
                                   
                                 return(mat_a)}
 
+```
+
+```{r age_struct_tma_run}
+
 # Run first test.
 uh = fun_test(25, 30, ninit, v_mort, bymort, v_select_use, v_eggs, 5000000)
+
+```
+
+```{r age_struct_tma_ploots}
 
 duh = data.frame(uh)
 
