@@ -29,11 +29,12 @@ pkg <- c("readr",
 #devtools::install_github("AckerDWM/gg3D")
   
 # Update packages.
-#update.packages(pkg, verbose = FALSE, quiet = TRUE)
+update.packages(pkg, verbose = FALSE, quiet = TRUE)
 
 # Check out packages.
 lapply(pkg, library, character.only = TRUE)
-library(gg3D)
+
+#library(gg3D)
 
 ```
 
@@ -102,7 +103,7 @@ duh = data.frame(uh)
 
 mut = mutate(duh, t = seq(0, 49))
 
-melt = melt(mut, id.vars = "t")
+melt = reshape2::melt(mut, id.vars = "t")
 
 ggplot(melt, aes(t, value, color = variable)) +
   geom_line()
