@@ -57,7 +57,7 @@ fn_vb = function(linf, k, t, t_0){l = linf * ( 1 - exp( - k * ( t - t_0)))
 
 # Set parameter values for future reference.
 vb_linf = 200 # From 180 to 200.
-vb_k    = 0.22856
+vb_k    = 0.155#0.22856
 vb_t0   = -0.65
 
 # Parameterization demo.
@@ -106,7 +106,7 @@ Supposing a mortality trend $m = \beta_1 * e^{\beta_2a}$, R function nls in pack
 
 # Specification for nonlinear regression:
 am_reg = nls(m_months ~ b1 * exp(b2 * a_months), dat_m, start = list(b1 = 8.00, b2 = - 1.00))
-
+View(dat_m)
 # Clean up output:
 am_reg_tidy = tidy(am_reg, conf.int = TRUE, conf.level = 0.95)
 dat_m_est = augment(am_reg)
@@ -159,7 +159,7 @@ $M = \frac{\beta_1 * e^{\beta_2a}}{\beta_2}$
 # Note conversion from months to years for ease of use later.
 
 # Set marginal mortality.
-fn_am_marg = function(a, b1, b2){m = b1 * exp(b2 * a * 12) + 2.5} 
+fn_am_marg = function(a, b1, b2){m = b1 * exp(b2 * a * 12) + 1} #Assumed that mortality keeps at 1% forever
 
 # Cumulative mortality doesn't work the way you think it does - reconsider and work out a new functional form.
 
@@ -210,24 +210,24 @@ ggplot() +
         legend.title = element_text(size = 9),
         plot.title = element_text(size = 9)) +
   theme_classic()
-
+#gglw
 #ggsave("gglw.png", gglw, width = 5.5, height = 3, dpi = 300)
 
 ```
 
 #####Age to Count
 
-After mortality, any biomass in excess of optimal stocking density is harvested. Optimal density is 140,000 kilograms per cage at and after first salable size. First salable size is 2 kilograms.
+After mortality, any biomass in excess of optimal stocking density is harvested. Optimal density is 160,000 kilograms per cage at and after first salable size. First salable size is 2 kilograms.
 
 $T = n_t^* - n_{t-1}^* * m_{t-1}$
 
 ```{r ac_calc}
 
 # Density is highest possible kilograms per cubic meter without density-dependence slowing growth.
-density = 80000 # Goto.
+density = 160000 # Goto.
 
 # Size is first saleable size in kilograms.
-size = 2
+size = 3
 
 a = seq(1, 25)
 w = fn_lw(wl_a, fn_vb(vb_linf, vb_k, a, vb_t0), wl_b)
@@ -253,6 +253,7 @@ nstart = nsale * (100 / (100 - fn_am_marg(a_sale, am_b1, am_b2))) * (100 / (100 
 #ntrim = fn_nt(density, w, a, am_b1, am_b2, nstart)
 
 #plot(a, ntrim)
+nstart
 
 ```
 
@@ -274,9 +275,9 @@ $k^{maw}$  | Yield of dry maw from wet maw.
 
 fn_wm = function(w, n, c, k){ymaw = w * n * c * k}
 
-# Parameters from literature:
-wm_c = 0.0175
-wm_k = 0.4000
+# Parameters from cultivated sample (UABC & PhD) and from inapesca wild sample:
+wm_c = 0.0161
+wm_k = 0.31
 
 ```
 
@@ -294,7 +295,7 @@ mp_b0 = 82.99177
 mp_b1 = -5.28312
 mp_b2 = 0.52540
 mp_q = 14 # Note that 14 fills in for a reasonable quantity at market from poaching.
-
+#mp_q has to be a vector
 ```
 
 #####Maw-Revenue Conversion
@@ -393,7 +394,7 @@ $f = \beta_1 \beta_2 w^{\beta_{1}-1}$
 
 ```{r fcr_function}
 
-# Note placeholder shift from regression to constant marginal feed requirement.
+# Regression to constant marginal feed requirement.
 
 # Set cumulative feed requirement.
 #fn_f_cumu = function(w, b1, b2){F = b1 * w ^ b2}
@@ -430,7 +431,7 @@ o = 170000
 
 ```{r c_restock}
 
-ch1 = nstart * 2 + o
+ch1 = nstart * 2 + o #How much CREMES charged Actino for the organims 
 
 ```
 
@@ -468,7 +469,7 @@ var = c("start",
         "nstart")
 
 par = c(1, 
-        6, 
+        10, 
         vb_linf, 
         vb_k, 
         vb_t0,
@@ -635,7 +636,7 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                      c1[i] = fn_ch0(w1[i], par[16], par[17], par[18], n1[i], par[19]) #+ 10000 * w1[i] ^ 2 | Extra costs for a pretty cost function.
                      
                      # Mind wrapper for hard-coding lower bound age at harvest.
-                     h[i] = 0 #ifelse(a0[i] > 2, ifelse((r0[i] - c0[i]) > (par[21] * (r1[i] - c1[i] + rt0[i])), 1, 0), 0)
+                     h[i] = ifelse(a0[i] > 2, ifelse((r0[i] - c0[i]) > (par[21] * (r1[i] - c1[i] + rt0[i])), 1, 0), 0)
                      hinv[i] = (h[i] - 1) ^ 2
                      
                      r[i] = (r0[i] + rt0[i] * hinv[i])
@@ -643,12 +644,14 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                      
                      }
                     
-                    output = tibble(t, c / n0, r / n0)
+                    output = tibble(t, c, r)
 
                   return(output)}
 
 # Run the dynamic harvest demo from parameters.
 output = aq(par)
+output
+
 
 tibble_rc = output %>% 
   select(-h) %>% 
