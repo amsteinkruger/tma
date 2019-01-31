@@ -224,10 +224,10 @@ $T = n_t^* - n_{t-1}^* * m_{t-1}$
 ```{r ac_calc}
 
 # Density is highest possible kilograms per cubic meter without density-dependence slowing growth.
-density = 160000 # Goto.
+density = 160000 # Goto or Miguel - is this from Felipe?
 
 # Size is first saleable size in kilograms.
-size = 3
+size = 3 # Communications with EOF (2018).
 
 a = seq(1, 25)
 w = fn_lw(wl_a, fn_vb(vb_linf, vb_k, a, vb_t0), wl_b)
@@ -237,7 +237,7 @@ fn_ns = function(density, w){ns = density / w} # Note lag on age to get last yea
 nsale = density / size
 
 # Initial cohort count is density at first saleable size, plus cumulative mortality at first saleable age.
-# Casually, nstart = nsale + mort(a(l(wsale)))
+# Casually, nstart = nsale + mort(a(l(wsale))).
 # Cumulative mortality to first saleable age:
 a_sale = (vb_t0 - 1 / vb_k * (log(1 - ((size / wl_a) ^ (1 / wl_b))/vb_linf))) # Inverse Von Bertalanffy.
 nstart = nsale * (100 / (100 - fn_am_marg(a_sale, am_b1, am_b2))) * (100 / (100 - fn_am_marg(1, am_b1, am_b2))) * (100 / (100 - fn_am_marg(1, am_b1, am_b2)))
@@ -253,7 +253,6 @@ nstart = nsale * (100 / (100 - fn_am_marg(a_sale, am_b1, am_b2))) * (100 / (100 
 #ntrim = fn_nt(density, w, a, am_b1, am_b2, nstart)
 
 #plot(a, ntrim)
-nstart
 
 ```
 
@@ -431,15 +430,15 @@ o = 170000
 
 ```{r c_restock}
 
-ch1 = nstart * 2 + o #How much CREMES charged Actino for the organims 
+ch1 = nstart * 2 + o # Fry Cost (CREMES).
 
 ```
 
-#####Single-Run Harvest
+##### Parameter Set-Up
 
-```{r demo_harvest}
+```{r pars}
 
-# Define parameters for each low-level function in a high-level function of multiple harvests over time
+# Define parameters for each low-level function in a high-level function of multiple harvests over time.
 var = c("start", 
         "end", 
         "linf", 
@@ -466,35 +465,47 @@ var = c("start",
         "density",
         "am_b1",
         "am_b2",
-        "nstart")
+        "nstart",
+        "harvest",
+        "maw")
 
-par = c(1, 
-        10, 
-        vb_linf, 
-        vb_k, 
-        vb_t0,
-        wl_a,
-        wl_b,
-        nstart,
-        wm_c,
-        wm_k,
-        mp_b0,
-        mp_b1,
-        mp_b2,
-        mp_q,
-        pround,
-        #10000,
-        #2.00,
-        f_b1, 
-        f_b2, 
-        ch0_cf, 
-        o,
-        ch1,
-        0.95,
-        density,
-        am_b1,
-        am_b2,
-        nstart)
+par00 = c(1, 
+          50, 
+          vb_linf, 
+          vb_k, 
+          vb_t0,
+          wl_a,
+          wl_b,
+          nstart,
+          wm_c,
+          wm_k,
+          mp_b0,
+          mp_b1,
+          mp_b2,
+          mp_q,
+          pround,
+          f_b1, 
+          f_b2, 
+          ch0_cf, 
+          o,
+          ch1,
+          0.75,
+          density,
+          am_b1,
+          am_b2,
+          nstart,
+          0,
+          0)
+
+par01 = par00
+par01[27] = 1
+
+par10 = par00
+par10[26] = 1
+
+par11 = par00
+par11[27] = 1
+par11[26] = 1
 
 fun = c(rep("All", 2), 
         rep("Age-Length", 3),
@@ -505,20 +516,26 @@ fun = c(rep("All", 2),
         rep("No-Harvest Cost", 4),
         "Harvest Cost",
         "Discount Factor",
-        rep("Density-Optimal Stocking", 4))
+        rep("Density-Optimal Stocking", 4),
+        "Harvest Switch",
+        "Maw Switch")
 
 num = seq(1, length(var))
 
-tab = data.frame(num, fun, var, par)
+tab = data.frame(num, fun, var, par00, par10, par01, par11)
 
 # Save parameters to working directory.
 #kable(tab, digits = 2) %>%
 #  kable_styling() %>%
 #  save_kable(file = "partab.html", self_contained = T)
 
+```
 
+##### Single-Run Function
+
+```{r fun}
 # Define a function for dynamic harvests over time.
-aq = function(par){t = as.numeric(vector(length = par[2]))
+aq = function(par){t = as.numeric(vector(length = par[2]))  # First, initialize blank vectors for each variable.
                    a0 = as.numeric(vector(length = par[2]))
                    a1 = as.numeric(vector(length = par[2]))
 
@@ -556,7 +573,7 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                    r = as.numeric(vector(length = par[2]))
                    c = as.numeric(vector(length = par[2]))
                   
-                   t[1] = par[1]
+                   t[1] = par[1] # Plug a starting value into each vector's first cell.
                    a0[1] = t[1]
                    a1[1] = a0[1] + 1
                    
@@ -600,7 +617,8 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                    
                    r[1] = r0[1]
                    c[1] = c0[1]
-                                     
+                  
+                   # With vectors to fill and initial values to loop from, loop through periods of interest. i is years.                   
                    for(i in 2:par[2]){
                      t[i] = t[i - 1] + 1
                      
@@ -618,8 +636,8 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                      p0[i] = fn_mp(w0[i], par[11], par[12], par[13], par[14]) * 0.10 # Note price transformation.
                      rmaw0[i] = y0[i] * p0[i]
                      rround0[i] = fn_fr(w0[i], n0[i], par[15])
-                     r0[i] = 0 * rmaw0[i] + rround0[i] # Note the null on maw value.
-                     c0[i] = fn_ch0(w0[i], par[16], par[17], par[18], n0[i], par[19]) #+ 10000 * w0[i] ^ 2  | Extra costs for a pretty cost function.
+                     r0[i] = par[27] * rmaw0[i] + rround0[i]
+                     c0[i] = fn_ch0(w0[i], par[16], par[17], par[18], n0[i], par[19])
                      
                      l1[i] = fn_vb(par[3], par[4], a1[i], par[5])
                      w1[i] = fn_lw(par[6], l1[i], par[7])
@@ -633,10 +651,10 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                      rmaw1[i] = y1[i] * p1[i]
                      rround1[i] = fn_fr(w1[i], n1[i], par[15])
                      r1[i] = rmaw1[i] + rround1[i]
-                     c1[i] = fn_ch0(w1[i], par[16], par[17], par[18], n1[i], par[19]) #+ 10000 * w1[i] ^ 2 | Extra costs for a pretty cost function.
+                     c1[i] = fn_ch0(w1[i], par[16], par[17], par[18], n1[i], par[19])
                      
                      # Mind wrapper for hard-coding lower bound age at harvest.
-                     h[i] = ifelse(a0[i] > 2, ifelse((r0[i] - c0[i]) > (par[21] * (r1[i] - c1[i] + rt0[i])), 1, 0), 0)
+                     h[i] = par[26] * ifelse(a0[i] > 0, ifelse((r0[i] - c0[i]) > (par[21] * (r1[i] - c1[i] + rt0[i])), 1, 0), 0)
                      hinv[i] = (h[i] - 1) ^ 2
                      
                      r[i] = (r0[i] + rt0[i] * hinv[i])
@@ -644,14 +662,18 @@ aq = function(par){t = as.numeric(vector(length = par[2]))
                      
                      }
                     
-                    output = tibble(t, c, r)
+                    output = tibble(t, c, r, h)
 
                   return(output)}
 
-# Run the dynamic harvest demo from parameters.
-output = aq(par)
-output
+```
 
+##### Run 00
+
+```{r run00}
+
+# Run the dynamic harvest demo from parameters.
+output = aq(par00)
 
 tibble_rc = output %>% 
   select(-h) %>% 
@@ -662,9 +684,9 @@ tibble_rc = output %>%
 h = ggplot(tibble_rc, aes(t, val, color = var)) +
       geom_path() +
       labs(x = "Years", y = "USD2018") +
-      scale_x_continuous(expand = c(0, 0), limits = c(1, 25)) +
-      scale_y_continuous(expand = c(0, 0), limits = c(0, 300000000), labels = scales::comma) +
-      ggtitle("Costs and Revenues for One Cage - Trimming and Harvest") +
+      #scale_x_continuous(expand = c(0, 0), limits = c(1, 25)) +
+      #scale_y_continuous(expand = c(0, 0), limits = c(0, 300000000), labels = scales::comma) +
+      #ggtitle("Costs and Revenues for One Cage - Trimming and Harvest") +
       theme_classic() +
       theme(axis.text.x = element_text(size = 8),
           axis.text.y = element_text(size = 8),
@@ -672,11 +694,11 @@ h = ggplot(tibble_rc, aes(t, val, color = var)) +
           axis.title.x = element_text(size = 9),
           axis.title.y = element_text(size = 9),
           #legend.title = element_text(size = 9),
-          plot.title = element_text(size = 9),
-          legend.position = "none")
+          plot.title = element_text(size = 9))#,
+          #legend.position = "none")
 
 # Save harvest plot to working directory.
-ggsave("h1plot.png", plot = h, dpi = 300, width = 6.5, height = 4.5)
+#ggsave("h1plot.png", plot = h, dpi = 300, width = 6.5, height = 4.5)
 
 # Save output to working directory.
 #kable(output) %>%
@@ -691,13 +713,13 @@ tbl_pi = output %>%
   mutate(rsale = r * h) %>% 
   mutate(pi = rsale - mc)
 
-plot(tbl_pi$t, tbl_pi$pi)
+#plot(tbl_pi$t, tbl_pi$pi)
 
 # Calculate and plot cumulative profit.
-pi_sum = as.numeric(vector(length = par[2] - 1))
+pi_sum = as.numeric(vector(length = par00[2] - 1))
 pi_sum[1] = 0
 
-for(i in 2:24){pi_sum[i] = tbl_pi$r[i] * tbl_pi$h[i] - tbl_pi$mc[i] + pi_sum[i - 1]} # par[2] for length
+for(i in 2:9){pi_sum[i] = tbl_pi$r[i] * tbl_pi$h[i] - tbl_pi$mc[i] + pi_sum[i - 1]} # par[2] for length
 
 tbl_pi = cbind(tbl_pi, pi_sum)
 
@@ -705,16 +727,16 @@ tbl_pi = cbind(tbl_pi, pi_sum)
 tbl_pi = mutate(tbl_pi, color = ifelse(pi_sum > 0, 1, 0))
 
 # Basic plot.  
-plot(tbl_pi$t, tbl_pi$pi_sum)
+#plot(tbl_pi$t, tbl_pi$pi_sum)
 
 # Better plots.
 pimargplot =
 ggplot(tbl_pi, aes(t, pi)) +
   geom_path() +
   labs(x = "Years", y = "USD2018") +
-      scale_x_continuous(expand = c(0, 0), limits = c(1, 24)) +
-      scale_y_continuous(expand = c(0, 0), limits = c(-200000000, 600000000), labels = scales::comma) +
-      ggtitle("Annual Profit for One Cage - Harvest and Trimming, No Trimming Revenue") +
+      #scale_x_continuous(expand = c(0, 0), limits = c(1, 24)) +
+      #scale_y_continuous(expand = c(0, 0), limits = c(-200000000, 600000000), labels = scales::comma) +
+      #ggtitle("Annual Profit for One Cage - Harvest and Trimming, No Trimming Revenue") +
       theme_classic() +
       theme(axis.text.x = element_text(size = 8),
           axis.text.y = element_text(size = 8),
@@ -729,9 +751,9 @@ picumuplot =
 ggplot(tbl_pi, aes(t, pi_sum)) +
   geom_path() +
   labs(x = "Years", y = "USD2018") +
-      scale_x_continuous(expand = c(0, 0), limits = c(1, 24)) +
-      scale_y_continuous(expand = c(0, 0), limits = c(-200000000, 600000000), labels = scales::comma) +
-      ggtitle("Cumulative Profit for One Cage - Harvest and Trimming, No Trimming Revenue") +
+      #scale_x_continuous(expand = c(0, 0), limits = c(1, 24)) +
+      #scale_y_continuous(expand = c(0, 0), limits = c(-200000000, 600000000), labels = scales::comma) +
+      #ggtitle("Cumulative Profit for One Cage - Harvest and Trimming, No Trimming Revenue") +
       theme_classic() +
       theme(axis.text.x = element_text(size = 8),
           axis.text.y = element_text(size = 8),
@@ -744,8 +766,131 @@ ggplot(tbl_pi, aes(t, pi_sum)) +
 
 # Save!
 
-ggsave("pimplot.png", plot = pimargplot, dpi = 300, width = 6.5, height = 4.5)
-ggsave("picplot.png", plot = picumuplot, dpi = 300, width = 6.5, height = 4.5)
+#ggsave("pimplot.png", plot = pimargplot, dpi = 300, width = 6.5, height = 4.5)
+#ggsave("picplot.png", plot = picumuplot, dpi = 300, width = 6.5, height = 4.5)
 
 ```
 
+##### Run 00
+
+```{r run00}
+
+# Run the dynamic harvest demo from parameters.
+output = aq(par00)
+
+tibble_rc = output %>% 
+  select(-h) %>% 
+  melt(id = 1) %>% 
+  rename(t = t, var = variable, val = value)
+
+# Plot cumulative revenues and costs through harvest cycles.
+aq00 = ggplot(tibble_rc, aes(t, val, color = var)) +
+      geom_path() +
+      labs(x = "Years", y = "USD2018") +
+      #scale_x_continuous(expand = c(0, 0), limits = c(1, 25)) +
+      #scale_y_continuous(expand = c(0, 0), limits = c(0, 300000000), labels = scales::comma) +
+      #ggtitle("Costs and Revenues for One Cage - Trimming and Harvest") +
+      theme_classic() +
+      theme(axis.text.x = element_text(size = 8),
+          axis.text.y = element_text(size = 8),
+          #legend.text = element_text(size = 8),
+          axis.title.x = element_text(size = 9),
+          axis.title.y = element_text(size = 9),
+          #legend.title = element_text(size = 9),
+          plot.title = element_text(size = 9),
+          legend.position = "none")
+
+```
+
+##### Run 01
+
+```{r run01}
+
+# Run the dynamic harvest demo from parameters.
+output = aq(par01)
+
+tibble_rc = output %>% 
+  select(-h) %>% 
+  melt(id = 1) %>% 
+  rename(t = t, var = variable, val = value)
+
+# Plot cumulative revenues and costs through harvest cycles.
+aq01 = ggplot(tibble_rc, aes(t, val, color = var)) +
+      geom_path() +
+      labs(x = "Years", y = "USD2018") +
+      #scale_x_continuous(expand = c(0, 0), limits = c(1, 25)) +
+      #scale_y_continuous(expand = c(0, 0), limits = c(0, 300000000), labels = scales::comma) +
+      #ggtitle("Costs and Revenues for One Cage - Trimming and Harvest") +
+      theme_classic() +
+      theme(axis.text.x = element_text(size = 8),
+          axis.text.y = element_text(size = 8),
+          #legend.text = element_text(size = 8),
+          axis.title.x = element_text(size = 9),
+          axis.title.y = element_text(size = 9),
+          #legend.title = element_text(size = 9),
+          plot.title = element_text(size = 9),
+          legend.position = "none")
+
+```
+
+##### Run 10
+
+```{r run10}
+
+# Run the dynamic harvest demo from parameters.
+output = aq(par10)
+
+tibble_rc = output %>% 
+  select(-h) %>% 
+  melt(id = 1) %>% 
+  rename(t = t, var = variable, val = value)
+
+# Plot cumulative revenues and costs through harvest cycles.
+aq10 = ggplot(tibble_rc, aes(t, val, color = var)) +
+      geom_path() +
+      labs(x = "Years", y = "USD2018") +
+      #scale_x_continuous(expand = c(0, 0), limits = c(1, 25)) +
+      #scale_y_continuous(expand = c(0, 0), limits = c(0, 300000000), labels = scales::comma) +
+      #ggtitle("Costs and Revenues for One Cage - Trimming and Harvest") +
+      theme_classic() +
+      theme(axis.text.x = element_text(size = 8),
+          axis.text.y = element_text(size = 8),
+          #legend.text = element_text(size = 8),
+          axis.title.x = element_text(size = 9),
+          axis.title.y = element_text(size = 9),
+          #legend.title = element_text(size = 9),
+          plot.title = element_text(size = 9),
+          legend.position = "none")
+
+```
+
+##### Run 11
+
+```{r run11}
+
+# Run the dynamic harvest demo from parameters.
+output = aq(par11)
+
+tibble_rc = output %>% 
+  select(-h) %>% 
+  melt(id = 1) %>% 
+  rename(t = t, var = variable, val = value)
+
+# Plot cumulative revenues and costs through harvest cycles.
+aq11 = ggplot(tibble_rc, aes(t, val, color = var)) +
+      geom_point() +
+      labs(x = "Years", y = "USD2018") +
+      #scale_x_continuous(expand = c(0, 0), limits = c(1, 25)) +
+      #scale_y_continuous(expand = c(0, 0), limits = c(0, 300000000), labels = scales::comma) +
+      #ggtitle("Costs and Revenues for One Cage - Trimming and Harvest") +
+      theme_classic() +
+      theme(axis.text.x = element_text(size = 8),
+          axis.text.y = element_text(size = 8),
+          #legend.text = element_text(size = 8),
+          axis.title.x = element_text(size = 9),
+          axis.title.y = element_text(size = 9),
+          #legend.title = element_text(size = 9),
+          plot.title = element_text(size = 9),
+          legend.position = "none")
+
+```

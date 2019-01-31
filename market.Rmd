@@ -278,8 +278,8 @@ pgr_quantity = ggplot(filter(dat, tma == 1 & year < 2018), aes(y_dry, p_g_r)) +
 
 # grid
 # fix grid please
-pgr_all = plot_grid(pgr_place, pgr_condition, pgr_grams, pgr_quantity)
-ggsave("pgr_all.pdf", dpi = 300, pgr_all)
+#pgr_all = plot_grid(pgr_place, pgr_condition, pgr_grams, pgr_quantity)
+#ggsave("pgr_all.pdf", dpi = 300, pgr_all)
 
 # box/whiskers for prices by species w/ labels for n 
 # jitter for prices by species
@@ -298,13 +298,13 @@ ggsave("pgr_all.pdf", dpi = 300, pgr_all)
 ```{r show, eval = FALSE}
 
 # Display figures.
-tma
-tmaplus
-pgr_grams
-pgr_place
-pgr_condition
-pgr_quantity
-pgr_all
+#tma
+#tmaplus
+#pgr_grams
+#pgr_place
+#pgr_condition
+#pgr_quantity
+#pgr_all
 
 ```
 
@@ -376,7 +376,7 @@ nlm = nls(p ~ q * a + (g ^ b) + c, data = tinydat, start = c(a = -5.00, b = 2.00
 ```{r nlm_tidy}
 
 nlm_tidy = tidy(nlm)
-#nlm_aug = augment(tinydat, nlm_tidy)
+tinydat_aug = augment(nlm, tinydat)
 
 ```
 
@@ -484,10 +484,15 @@ ggplot() +
 
 # Kablify the model.
 nlm_tidy$term = c("Supply (Tonnes)", "Weight (Grams)", "Choke Price")
+
 colnames(nlm_tidy) = c("", "Coef.", "SE", "t", "p")
+
+nlm_tab = 
 kable(nlm_tidy, format = "html", caption = "Inverse Demand Specification", digits = 3) %>% 
   kable_styling("striped", full_width = F) #%>
   #cat(file = "kab_nlm.html"
+
+save_kable(nlm_tab, "nlm_tab.png")
 
 ```
 

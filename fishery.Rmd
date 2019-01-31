@@ -155,10 +155,9 @@ plot(ninit)
 ```{r age_struct_tma_natmort}
 
 # Vector for proportional natural mortalities at age. NB: Survival, not mortality. From INAPESCA (2018) / Cisneros-Mata et al. (1995).
-v_mort = rep(0.73, 30) # FIX
+v_mort = rep(0.78, 30)
 
 ```
-
 
 ```{r age_struct_tma_fismort}
 # Vector for proportional poaching mortalities at age.
@@ -228,7 +227,7 @@ bymort = 1 - bymort_init / ninit[2] # Instead of distributing bycatch mortalitie
 
 # Vector for proportional fecundities at age. From INAPESCA (2018) / Valenzuela-Quiñonez (2014).
 #  Set function.
-fun_fec = function(l){1 / ( 1 + exp(-0.0099 * ((l - 133.331) * 10)))}
+fun_fec = function(l){1 / ( 1 + exp(-0.0099 * ((l - 1333.31) * 10)))}
 #  Transform vector of lengths at age to fecundities.
 v_fec = fun_fec(l)
 
@@ -267,22 +266,42 @@ fun_test = function(nrow, ncol, ninit, v_mort, bymort, v_select_use, v_eggs, k){
 ```{r age_struct_tma_run}
 
 # Run first test.
-uh = fun_test(25, 30, ninit, v_mort, bymort, v_select_use, v_eggs, 5000000)
+uh = fun_test(10, 30, ninit, v_mort, bymort, v_select_use, v_eggs, 5000000)
 
 ```
 
 ```{r age_struct_tma_ploots}
 
-duh = data.frame(uh)
+duh = data.frame(uh) %>% 
+  mutate(t = seq(0, 9)) %>% 
+  melt(id.vars = "t")
 
-mut = mutate(duh, t = seq(0, 24))
-
-melt = melt(mut, id.vars = "t")
-
-try2 =
-ggplot(melt, aes(t, value, color = variable)) +
+try_age =
+ggplot(duh, aes(t, value, color = variable)) +
   geom_line()
 
+muh = data.frame(uh) %>% 
+  mutate(t = seq(0, 9)) %>% 
+  melt(id.vars = "t") %>%
+  group_by(t) %>% 
+  summarise(s = sum(value))
+
+try_sum = 
+ggplot(muh, aes(t, s)) +
+  geom_line()
+
+huh = muh %>%
+  mutate(b = ifelse(t < 5, s, s + t * 100000))
+
+try_hum = 
+ggplot(huh) +
+  geom_ribbon(aes(t, ymin = s, ymax = b), color = "midnightblue", alpha = 0.25) +
+  geom_line(aes(t, b), color = "midnightblue") +
+  geom_line(aes(t, s), color = "firebrick4")
+
+```
+
+```{r otherploots}
 melt$variable = str_remove(melt$variable, "X")
 melt$variable = as.numeric(melt$variable)
 
