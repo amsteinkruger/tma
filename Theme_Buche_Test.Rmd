@@ -1,0 +1,133 @@
+---
+title: "Fish Bioenergetics 4.0"
+author: "Garrett Goto"
+date: "November 27, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages, echo=FALSE, message=FALSE}
+
+library(ggplot2)
+library(gridExtra)
+library(dplyr)
+library(readr)
+finaldata <- read_csv("~/Bren School Work/Actino/NWFSC Sablefish Data/finaldata.csv")
+View(finaldata)
+library(shiny)
+
+library(extrafont)
+library(extrafontdb)
+library(Rttf2pt1)
+#font_import()
+#fonts()
+#fonttable()
+#loadfonts(quiet=TRUE)
+#loadfonts(device = "Win")
+
+
+
+```
+
+
+```{r buche_theme}
+
+#theme_buche <- function(base_size = 12,
+#                        base_family = "URWGothic",
+#                        base_line_size = base_size / 170,
+#                        base_rect_size = base_size / 170,
+#                        text=URWGothic) {
+#  theme_bw(base_size=12, base_family="",) %+replace%
+#    theme(panel.background = element_blank(), 
+#          plot.background = element_rect(fill="transparent",colour=NA), 
+#          legend.background = element_rect(fill="transparent", colour=NA),
+#          legend.key = element_rect(fill="transparent", colour=NA),
+#          plot.title = element_text(
+#            color = rgb(25, 43, 65, maxColorValue = 255), 
+#            face = "bold",
+#            family = "URWGothic",
+#            hjust = 0),
+#          axis.title = element_text(
+#            color = rgb(105, 105, 105, 
+#            maxColorValue = 255), 
+#            family = "URWGothic",
+#            size = rel(1)),
+#          axis.text = element_text(
+#            color = rgb(105, 105, 105, 
+#            maxColorValue = 255), 
+#            family = "URWGothic",
+#            size = rel(1)),
+#          panel.grid = element_blank(),
+#      complete = TRUE
+#          )
+#}
+
+
+#presentation_theme <- theme_buche()
+#theme_set(presentation_theme)
+
+
+ggplot(finaldata, aes(x = tank, y = fish_weight, color=treatment), fill = "transparent") + 
+  geom_line(size = 3) +
+  scale_color_manual(values = c("#1F4E79", "#F4B183","#82BAD5", "#366963")) +
+  theme_classic() +
+  ggtitle("name_of_graph") +
+  labs( x = "x_label", y = "y_label") +
+  theme(plot.title = element_text(hjust = 0.5, size = 32, family = "URWGothic", face = "bold"), 
+        rect = element_rect(fill = "transparent"),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        legend.position = "right",
+        legend.background = element_rect(fill = "transparent"),
+        legend.box.background = element_rect(fill = "transparent"),
+        legend.key = element_rect(fill="transparent", colour=NA),
+        legend.text = element_text(size = 16, family = "URWGothic"),
+        legend.title = element_text(size = 18, family = "URWGothic"),
+        panel.background = element_rect(fill = "transparent"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 14, family = "URWGothic"),
+        axis.title.x = element_text(size = 24, family = "URWGothic", face = "bold"),
+        axis.text.y = element_text(size = 14, family = "URWGothic"),
+        axis.title.y = element_text(size = 24, family = "URWGothic", face = "bold"))
+ 
+
+#colors: 
+#dark blue: #1F4E79
+#orange: #1F4E79
+#light blue: #82BAD5
+#dark teal: #366963
+
+
+#fullcreen
+ggsave("name_of_graph.png", 
+       width = 1280, 
+       height = 720, 
+       dpi = 300, 
+       device = png, 
+       limitsize = FALSE, 
+       bg = "transparent")
+
+#widescreen
+ggsave("name_of_graph_wide.png", 
+       width = 1280, 
+       height = 550, 
+       dpi = 300, 
+       device = png, 
+       limitsize = FALSE, 
+       bg = "transparent")
+
+#1/2 widescreen
+ggsave("name_of_graph_half.png", 
+       width = 800, 
+       height = 720, 
+       dpi = 300, 
+       device = png, 
+       limitsize = FALSE, 
+       bg = "transparent")
+
+
+```
+
