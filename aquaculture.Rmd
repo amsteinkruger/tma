@@ -61,25 +61,26 @@ vb_k    = 0.155#0.22856
 vb_t0   = -0.65
 
 # Parameterization demo.
-a = seq(1, 25)
-l = fn_vb(vb_linf, vb_k, a, vb_t0)
-plot(a, l)
+#a = seq(1, 25)
+#l = fn_vb(vb_linf, vb_k, a, vb_t0)
+
+#plot(a, l)
 
 # Better graph for Goto.
-ggvb =
-ggplot() +
-  geom_path(aes(a, l), colour = "firebrick") +
-    labs(x = "Age (Years)", y = "Length (Centimeters)") +
-  scale_y_continuous(expand = c(0, 0)) +
-  ggtitle("Estimated Length-at-Age Function") +
-  theme(axis.text.x = element_text(size = 8),
-        axis.text.y = element_text(size = 8),
-        legend.text = element_text(size = 8),
-        axis.title.x = element_text(size = 9),
-        axis.title.y = element_text(size = 9),
-        legend.title = element_text(size = 9),
-        plot.title = element_text(size = 9)) +
-  theme_classic()
+#ggvb =
+#ggplot() +
+#  geom_path(aes(a, l), colour = "firebrick") +
+#  labs(x = "Age (Years)", y = "Length (Centimeters)") +
+#  scale_y_continuous(expand = c(0, 0)) +
+#  ggtitle("Estimated Length-at-Age Function") +
+#  theme(axis.text.x = element_text(size = 8),
+#        axis.text.y = element_text(size = 8),
+#        legend.text = element_text(size = 8),
+#        axis.title.x = element_text(size = 9),
+#        axis.title.y = element_text(size = 9),
+#        legend.title = element_text(size = 9),
+#        plot.title = element_text(size = 9)) +
+#  theme_classic()
 
 #ggsave("ggvb.png", ggvb, width = 5.5, height = 3, dpi = 300)
 
@@ -96,7 +97,7 @@ m_months = c(rep(5.00, 2), rep(2.40, 2), rep(1.60, 2), rep(1.15, 2), rep(1.00, 3
 
 dat_m = tibble(a_months, m_months)
 
-plot(dat_m$a_months, dat_m$m_months)
+#plot(dat_m$a_months, dat_m$m_months)
 
 ```
  
@@ -106,34 +107,34 @@ Supposing a mortality trend $m = \beta_1 * e^{\beta_2a}$, R function nls in pack
 
 # Specification for nonlinear regression:
 am_reg = nls(m_months ~ b1 * exp(b2 * a_months), dat_m, start = list(b1 = 8.00, b2 = - 1.00))
-View(dat_m)
+
 # Clean up output:
 am_reg_tidy = tidy(am_reg, conf.int = TRUE, conf.level = 0.95)
 dat_m_est = augment(am_reg)
 
-kable(am_reg_tidy)
+#kable(am_reg_tidy)
 
-ggplot(dat_m_est) +
-  geom_point(aes(a_months, m_months)) +
-  geom_path(aes(a_months, .fitted))
+#ggplot(dat_m_est) +
+#  geom_point(aes(a_months, m_months)) +
+#  geom_path(aes(a_months, .fitted))
 
 # Better graph for Goto.
-ggam =
-ggplot(dat_m_est) +
-  geom_point(aes(a_months, m_months), colour = "gray50") +
-  geom_segment(aes(x = a_months, y = m_months, xend = a_months, yend = .fitted), colour = "gray50") +
-  geom_point(aes(a_months, .fitted), colour = "firebrick") +
-  labs(x = "Age (Months)", y = "Cohort Mortality (%)") +
-  scale_y_continuous(expand = c(0, 0)) +
-  ggtitle("Estimated Mortality-at-Age Function") +
-  theme(axis.text.x = element_text(size = 8),
-        axis.text.y = element_text(size = 8),
-        legend.text = element_text(size = 8),
-        axis.title.x = element_text(size = 9),
-        axis.title.y = element_text(size = 9),
-        legend.title = element_text(size = 9),
-        plot.title = element_text(size = 9)) +
-  theme_classic()
+#ggam =
+#ggplot(dat_m_est) +
+#  geom_point(aes(a_months, m_months), colour = "gray50") +
+#  geom_segment(aes(x = a_months, y = m_months, xend = a_months, yend = .fitted), colour = "gray50") +
+#  geom_point(aes(a_months, .fitted), colour = "firebrick") +
+#  labs(x = "Age (Months)", y = "Cohort Mortality (%)") +
+#  scale_y_continuous(expand = c(0, 0)) +
+#  ggtitle("Estimated Mortality-at-Age Function") +
+#  theme(axis.text.x = element_text(size = 8),
+#        axis.text.y = element_text(size = 8),
+#        legend.text = element_text(size = 8),
+#        axis.title.x = element_text(size = 9),
+#        axis.title.y = element_text(size = 9),
+#        legend.title = element_text(size = 9),
+#        plot.title = element_text(size = 9)) +
+#  theme_classic()
 
 #ggsave("ggam.png", ggam, width = 5.5, height = 3, dpi = 300)
 
@@ -293,7 +294,7 @@ fn_mp = function(w, b0, b1, b2, q){pmaw = (q * b1 + (w * 1000) ^ b2 + b0) * 1000
 mp_b0 = 82.99177
 mp_b1 = -5.28312
 mp_b2 = 0.52540
-mp_q = 14 # Note that 14 fills in for a reasonable quantity at market from poaching.
+mp_q = 10 # Note that 14 fills in for a reasonable quantity at market from poaching.
 #mp_q has to be a vector
 ```
 
@@ -470,7 +471,7 @@ var = c("start",
         "maw")
 
 par00 = c(1, 
-          50, 
+          10, 
           vb_linf, 
           vb_k, 
           vb_t0,
@@ -588,7 +589,7 @@ aq = function(par){t = as.numeric(vector(length = par[2]))  # First, initialize 
                    n0[1] = nstart - nm0[1] - nt0[1]
                    rt0[1] = fn_fr(w0[1], nt0[1], par[15])
                    y0[1] = fn_wm(w0[1], n0[1], par[9], par[10])
-                   p0[1] = fn_mp(w0[1], par[11], par[12], par[13], par[14]) * 0.10 # Note price transformation.
+                   p0[1] = fn_mp(w0[1], par[11], par[12], par[13], par[14] + y0[1] / 1000) * 0.10 # Note price transformation.
                    rmaw0[1] = y0[1] * p0[1]
                    rround0[1] = w0[1] * par[15]
                    r0[1] = (rmaw0[1] + rround0[1])
@@ -609,7 +610,7 @@ aq = function(par){t = as.numeric(vector(length = par[2]))  # First, initialize 
                    n1[1] = fn_ns(density, w1[1])
                    rt1[1] = fn_fr(w1[1], nt1[1], par[15])
                    y1[1] = fn_wm(w1[1], n1[1], par[9], par[10])
-                   p1[1] = fn_mp(w1[1], par[11], par[12], par[13], par[14]) * 0.10 # Note price transformation.
+                   p1[1] = fn_mp(w1[1], par[11], par[12], par[13], par[14] + y1[1] / 1000) * 0.10 # Note price transformation.
                    rmaw1[1] = y1[1] * p1[1]
                    rround1[1] = w1[1] * par[15]
                    r1[1] = (rmaw1[1] + rround1[1])
@@ -633,7 +634,7 @@ aq = function(par){t = as.numeric(vector(length = par[2]))  # First, initialize 
                      n0[i] = (nstart * h[i - 1] + n0[i - 1] * hinv[i - 1]) - nm0[i] - nt0[i]
                      rt0[i] = fn_fr(w0[i], nt0[i], par[15])
                      y0[i] = fn_wm(w0[i], n0[i], par[9], par[10])
-                     p0[i] = fn_mp(w0[i], par[11], par[12], par[13], par[14]) * 0.10 # Note price transformation.
+                     p0[i] = fn_mp(w0[i], par[11], par[12], par[13], par[14] + y0[i - 1] / 1000) * 0.10 # Note price transformation.
                      rmaw0[i] = y0[i] * p0[i]
                      rround0[i] = fn_fr(w0[i], n0[i], par[15])
                      r0[i] = par[27] * rmaw0[i] + rround0[i]
@@ -647,7 +648,7 @@ aq = function(par){t = as.numeric(vector(length = par[2]))  # First, initialize 
                      n1[i] = (nstart * h[i - 1] + n1[i - 1] * hinv[i - 1]) - nm1[i] - nt1[i]
                      rt1[i] = fn_fr(w1[i], nt1[i], par[15])
                      y1[i] = fn_wm(w1[i], n1[i], par[9], par[10])
-                     p1[i] = fn_mp(w1[i], par[11], par[12], par[13], par[14]) * 0.10 # Note price transformation.
+                     p1[i] = fn_mp(w1[i], par[11], par[12], par[13], par[14] + y1[i - 1] / 1000) * 0.10 # Note price transformation.
                      rmaw1[i] = y1[i] * p1[i]
                      rround1[i] = fn_fr(w1[i], n1[i], par[15])
                      r1[i] = rmaw1[i] + rround1[i]
@@ -662,7 +663,7 @@ aq = function(par){t = as.numeric(vector(length = par[2]))  # First, initialize 
                      
                      }
                     
-                    output = tibble(t, c, r, h)
+                    output = tibble(t, c / n0, r, p0, h)
 
                   return(output)}
 
@@ -779,7 +780,7 @@ ggplot(tbl_pi, aes(t, pi_sum)) +
 output = aq(par00)
 
 tibble_rc = output %>% 
-  select(-h) %>% 
+  select(-h, -p0, -r) %>% 
   melt(id = 1) %>% 
   rename(t = t, var = variable, val = value)
 
@@ -810,7 +811,7 @@ aq00 = ggplot(tibble_rc, aes(t, val, color = var)) +
 output = aq(par01)
 
 tibble_rc = output %>% 
-  select(-h) %>% 
+  select(-h, -p0) %>% 
   melt(id = 1) %>% 
   rename(t = t, var = variable, val = value)
 
@@ -841,7 +842,7 @@ aq01 = ggplot(tibble_rc, aes(t, val, color = var)) +
 output = aq(par10)
 
 tibble_rc = output %>% 
-  select(-h) %>% 
+  select(-h, -p0) %>% 
   melt(id = 1) %>% 
   rename(t = t, var = variable, val = value)
 
@@ -872,7 +873,7 @@ aq10 = ggplot(tibble_rc, aes(t, val, color = var)) +
 output = aq(par11)
 
 tibble_rc = output %>% 
-  select(-h) %>% 
+  select(-h, -p0) %>% 
   melt(id = 1) %>% 
   rename(t = t, var = variable, val = value)
 
@@ -883,6 +884,65 @@ aq11 = ggplot(tibble_rc, aes(t, val, color = var)) +
       #scale_x_continuous(expand = c(0, 0), limits = c(1, 25)) +
       #scale_y_continuous(expand = c(0, 0), limits = c(0, 300000000), labels = scales::comma) +
       #ggtitle("Costs and Revenues for One Cage - Trimming and Harvest") +
+      theme_classic() +
+      theme(axis.text.x = element_text(size = 8),
+          axis.text.y = element_text(size = 8),
+          #legend.text = element_text(size = 8),
+          axis.title.x = element_text(size = 9),
+          axis.title.y = element_text(size = 9),
+          #legend.title = element_text(size = 9),
+          plot.title = element_text(size = 9),
+          legend.position = "none")
+
+# Calculate and plot profit.
+tbl_pi = output %>% 
+  mutate(c1 = lead(c)) %>% 
+  filter(!is.na(c1)) %>% 
+  mutate(mc = ifelse(c1 - c > 0, c1 - c, 0)) %>% 
+  mutate(rsale = r * h) %>% 
+  mutate(pi = rsale - mc)
+
+#plot(tbl_pi$t, tbl_pi$pi)
+
+# Calculate and plot cumulative profit.
+pi_sum = as.numeric(vector(length = par00[2] - 1))
+pi_sum[1] = 0
+
+for(i in 2:9){pi_sum[i] = tbl_pi$r[i] * tbl_pi$h[i] - tbl_pi$mc[i] + pi_sum[i - 1]} # par[2] for length
+
+tbl_pi = cbind(tbl_pi, pi_sum)
+
+# Add a column for color by vertical position.
+tbl_pi = mutate(tbl_pi, color = ifelse(pi_sum > 0, 1, 0))
+
+# Basic plot.  
+#plot(tbl_pi$t, tbl_pi$pi_sum)
+
+# Better plots.
+pimargplot =
+ggplot(tbl_pi, aes(t, pi)) +
+  geom_path() +
+  labs(x = "Years", y = "USD2018") +
+      #scale_x_continuous(expand = c(0, 0), limits = c(1, 24)) +
+      #scale_y_continuous(expand = c(0, 0), limits = c(-200000000, 600000000), labels = scales::comma) +
+      #ggtitle("Annual Profit for One Cage - Harvest and Trimming, No Trimming Revenue") +
+      theme_classic() +
+      theme(axis.text.x = element_text(size = 8),
+          axis.text.y = element_text(size = 8),
+          #legend.text = element_text(size = 8),
+          axis.title.x = element_text(size = 9),
+          axis.title.y = element_text(size = 9),
+          #legend.title = element_text(size = 9),
+          plot.title = element_text(size = 9),
+          legend.position = "none")
+
+picumuplot =
+ggplot(tbl_pi, aes(t, pi_sum)) +
+  geom_path() +
+  labs(x = "Years", y = "USD2018") +
+      #scale_x_continuous(expand = c(0, 0), limits = c(1, 24)) +
+      #scale_y_continuous(expand = c(0, 0), limits = c(-200000000, 600000000), labels = scales::comma) +
+      #ggtitle("Cumulative Profit for One Cage - Harvest and Trimming, No Trimming Revenue") +
       theme_classic() +
       theme(axis.text.x = element_text(size = 8),
           axis.text.y = element_text(size = 8),
