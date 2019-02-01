@@ -281,17 +281,22 @@ ggplot(duh, aes(t, value, color = variable)) +
   geom_line()
 
 muh = data.frame(uh) %>% 
-  mutate(t = seq(0, 9)) %>% 
+  mutate(t = seq(2020, 2029)) %>% 
   melt(id.vars = "t") %>%
   group_by(t) %>% 
-  summarise(s = sum(value))
+  summarise(s = sum(value)) %>% 
+  mutate(s = s * 0.001)
 
 try_sum = 
 ggplot(muh, aes(t, s)) +
+  geom_segment(aes(x = 2020, xend = Inf, y = 4000, yend = 4000), linetype = "dashed") +
+  geom_segment(aes(x = 2020, xend = Inf, y = 2500, yend = 2500), linetype = "dashed") +
   geom_line(size = 3, color = "#1F4E79") +
-  theme_classic() +
+  scale_x_continuous(expand = c(0, 0), limits = c(2020, 2029), breaks = c(2020, 2030)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 10000), labels = scales::comma) +
   ggtitle("Stock Forecast, 2017 - 2027") +
-  labs( x = "Year", y = "y_label") +
+  labs(x = "Year", y = "Tonnes of Biomass") +
+  theme_classic() +
   theme(plot.title = element_text(hjust = 0.5, size = 32, family = "Century Gothic", face = "bold"), 
         rect = element_rect(fill = "transparent"),
         plot.background = element_rect(fill = "transparent", color = NA),
@@ -309,16 +314,53 @@ ggplot(muh, aes(t, s)) +
         axis.text.y = element_text(size = 14, family = "Century Gothic"),
         axis.title.y = element_text(size = 24, family = "Century Gothic", face = "bold"))
 
-
+ggsave("fishy.png", 
+       width = 800, 
+       height = 720, 
+       dpi = 300, 
+       device = png, 
+       limitsize = FALSE, 
+       bg = "transparent")
 
 huh = muh %>%
-  mutate(b = ifelse(t < 5, s, s[5]))
+  mutate(b = ifelse(t < 2023, s, s[4]))
 
 try_hum = 
 ggplot(huh) +
-  geom_ribbon(aes(t, ymin = s, ymax = b), color = "midnightblue", alpha = 0.25) +
-  geom_line(aes(t, b), color = "midnightblue") +
-  geom_line(aes(t, s), color = "firebrick4")
+  geom_segment(aes(x = 2020, xend = Inf, y = 4000, yend = 4000), linetype = "dashed") +
+  geom_segment(aes(x = 2020, xend = Inf, y = 2500, yend = 2500), linetype = "dashed") +
+  geom_ribbon(aes(t, ymin = s, ymax = b), fill = "#F4B183", alpha = 0.25) +
+  geom_line(aes(t, b), color = "#F4B183", size = 3) +
+  geom_line(aes(t, s), color = "#1F4E79", size = 3) +
+  scale_x_continuous(expand = c(0, 0), limits = c(2020, 2029), breaks = c(2020, 2030)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 10000), labels = scales::comma) +
+  ggtitle("Range for Aquaculture Impacts, 2017 - 2027") +
+  labs(x = "Year", y = "Tonnes of Biomass") +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, size = 32, family = "Century Gothic", face = "bold"), 
+        rect = element_rect(fill = "transparent"),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        legend.position = "right",
+        legend.background = element_rect(fill = "transparent"),
+        legend.box.background = element_rect(fill = "transparent"),
+        legend.key = element_rect(fill="transparent", colour=NA),
+        legend.text = element_text(size = 16, family = "Century Gothic"),
+        legend.title = element_text(size = 18, family = "Century Gothic"),
+        panel.background = element_rect(fill = "transparent"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 14, family = "Century Gothic"),
+        axis.title.x = element_text(size = 24, family = "Century Gothic", face = "bold"),
+        axis.text.y = element_text(size = 14, family = "Century Gothic"),
+        axis.title.y = element_text(size = 24, family = "Century Gothic", face = "bold"))
+
+ggsave("fishier.png", 
+       width = 800, 
+       height = 720, 
+       dpi = 300, 
+       device = png, 
+       limitsize = FALSE, 
+       bg = "transparent")
 
 ```
 
