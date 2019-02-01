@@ -70,9 +70,9 @@ library(readr)
 #theme_set(presentation_theme)
 
 
-ggplot(finaldata, aes(x = tank, y = fish_weight, color=treatment), fill = "transparent") + 
+ggplot(butts, aes(x, y, color = as.factor(z)), fill = "transparent") + 
   geom_line(size = 3) +
-  scale_color_manual(values = c("#1F4E79", "#F4B183","#82BAD5", "#366963")) +
+  scale_color_manual(values = c("#1F4E79", "#F4B183")) +#,"#82BAD5", "#366963")) +
   theme_classic() +
   ggtitle("name_of_graph") +
   labs( x = "x_label", y = "y_label") +

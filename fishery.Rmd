@@ -29,7 +29,7 @@ pkg <- c("readr",
 #devtools::install_github("AckerDWM/gg3D")
   
 # Update packages.
-update.packages(pkg, verbose = FALSE, quiet = TRUE)
+#update.packages(pkg, verbose = FALSE, quiet = TRUE)
 
 # Check out packages.
 lapply(pkg, library, character.only = TRUE)
@@ -288,10 +288,31 @@ muh = data.frame(uh) %>%
 
 try_sum = 
 ggplot(muh, aes(t, s)) +
-  geom_line()
+  geom_line(size = 3, color = "#1F4E79") +
+  theme_classic() +
+  ggtitle("Stock Forecast, 2017 - 2027") +
+  labs( x = "Year", y = "y_label") +
+  theme(plot.title = element_text(hjust = 0.5, size = 32, family = "Century Gothic", face = "bold"), 
+        rect = element_rect(fill = "transparent"),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        legend.position = "right",
+        legend.background = element_rect(fill = "transparent"),
+        legend.box.background = element_rect(fill = "transparent"),
+        legend.key = element_rect(fill="transparent", colour=NA),
+        legend.text = element_text(size = 16, family = "Century Gothic"),
+        legend.title = element_text(size = 18, family = "Century Gothic"),
+        panel.background = element_rect(fill = "transparent"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 14, family = "Century Gothic"),
+        axis.title.x = element_text(size = 24, family = "Century Gothic", face = "bold"),
+        axis.text.y = element_text(size = 14, family = "Century Gothic"),
+        axis.title.y = element_text(size = 24, family = "Century Gothic", face = "bold"))
+
+
 
 huh = muh %>%
-  mutate(b = ifelse(t < 5, s, s + t * 100000))
+  mutate(b = ifelse(t < 5, s, s[5]))
 
 try_hum = 
 ggplot(huh) +
