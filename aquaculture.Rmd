@@ -1086,6 +1086,8 @@ tibble_rc = output %>%
   melt(id = 1) %>% 
   rename(t = t, var = variable, val = value)
 
+tibble_rc$val[1] = 0
+
 # Plot cumulative revenues and costs through harvest cycles.
 meat = ggplot(tibble_rc, aes(t, val, color = var)) +
       geom_segment(aes(x = 3, xend = 3, y = 0, yend = Inf), linetype = "dashed") +
