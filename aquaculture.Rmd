@@ -21,7 +21,8 @@ pkg <- c("readr",
          "reshape2",
          "broom",
          "kableExtra",
-         "scales")
+         "scales",
+         "extrafont")
 
 # Install packages.
 #install.packages(pkg, verbose = FALSE, quiet = TRUE)
@@ -33,10 +34,29 @@ pkg <- c("readr",
 # Check out packages.
 lapply(pkg, library, character.only = TRUE)
 
-# Fonts.
+# Fonts set-up.
 #library(extrafont)
 #font_import()
 #loadfonts(device = "win")
+
+# Theming for gg.
+
+btheme =  theme(plot.title = element_text(hjust = 0.5, size = 32, family = "Century Gothic", face = "bold"), 
+          rect = element_rect(fill = "transparent"),
+          plot.background = element_rect(fill = "transparent", color = NA),
+          legend.position = "right",
+          legend.background = element_rect(fill = "transparent"),
+          legend.box.background = element_rect(fill = "transparent"),
+          legend.key = element_rect(fill="transparent", colour=NA),
+          legend.text = element_text(size = 16, family = "Century Gothic"),
+          legend.title = element_text(size = 18, family = "Century Gothic"),
+          panel.background = element_rect(fill = "transparent"),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.text.x = element_text(size = 18, family = "Century Gothic"),
+          axis.title.x = element_text(size = 24, family = "Century Gothic", face = "bold"),
+          axis.text.y = element_text(size = 18, family = "Century Gothic"),
+          axis.title.y = element_text(size = 24, family = "Century Gothic", face = "bold"))
 
 ```
 
@@ -976,37 +996,23 @@ tibble_rc = output %>%
   select(-X) %>% 
   #select(-h, -p0) %>% 
   melt(id = 1) %>% 
-  rename(t = t, var = variable, val = value)
+  rename(t = t, var = variable, val = value) %>% 
+  mutate(val = val * 0.000001)
 
 # Plot cumulative revenues and costs through harvest cycles.
 cost = ggplot(tibble_rc, aes(t, val)) +
       geom_line(size = 3, color = "#1F4E79") +
-      labs(x = "Years", y = "USD2018") +
-      scale_x_continuous(limits = c(1, 10), breaks = c(1, 10)) +
-      scale_y_continuous(limits = c(0, 3000000), labels = scales::comma) +
+      annotate("text", x = 8.5, y = 1.150000, label = "Costs", size = 9, family = "Century Gothic") +
+      scale_x_continuous(limits = c(1, 10), breaks = c(1, 10), expand = c(0, 0.125)) +
+      scale_y_continuous(limits = c(0, 3.000000), labels = scales::comma, expand = c(0, 0)) +
       theme_classic() +
-      ggtitle("Costs for One Cage") +
-      labs( x = "Year", y = "USD (2018)") +
-      theme(plot.title = element_text(hjust = 0.5, size = 32, family = "Century Gothic", face = "bold"), 
-          rect = element_rect(fill = "transparent"),
-          plot.background = element_rect(fill = "transparent", color = NA),
-          legend.position = "right",
-          legend.background = element_rect(fill = "transparent"),
-          legend.box.background = element_rect(fill = "transparent"),
-          legend.key = element_rect(fill="transparent", colour=NA),
-          legend.text = element_text(size = 16, family = "Century Gothic"),
-          legend.title = element_text(size = 18, family = "Century Gothic"),
-          panel.background = element_rect(fill = "transparent"),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          axis.text.x = element_text(size = 14, family = "Century Gothic"),
-          axis.title.x = element_text(size = 24, family = "Century Gothic", face = "bold"),
-          axis.text.y = element_text(size = 14, family = "Century Gothic"),
-          axis.title.y = element_text(size = 24, family = "Century Gothic", face = "bold"))
+      #ggtitle("Costs for One Cage") +
+      labs( x = "Years", y = "Millions USD") +
+      btheme
 
 ggsave("cagecost_20190201.png",
-       width = 800, 
-       height = 720, 
+       width = 720, 
+       height = 490, 
        dpi = 300, 
        device = png, 
        limitsize = FALSE, 
@@ -1041,33 +1047,17 @@ weights = data.frame(a, w_slow, w_fast)
 w_plot = ggplot(weights) +
       geom_line(aes(a, w_slow), size = 3, color = "#1F4E79") +
       geom_line(aes(a, w_fast), size = 3, color = "#F4B183") +
-      annotate("text", x = 23, y = 105, label = "WILD", size = 9, family = "Century Gothic") +
-      annotate("text", x = 23, y = 128, label = "AQUACULTURE", size = 9, family = "Century Gothic") +
+      annotate("text", x = 23, y = 105, label = "Wild", size = 9, family = "Century Gothic") +
+      annotate("text", x = 23, y = 128, label = "Aquaculture", size = 9, family = "Century Gothic") +
       labs(x = "Years", y = "Kilograms") +
-      scale_x_continuous(limits = c(0, 27), breaks = c(0, 10, 20, 27)) +
-      scale_y_continuous(limits = c(0, 150), labels = scales::comma) +
+      scale_x_continuous(limits = c(0, 27), breaks = c(0, 10, 20, 27), expand = c(0, 0.125)) +
+      scale_y_continuous(limits = c(0, 150), labels = scales::comma, expand = c(0, 0)) +
       theme_classic() +
-      ggtitle("Totoaba Growth") +
-      theme(plot.title = element_text(hjust = 0.5, size = 32, family = "Century Gothic", face = "bold"), 
-          rect = element_rect(fill = "transparent"),
-          plot.background = element_rect(fill = "transparent", color = NA),
-          legend.position = "right",
-          legend.background = element_rect(fill = "transparent"),
-          legend.box.background = element_rect(fill = "transparent"),
-          legend.key = element_rect(fill="transparent", colour=NA),
-          legend.text = element_text(size = 16, family = "Century Gothic"),
-          legend.title = element_text(size = 18, family = "Century Gothic"),
-          panel.background = element_rect(fill = "transparent"),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          axis.text.x = element_text(size = 14, family = "Century Gothic"),
-          axis.title.x = element_text(size = 24, family = "Century Gothic", face = "bold"),
-          axis.text.y = element_text(size = 14, family = "Century Gothic"),
-          axis.title.y = element_text(size = 24, family = "Century Gothic", face = "bold"))
+      btheme
 
 ggsave("weights_20190201.png",
-       width = 800, 
-       height = 720, 
+       width = 720, 
+       height = 490, 
        dpi = 300, 
        device = png, 
        limitsize = FALSE, 
@@ -1084,40 +1074,28 @@ tibble_rc = output %>%
   select(t, Revenue = r, Cost = c) %>% 
   #select(-h, -p0) %>% 
   melt(id = 1) %>% 
-  rename(t = t, var = variable, val = value)
+  rename(t = t, var = variable, val = value) %>% 
+  mutate(val = val * 0.000001)
 
 tibble_rc$val[1] = 0
+tibble_rc$val[4:10] = tibble_rc$val[3]
 
 # Plot cumulative revenues and costs through harvest cycles.
 meat = ggplot(tibble_rc, aes(t, val, color = var)) +
       geom_segment(aes(x = 3, xend = 3, y = 0, yend = Inf), linetype = "dashed") +
       geom_path(size = 3) +
+      annotate("text", x = 8.5, y = 1.150000, label = "Costs", size = 9, family = "Century Gothic") +
+      annotate("text", x = 9, y = 2.500000, label = "Revenues", size = 9, family = "Century Gothic") +
       scale_color_manual(values = c("#F4B183", "#1F4E79")) +
-      labs(x = "Years", y = "USD (2018)", color = "") +
-      scale_x_continuous(expand = c(0, 0), limits = c(1, 10), breaks = c(1, 3, 10)) +
-      scale_y_continuous(expand = c(0, 0), limits = c(0, 3000000), labels = scales::comma) +
-      theme_classic() +
-      ggtitle("Costs and Revenues for One Cage - Meat Only") +
-      theme(plot.title = element_text(hjust = 0.5, size = 32, family = "Century Gothic", face = "bold"), 
-          rect = element_rect(fill = "transparent"),
-          plot.background = element_rect(fill = "transparent", color = NA),
-          legend.position = "right",
-          legend.background = element_rect(fill = "transparent"),
-          legend.box.background = element_rect(fill = "transparent"),
-          legend.key = element_rect(fill="transparent", colour=NA),
-          legend.text = element_text(size = 16, family = "Century Gothic"),
-          legend.title = element_text(size = 18, family = "Century Gothic"),
-          panel.background = element_rect(fill = "transparent"),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          axis.text.x = element_text(size = 14, family = "Century Gothic"),
-          axis.title.x = element_text(size = 24, family = "Century Gothic", face = "bold"),
-          axis.text.y = element_text(size = 14, family = "Century Gothic"),
-          axis.title.y = element_text(size = 24, family = "Century Gothic", face = "bold"))
+      labs(x = "Years", y = " Millions USD", color = "") +
+      scale_x_continuous(limits = c(1, 10), breaks = c(1, 3, 10),expand = c(0, 0.125)) +
+      scale_y_continuous(limits = c(0, 3.000000), labels = scales::comma, expand = c(0, 0)) +
+      btheme +
+      theme(legend.position = "none")
 
 ggsave("meat_20190201.png", 
-       width = 1280, 
-       height = 550, 
+       width = 720, 
+       height = 490, 
        dpi = 300, 
        device = png, 
        limitsize = FALSE, 
@@ -1134,38 +1112,25 @@ tibble_rc = output %>%
   select(t, Revenue = r, Cost = c) %>% 
   #select(-h, -p0) %>% 
   melt(id = 1) %>% 
-  rename(t = t, var = variable, val = value)
+  rename(t = t, var = variable, val = value) %>% 
+  mutate(val = val * 0.000001)
 
 # Plot cumulative revenues and costs through harvest cycles.
 mbpi = ggplot(tibble_rc, aes(t, val, color = var)) +
-      geom_segment(aes(x = 4, xend = 4, y = 0, yend = Inf), linetype = "dashed") +
       geom_path(size = 3) +
+      annotate("text", x = 8.5, y = 3, label = "Costs", size = 9, family = "Century Gothic") +
+      annotate("text", x = 9, y = 31, label = "Revenues", size = 9, family = "Century Gothic") +
       scale_color_manual(values = c("#F4B183", "#1F4E79")) +
-      labs(x = "Years", y = "USD (2018)", color = "") +
-      scale_x_continuous(expand = c(0, 0), limits = c(1, 10), breaks = c(1, 4, 10)) +
-      scale_y_continuous(expand = c(0, 0), limits = c(0, 30000000), labels = scales::comma) +
+      labs(x = "Years", y = "Millions USD", color = "") +
+      scale_x_continuous(expand = c(0, 0.125), limits = c(1, 10), breaks = c(1, 10)) +
+      scale_y_continuous(expand = c(0, 0), limits = c(0, 35)) +
       theme_classic() +
-      ggtitle("Costs and Revenues for One Cage") +
-      theme(plot.title = element_text(hjust = 0.5, size = 32, family = "Century Gothic", face = "bold"), 
-          rect = element_rect(fill = "transparent"),
-          plot.background = element_rect(fill = "transparent", color = NA),
-          legend.position = "right",
-          legend.background = element_rect(fill = "transparent"),
-          legend.box.background = element_rect(fill = "transparent"),
-          legend.key = element_rect(fill="transparent", colour=NA),
-          legend.text = element_text(size = 16, family = "Century Gothic"),
-          legend.title = element_text(size = 18, family = "Century Gothic"),
-          panel.background = element_rect(fill = "transparent"),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          axis.text.x = element_text(size = 14, family = "Century Gothic"),
-          axis.title.x = element_text(size = 24, family = "Century Gothic", face = "bold"),
-          axis.text.y = element_text(size = 14, family = "Century Gothic"),
-          axis.title.y = element_text(size = 24, family = "Century Gothic", face = "bold"))
+      btheme +
+      theme(legend.position = "none")
 
 ggsave("mbpi_20190201.png", 
-       width = 800, 
-       height = 720, 
+       width = 720, 
+       height = 490, 
        dpi = 300, 
        device = png, 
        limitsize = FALSE, 
@@ -1187,33 +1152,17 @@ slapdat = data.frame(q, p, phh, phl, pth, ptl)
 slapdash =
 ggplot(data = slapdat) +
   geom_line(aes(q, p), color = "#1F4E79", size = 3) +
-  geom_segment(aes(x = 14, xend = 14, y = 0, yend = Inf), linetype = "dashed") +
-  labs(x = "Tonnes of Dry Maw", y = "USD per Gram of Dry Maw") +
-  scale_x_continuous(expand = c(0, 0), breaks = c(0, 5, 10, 14, 17), limits = c(0, 17)) +
+  labs(x = "Tonnes of Buche", y = "USD / Gram of Buche") +
+  scale_x_continuous(expand = c(0, 0.125), breaks = c(0, 5, 10, 14, 17), limits = c(0, 17)) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 90)) +
-  ggtitle("Demand for Dry Maw at First Harvest Size") +
+  #ggtitle("Demand for Dry Maw at First Harvest Size") +
   theme_classic() +
-  theme(plot.title = element_text(hjust = 0.5, size = 32, family = "Century Gothic", face = "bold"), 
-          rect = element_rect(fill = "transparent"),
-          plot.background = element_rect(fill = "transparent", color = NA),
-          legend.position = "right",
-          legend.background = element_rect(fill = "transparent"),
-          legend.box.background = element_rect(fill = "transparent"),
-          legend.key = element_rect(fill="transparent", colour=NA),
-          legend.text = element_text(size = 16, family = "Century Gothic"),
-          legend.title = element_text(size = 18, family = "Century Gothic"),
-          panel.background = element_rect(fill = "transparent"),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          axis.text.x = element_text(size = 14, family = "Century Gothic"),
-          axis.title.x = element_text(size = 24, family = "Century Gothic", face = "bold"),
-          axis.text.y = element_text(size = 14, family = "Century Gothic"),
-          axis.title.y = element_text(size = 24, family = "Century Gothic", face = "bold"))
+  btheme
 
 #widescreen
 ggsave("slapdash.png", 
-       width = 800, 
-       height = 720,  
+       width = 720, 
+       height = 490,   
        dpi = 300, 
        device = png, 
        limitsize = FALSE, 
@@ -1229,40 +1178,31 @@ output = aq(par11)
 tibble_rc = output %>% 
   select(t, Revenue = r, Cost = c) %>% 
   melt(id = 1) %>% 
-  rename(t = t, var = variable, val = value)
+  rename(t = t, var = variable, val = value) %>% 
+  mutate(val = val * 0.000001)
 
 # Plot cumulative revenues and costs through harvest cycles.
 aq11 = ggplot(tibble_rc, aes(t, val, color = var)) +
       geom_segment(aes(x = 4, xend = 4, y = 0, yend = Inf), linetype = "dashed") +
       geom_segment(aes(x = 8, xend = 8, y = 0, yend = Inf), linetype = "dashed") +
       geom_line(size = 3) +
-      labs(x = "Years", y = "USD", color = "") +
-      scale_x_continuous(expand = c(0, 0), limits = c(1, 10), breaks = c(1, 4, 8, 10)) +
-      scale_y_continuous(expand = c(0, 0), limits = c(0, 17000000), labels = scales::comma) +
-      ggtitle("Costs and Revenues for One Cage - Trimming and Harvest") +
+      annotate("text", x = 5.35, y = 16.5, label = "800kg Dry Buche", size = 8, family = "Century Gothic") +
+      annotate("text", x = 8.55, y = 16.5, label = "800kg", size = 8, family = "Century Gothic") +
+      annotate("text", x = 10, y = 2.5, label = "C", size = 9, family = "Century Gothic") +
+      annotate("text", x = 10, y = 10.5, label = "R", size = 9, family = "Century Gothic") +
+      labs(x = "Years", y = "Millions USD", color = "") +
+      scale_x_continuous(expand = c(0, 0.125), limits = c(1, 10), breaks = c(1, 4, 8, 10)) +
+      scale_y_continuous(expand = c(0, 0), limits = c(0, 17.000000), labels = scales::comma) +
+      #ggtitle("Costs and Revenues for One Cage - Trimming and Harvest") +
       scale_color_manual(values = c("#F4B183", "#1F4E79")) +
       theme_classic() +
-      theme(plot.title = element_text(hjust = 0.5, size = 32, family = "Century Gothic", face = "bold"), 
-          rect = element_rect(fill = "transparent"),
-          plot.background = element_rect(fill = "transparent", color = NA),
-          legend.position = "right",
-          legend.background = element_rect(fill = "transparent"),
-          legend.box.background = element_rect(fill = "transparent"),
-          legend.key = element_rect(fill="transparent", colour=NA),
-          legend.text = element_text(size = 16, family = "Century Gothic"),
-          legend.title = element_text(size = 18, family = "Century Gothic"),
-          panel.background = element_rect(fill = "transparent"),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          axis.text.x = element_text(size = 14, family = "Century Gothic"),
-          axis.title.x = element_text(size = 24, family = "Century Gothic", face = "bold"),
-          axis.text.y = element_text(size = 14, family = "Century Gothic"),
-          axis.title.y = element_text(size = 24, family = "Century Gothic", face = "bold"))
+      btheme +
+      theme(legend.position = "none")
 
 #widescreen
 ggsave("faust.png", 
-       width = 1280, 
-       height = 550, 
+       width = 720, 
+       height = 490,  
        dpi = 300, 
        device = png, 
        limitsize = FALSE, 
