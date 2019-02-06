@@ -429,7 +429,7 @@ $f = \beta_1 \beta_2 w^{\beta_{1}-1}$
 fn_f_marg = function(w, b1, b2){f = b1 * b2 * w}
 
 # Set parameters for reference.
-f_b1 = 0.01 #fcr_reg_tidy$estimate[1]
+f_b1 = 0.04 #fcr_reg_tidy$estimate[1]
 f_b2 = 1.00 #fcr_reg_tidy$estimate[2]
 
 ```
@@ -532,6 +532,9 @@ par10[26] = 1
 par11 = par00
 par11[27] = 1
 par11[26] = 1
+
+parfake = par11
+parfake[16] = 0.01
 
 fun = c(rep("All", 2), 
         rep("Age-Length", 3),
@@ -985,15 +988,15 @@ ggplot(tbl_pi, aes(t, pi_sum)) +
 ```{r run00_costs_presentation}
 
 # Run the dynamic harvest demo from parameters.
-#output = aq(par00)
+output = aq(par00)
 
-#output = select(output, t, c)
+output = select(output, t, c)
 
 # Reference .csv written from model output in console to save time.
-output = read.csv("cagecost_20190201.csv")
+#output = read.csv("cagecost_20190201.csv")
 
 tibble_rc = output %>% 
-  select(-X) %>% 
+  #select(-X) %>% 
   #select(-h, -p0) %>% 
   melt(id = 1) %>% 
   rename(t = t, var = variable, val = value) %>% 
@@ -1002,9 +1005,9 @@ tibble_rc = output %>%
 # Plot cumulative revenues and costs through harvest cycles.
 cost = ggplot(tibble_rc, aes(t, val)) +
       geom_line(size = 3, color = "#1F4E79") +
-      annotate("text", x = 8.5, y = 1.150000, label = "Costs", size = 9, family = "Century Gothic") +
-      scale_x_continuous(limits = c(1, 10), breaks = c(1, 10), expand = c(0, 0.125)) +
-      scale_y_continuous(limits = c(0, 3.000000), labels = scales::comma, expand = c(0, 0)) +
+      annotate("text", x = 8.5, y = 4.35, label = "Costs", size = 9, family = "Century Gothic") +
+      scale_x_continuous(limits = c(1, 10), breaks = c(1, 2, 10), expand = c(0, 0.125)) +
+      scale_y_continuous(limits = c(0, 6.000000), labels = scales::comma, expand = c(0, 0)) +
       theme_classic() +
       #ggtitle("Costs for One Cage") +
       labs( x = "Years", y = "Millions USD") +
@@ -1084,12 +1087,12 @@ tibble_rc$val[4:10] = tibble_rc$val[3]
 meat = ggplot(tibble_rc, aes(t, val, color = var)) +
       geom_segment(aes(x = 3, xend = 3, y = 0, yend = Inf), linetype = "dashed") +
       geom_path(size = 3) +
-      annotate("text", x = 8.5, y = 1.150000, label = "Costs", size = 9, family = "Century Gothic") +
-      annotate("text", x = 9, y = 2.500000, label = "Revenues", size = 9, family = "Century Gothic") +
+      annotate("text", x = 8.5, y = 4.35, label = "Costs", size = 9, family = "Century Gothic") +
+      annotate("text", x = 9, y = 2.750000, label = "Revenues", size = 9, family = "Century Gothic") +
       scale_color_manual(values = c("#F4B183", "#1F4E79")) +
       labs(x = "Years", y = " Millions USD", color = "") +
-      scale_x_continuous(limits = c(1, 10), breaks = c(1, 3, 10),expand = c(0, 0.125)) +
-      scale_y_continuous(limits = c(0, 3.000000), labels = scales::comma, expand = c(0, 0)) +
+      scale_x_continuous(limits = c(1, 10), breaks = c(1, 2, 3, 10),expand = c(0, 0.125)) +
+      scale_y_continuous(limits = c(0, 6.000000), labels = scales::comma, expand = c(0, 0)) +
       btheme +
       theme(legend.position = "none")
 
@@ -1118,11 +1121,11 @@ tibble_rc = output %>%
 # Plot cumulative revenues and costs through harvest cycles.
 mbpi = ggplot(tibble_rc, aes(t, val, color = var)) +
       geom_path(size = 3) +
-      annotate("text", x = 8.5, y = 3, label = "Costs", size = 9, family = "Century Gothic") +
+      annotate("text", x = 8.5, y = 6.25, label = "Costs", size = 9, family = "Century Gothic") +
       annotate("text", x = 9, y = 31, label = "Revenues", size = 9, family = "Century Gothic") +
       scale_color_manual(values = c("#F4B183", "#1F4E79")) +
       labs(x = "Years", y = "Millions USD", color = "") +
-      scale_x_continuous(expand = c(0, 0.125), limits = c(1, 10), breaks = c(1, 10)) +
+      scale_x_continuous(expand = c(0, 0.125), limits = c(1, 10), breaks = c(1, 2, 10)) +
       scale_y_continuous(expand = c(0, 0), limits = c(0, 35)) +
       theme_classic() +
       btheme +
@@ -1153,7 +1156,7 @@ slapdash =
 ggplot(data = slapdat) +
   geom_line(aes(q, p), color = "#1F4E79", size = 3) +
   labs(x = "Tonnes of Buche", y = "USD / Gram of Buche") +
-  scale_x_continuous(expand = c(0, 0.125), breaks = c(0, 5, 10, 14, 17), limits = c(0, 17)) +
+  scale_x_continuous(expand = c(0, 0.125), breaks = c(0, 5, 10, 15, 17), limits = c(0, 17)) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 90)) +
   #ggtitle("Demand for Dry Maw at First Harvest Size") +
   theme_classic() +
@@ -1173,11 +1176,13 @@ ggsave("slapdash.png",
 ```{r run}
 
 # Run the dynamic harvest demo from parameters.
-output = aq(par11)
+output = aq(parfake)
 
 tibble_rc = output %>% 
   select(t, Revenue = r, Cost = c) %>% 
+  mutate(Cost = Cost * 4) %>% 
   melt(id = 1) %>% 
+  #mutate(Group = rep(c(1, 1, 1, 1, 2, 2, 2, 2, 3, 3), 2)) %>% 
   rename(t = t, var = variable, val = value) %>% 
   mutate(val = val * 0.000001)
 
@@ -1191,7 +1196,7 @@ aq11 = ggplot(tibble_rc, aes(t, val, color = var)) +
       annotate("text", x = 10, y = 2.5, label = "C", size = 9, family = "Century Gothic") +
       annotate("text", x = 10, y = 10.5, label = "R", size = 9, family = "Century Gothic") +
       labs(x = "Years", y = "Millions USD", color = "") +
-      scale_x_continuous(expand = c(0, 0.125), limits = c(1, 10), breaks = c(1, 4, 8, 10)) +
+      scale_x_continuous(expand = c(0, 0.125), limits = c(1, 10), breaks = c(1, 2, 4, 8, 10)) +
       scale_y_continuous(expand = c(0, 0), limits = c(0, 17.000000), labels = scales::comma) +
       #ggtitle("Costs and Revenues for One Cage - Trimming and Harvest") +
       scale_color_manual(values = c("#F4B183", "#1F4E79")) +
