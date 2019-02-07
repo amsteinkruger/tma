@@ -42,7 +42,7 @@ pkg <- c("readr",
 # Check out packages.
 lapply(pkg, library, character.only = TRUE)
 
-library(gg3D)
+#library(gg3D)
 
 ```
 
@@ -56,7 +56,7 @@ library(gg3D)
 
 ##### 1. Toy Model
 
-```{r age_struct_toy}
+```{r age_struct_toy, eval = FALSE}
 
 # Build a matrix to fill.
 # Matrix of numbers at age by year.
@@ -109,14 +109,14 @@ ggplot(melt, aes(t, value, color = variable)) +
 print(toy_plot)
 
 # Plot in three dimensions. WHY IS THIS SO BROKEN
-toy_plot3 = 
-ggplot(melt, aes(x = variable, z = t, y = value, color = variable)) +
-  ggtitle("Toy Stock") +
-  theme_void() + 
-  theme(legend.position = "none") +
-  axes_3D() +
-  stat_3D(geom = "point", phi = 90, theta = 270) +
-  scale_color_brewer(palette = "RdBu")
+#toy_plot3 = 
+#ggplot(melt, aes(x = variable, z = t, y = value, color = variable)) +
+#  ggtitle("Toy Stock") +
+#  theme_void() + 
+#  theme(legend.position = "none") +
+#  axes_3D() +
+#  stat_3D(geom = "point", phi = 90, theta = 270) +
+#  scale_color_brewer(palette = "RdBu")
 
 ```
 
@@ -131,7 +131,7 @@ ggplot(melt, aes(x = variable, z = t, y = value, color = variable)) +
 ```{r age_struct_tma_mat}
 
 # Matrix of numbers at age by year.
-mat_a = matrix(nrow = 50, ncol = 30)
+mat_a = matrix(nrow = 50, ncol = 27)
 
 ```
 
@@ -147,7 +147,9 @@ mat_a = matrix(nrow = 50, ncol = 30)
 biomass_init = 25709000 # kilograms.
 
 #  Assign functional form for frequencies at age from True (2018). See notes on symposium presentation. Check whether curve describes numbers at age.
-fun_a_n = function(a){121.99 * 10 ^ (-0.214 * a)}
+#fun_a_n = function(a){121.99 * 10 ^ (-0.214 * a)}
+# Alternative distribution for tests.
+fun_a_n = function(a){121.99 * 10 ^ (-0.05 * a)}
 
 #  Convert numbers at age to sums of weights at age to work from total biomass back to numbers at age.
 fun_a_l = function(a, linf, k, t0){l = linf * (1 - exp(-k * (a - t0)))} # INAPESCA (2018): 200, 0.155, -0.65. See notes for alternatives.
@@ -155,11 +157,12 @@ fun_l_w = function(a, l, b){w = a * l ^ b} # INAPESCA (2018) / Anda-Montañez et
 
 # Calculations:
 #  Vector of ages.
-a = seq(0, 29)
+a = seq(0, 26)
 #  Vector of lengths.
 l = fun_a_l(a, 200, 0.155, -0.65)
 #  Vector of weights.
-w = fun_l_w(0.000005, l, 3.0635)
+#w = fun_l_w(0.000005, l, 3.0635) This is a wrong thing that makes your numbers bad and wrong.
+w = fun_l_w(0.000004128, l, 3.24674) # This is a right thing that makes your numbers good and right.
 #  Numbers at age.
 afreq = fun_a_n(a)
 #  Weights at age.
@@ -178,7 +181,7 @@ plot(ninit)
 ```{r age_struct_tma_natmort}
 
 # Vector for proportional natural mortalities at age. NB: Survival, not mortality. From INAPESCA (2018) / Cisneros-Mata et al. (1995).
-v_mort = rep(0.78, 30)
+v_mort = rep(0.78, 27)
 
 ```
 
@@ -293,9 +296,9 @@ mat_a[1,] = ninit
 fun_test = function(nrow, ncol, ninit, v_mort, bymort, v_select_use, v_eggs, k){
                                 mat_a = matrix(nrow = nrow, ncol = ncol)
                                 mat_a[1,] = ninit
-                                for(i in 2:nrow){mat_a[i, 3:30] = mat_a[i - 1, 2:29] * v_mort[3:30] * (1 - v_select_use[3:30])
+                                for(i in 2:nrow){mat_a[i, 3:27] = mat_a[i - 1, 2:26] * v_mort[3:27] * (1 - v_select_use[3:27])
                                                  mat_a[i, 2] = mat_a[i - 1, 2] * v_mort[2] * bymort * (1 - v_select_use[2])
-                                                 mat_a[i, 1] = sum(mat_a[i - 1, 1:30] * v_eggs)/(1 + mat_a[i - 1, 1] / k)}
+                                                 mat_a[i, 1] = sum(mat_a[i - 1, 1:27] * v_eggs)/(1 + mat_a[i - 1, 1] / k)}
                                   
                                 return(mat_a)}
 
@@ -306,8 +309,11 @@ fun_test = function(nrow, ncol, ninit, v_mort, bymort, v_select_use, v_eggs, k){
 ```{r age_struct_tma_run}
 
 # Run first test.
-uh = fun_test(10, 30, ninit, v_mort, bymort, v_select_use, v_eggs, 5000000)
-vh = fun_test(10, 30, ninit, v_mort, bymort, v_select_use * 0, v_eggs, 5000000)
+uh = fun_test(10, 27, ninit, v_mort, bymort, v_select_use, v_eggs, 5000000)
+vh = fun_test(10, 27, ninit, v_mort, bymort, v_select_use * 0, v_eggs, 5000000)
+
+wuh = sweep(uh, MARGIN = 2, w, '*')
+wvh = sweep(vh, MARGIN = 2, w, '*')
 
 ```
 
@@ -315,6 +321,7 @@ vh = fun_test(10, 30, ninit, v_mort, bymort, v_select_use * 0, v_eggs, 5000000)
 
 ```{r age_struct_tma_ploots}
 
+# Using weights! Weights, not numbers!
 # Reshape for a basic plot.
 duh = data.frame(uh) %>% 
   mutate(t = seq(0, 9)) %>% 
@@ -326,7 +333,7 @@ ggplot(duh, aes(t, value, color = variable)) +
   geom_line()
 
 # Reshape and fiddle for a presentable plot.
-muh = data.frame(uh) %>% 
+muh = data.frame(wuh) %>% 
   mutate(t = seq(2020, 2029)) %>% 
   melt(id.vars = "t") %>%
   group_by(t) %>% 
@@ -335,7 +342,7 @@ muh = data.frame(uh) %>%
   mutate(t = t - 3)
 
 # Ditto, but for the counterfactual plot.
-vuh = data.frame(vh) %>% 
+vuh = data.frame(wvh) %>% 
   mutate(t = seq(2020, 2029)) %>% 
   melt(id.vars = "t") %>%
   group_by(t) %>% 
@@ -366,11 +373,11 @@ try_sum =
 ggplot(muh, aes(t, s)) +
   geom_segment(aes(x = -Inf, xend = Inf, y = 4000, yend = 4000), linetype = "dashed") +
   geom_segment(aes(x = -Inf, xend = Inf, y = 2500, yend = 2500), linetype = "dashed") +
-  annotate("text", x = 2019.1, y = 4300, label = "Target Biomass", size = 8, family = "Century Gothic") +
-  annotate("text", x = 2020, y = 2800, label = "Minimum Viable Biomass", size = 8, family = "Century Gothic") +
+  #annotate("text", x = 2019.1, y = 4300, label = "Target Biomass", size = 8, family = "Century Gothic") +
+  #annotate("text", x = 2020, y = 2800, label = "Minimum Viable Biomass", size = 8, family = "Century Gothic") +
   geom_line(size = 3, color = "#1F4E79") +
-  scale_x_continuous(expand = c(0, 0.225), limits = c(2017, 2026), breaks = c(2017, 2026)) +
-  scale_y_continuous(expand = c(0, 0), limits = c(0, 10000), labels = scales::comma) +
+  #scale_x_continuous(expand = c(0, 0.225), limits = c(2017, 2026), breaks = c(2017, 2026)) +
+  #scale_y_continuous(expand = c(0, 0), limits = c(0, 10000), labels = scales::comma) +
   #ggtitle("Stock Forecast, 2017 - 2027") +
   labs(x = "Years", y = "Tonnes of Biomass") +
   theme_classic() +
@@ -392,12 +399,12 @@ ggplot(huh) +
   geom_ribbon(aes(t, ymin = s.x, ymax = s.y), fill = "#F4B183", alpha = 0.50) +
   geom_line(aes(t, s.y), color = "#F4B183", size = 3) +
   geom_line(aes(t, s.x), color = "#1F4E79", size = 3) +
-  annotate("text", x = 2019.1, y = 4300, label = "Target Biomass", size = 8, family = "Century Gothic") +
-  annotate("text", x = 2020, y = 2800, label = "Minimum Viable Biomass", size = 8, family = "Century Gothic") +
+  #annotate("text", x = 2019.1, y = 4300, label = "Target Biomass", size = 8, family = "Century Gothic") +
+  #annotate("text", x = 2020, y = 2800, label = "Minimum Viable Biomass", size = 8, family = "Century Gothic") +
   geom_segment(aes(x = -Inf, xend = 2026, y = 4000, yend = 4000), linetype = "dashed") +
   geom_segment(aes(x = -Inf, xend = 2026, y = 2500, yend = 2500), linetype = "dashed") +
-  scale_x_continuous(expand = c(0, 0.225), limits = c(2017, 2026), breaks = c(2017, 2026)) +
-  scale_y_continuous(expand = c(0, 0), limits = c(0, 10000), labels = scales::comma) +
+  #scale_x_continuous(expand = c(0, 0.225), limits = c(2017, 2026), breaks = c(2017, 2026)) +
+  #scale_y_continuous(expand = c(0, 0), limits = c(0, 10000), labels = scales::comma) +
   #ggtitle("Stock Forecast, 2017 - 2027") +
   labs(x = "Years", y = "Tonnes of Biomass") +
   theme_classic() +
