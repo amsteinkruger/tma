@@ -1,0 +1,36 @@
+---
+title: "script test"
+author: "Andrew Steinkruger"
+date: "February 6, 2019"
+output: html_document
+---
+
+Let's see whether scripts run in markdown the way I think they do.
+
+```{r test}
+
+
+knitr::read_chunk('scripttest.R')
+
+
+```
+
+Let's run this code.
+
+```{r test-a}
+
+
+
+```
+
+Text to break up the chunks.
+
+```{r plot}
+
+xy = read.csv("xy.csv")
+
+ggplot(xy, aes(x, y)) + geom_point()
+
+```
+
+Here's some text to mark the end of the document.
