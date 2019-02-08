@@ -34,6 +34,63 @@ knitr::read_chunk('setup.R')
 
 ```
 
+```{r pkg_ins, echo = TRUE, warning = FALSE, message = FALSE}
+
+rm(list=ls())
+
+# Check out knitr for knitr::read_chunk.
+library(knitr)
+
+# Name packages.
+pkg <- c("readr",
+         "knitr",
+         "tidyverse",
+         "gapminder",
+         "sandwich",
+         "broom",
+         "stargazer",
+         "cowplot",
+         "kableExtra",
+         "reshape2",
+         "devtools")
+
+# Install packages.
+#install.packages(pkg, verbose = FALSE, quiet = TRUE)
+#devtools::install_github("AckerDWM/gg3D")
+  
+# Update packages.
+#update.packages(pkg, verbose = FALSE, quiet = TRUE)
+
+# Check out packages.
+lapply(pkg, library, character.only = TRUE)
+
+#library(gg3D)
+
+```
+```{r btheme}
+
+btheme =
+  theme(plot.title = element_text(hjust = 0.5, size = 32, family = "Century Gothic", face = "bold"), 
+        rect = element_rect(fill = "transparent"),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        legend.position = "right",
+        legend.background = element_rect(fill = "transparent"),
+        legend.box.background = element_rect(fill = "transparent"),
+        legend.key = element_rect(fill="transparent", colour=NA),
+        legend.text = element_text(size = 16, family = "Century Gothic"),
+        legend.title = element_text(size = 18, family = "Century Gothic"),
+        panel.background = element_rect(fill = "transparent"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 18, family = "Century Gothic"),
+        axis.title.x = element_text(size = 24, family = "Century Gothic", face = "bold"),
+        axis.text.y = element_text(size = 18, family = "Century Gothic"),
+        axis.title.y = element_text(size = 24, family = "Century Gothic", face = "bold"))
+
+```
+
+
+
 #####Objective: Step through optimal rotations for a generic totoaba farm.
 
 #####Age to Length
@@ -396,7 +453,7 @@ $f = \beta_1 \beta_2 w^{\beta_{1}-1}$
 # Regression to constant marginal feed requirement.
 
 # Set cumulative feed requirement.
-#fn_f_cumu = function(w, b1, b2){F = b1 * w ^ b2}
+fn_f_cumu = function(w, b1, b2){F = b1 * w ^ b2}
 
 # Set marginal feed requirement.
 #fn_f_marg = function(w, b1, b2){f = b1 * b2 * w ^ (b2 - 1)}
@@ -662,9 +719,14 @@ aq = function(par){t = as.numeric(vector(length = par[2]))  # First, initialize 
                      
                      }
                     
-                    output = tibble(t, c, r, p0, w0, n0, h)
+                    output = tibble(t, c, r, p0, w0, n0, h, r0, r1, rround0, rt1, )
 
                   return(output)}
+
+output2 = aq(par10)
+
+write.csv(output2, "output2.csv")
+
 
 ```
 
@@ -854,6 +916,8 @@ ggsave("weights_20190201.png",
        limitsize = FALSE, 
        bg = "transparent")
 
+write.csv(weights,"weights.csv")
+
 ```
 
 ```{r meatprofit}
@@ -869,7 +933,8 @@ tibble_rc = output %>%
   mutate(val = val * 0.000001)
 
 tibble_rc$val[1] = NA
-tibble_rc$val[4:10] = tibble_rc$val[3]
+#tibble_rc$val[4:10] = tibble_rc$val[3]
+
 
 # Plot cumulative revenues and costs through harvest cycles.
 meat = ggplot(tibble_rc, aes(t, val, color = var)) +
@@ -891,6 +956,7 @@ ggsave("meat_20190201.png",
        device = png, 
        limitsize = FALSE, 
        bg = "transparent")
+
 
 ```
 
@@ -928,6 +994,7 @@ ggsave("mbpi_20190201.png",
        device = png, 
        limitsize = FALSE, 
        bg = "transparent")
+
 
 ```
 
@@ -1006,6 +1073,34 @@ ggsave("faust.png",
        device = png, 
        limitsize = FALSE, 
        bg = "transparent")
+
+```
+
+```{r garrett's funky graph time}
+
+library(readr)
+meatrev <- read_csv("~/GitHub/tma/meatrev.csv")
+
+ggplot(meatrev, aes(x = t))+
+  geom_line(aes(y = tr), colour="#F4B183", size = 3) +
+  geom_line(aes(y = c), colour="#1F4E79", size = 3) +
+  geom_segment(aes(x = 2, xend = 2, y = 0, yend = Inf), linetype = "dashed") +
+  labs(x = "Years", y = "Millions USD", color = "") +
+  scale_x_continuous(expand = c(0, 0.125), limits = c(1, 10), breaks = c(2, 4, 6, 8, 10)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 3), labels = scales::comma) +
+  theme(legend.position = "none") +
+  btheme
+
+
+#widescreen
+ggsave("meatrev.png", 
+       width = 720, 
+       height = 490,  
+       dpi = 300, 
+       device = png, 
+       limitsize = FALSE, 
+       bg = "transparent")
+
 
 ```
 
