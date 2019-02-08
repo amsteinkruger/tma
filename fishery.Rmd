@@ -144,12 +144,12 @@ mat_a = matrix(nrow = 50, ncol = 27)
 # Vector for initial n at a.
 #  Assign initial biomass from INAPESCA estimate.
 #  Try the lower bound on the 95% CI of INAPESCA's 2017 estimate from surveys.
-biomass_init = 25709000 # kilograms.
+biomass_init = 32399000 # median biomass estimate from INAPESCA (2018) in kilograms.
 
 #  Assign functional form for frequencies at age from True (2018). See notes on symposium presentation. Check whether curve describes numbers at age.
 #fun_a_n = function(a){121.99 * 10 ^ (-0.214 * a)}
 # Alternative distribution for tests.
-fun_a_n = function(a){121.99 * 10 ^ (-0.05 * a)}
+fun_a_n = function(a){121.99 * 10 ^ (-0.09 * a)}
 
 #  Convert numbers at age to sums of weights at age to work from total biomass back to numbers at age.
 fun_a_l = function(a, linf, k, t0){l = linf * (1 - exp(-k * (a - t0)))} # INAPESCA (2018): 200, 0.155, -0.65. See notes for alternatives.
@@ -265,10 +265,12 @@ bymort = 1 - bymort_init / ninit[2] # Instead of distributing bycatch mortalitie
 ```{r age_struct_tma_fec}
 
 # Vector for proportional fecundities at age. From INAPESCA (2018) / Valenzuela-Quiñonez (2014).
+#  Turn lengths into mm.
+lmm = l * 10
 #  Set function.
-fun_fec = function(l){1 / ( 1 + exp(-0.0099 * ((l - 1333.31) * 10)))}
+fun_fec = function(lmm){1 / (1 + exp(-0.0099 * (lmm - 1333.31)))}
 #  Transform vector of lengths at age to fecundities.
-v_fec = fun_fec(l)
+v_fec = fun_fec(lmm)
 
 # Vector for production of fecund hembras at age by way of length.
 #  Set function for eggs per kilogram of total weight of mature fish.
@@ -281,7 +283,7 @@ v_eggs_l = fun_eggs(l)
 v_eggs_w = v_eggs_l * w
 
 # So account for maturation and survival, dummy. Survival from egg to juvenile from INAPESCA (2018). Reference against True (2018).
-v_eggs_surv = 0.3 * 0.9 * 0.95 * 0.1 # Corrective factor of 100 - fix w/ optimization.
+v_eggs_surv = 0.3 * 0.9 * 0.95 * 0.1
 v_eggs = v_eggs_w * v_fec * v_eggs_surv
 
 ```
@@ -298,7 +300,7 @@ fun_test = function(nrow, ncol, ninit, v_mort, bymort, v_select_use, v_eggs, k){
                                 mat_a[1,] = ninit
                                 for(i in 2:nrow){mat_a[i, 3:27] = mat_a[i - 1, 2:26] * v_mort[3:27] * (1 - v_select_use[3:27])
                                                  mat_a[i, 2] = mat_a[i - 1, 2] * v_mort[2] * bymort * (1 - v_select_use[2])
-                                                 mat_a[i, 1] = sum(mat_a[i - 1, 1:27] * v_eggs)/(1 + mat_a[i - 1, 1] / k)}
+                                                 mat_a[i, 1] = sum(mat_a[i - 1, 1:27] * v_eggs) / (1 + mat_a[i - 1, 1] / k) ^ 0.50} # Note alpha.
                                   
                                 return(mat_a)}
 
@@ -370,16 +372,16 @@ btheme =  theme(plot.title = element_text(hjust = 0.5, size = 32, family = "Cent
 
 # Presentable plot.
 try_sum = 
-ggplot(muh, aes(t, s)) +
-  geom_segment(aes(x = -Inf, xend = Inf, y = 4000, yend = 4000), linetype = "dashed") +
-  geom_segment(aes(x = -Inf, xend = Inf, y = 2500, yend = 2500), linetype = "dashed") +
+ggplot(muh, aes(t, s * 0.001)) +
+  geom_segment(aes(x = -Inf, xend = Inf, y = 20, yend = 20), linetype = "dashed") +
+  geom_segment(aes(x = -Inf, xend = Inf, y = 12.5, yend = 12.5), linetype = "dashed") +
   #annotate("text", x = 2019.1, y = 4300, label = "Target Biomass", size = 8, family = "Century Gothic") +
   #annotate("text", x = 2020, y = 2800, label = "Minimum Viable Biomass", size = 8, family = "Century Gothic") +
   geom_line(size = 3, color = "#1F4E79") +
-  #scale_x_continuous(expand = c(0, 0.225), limits = c(2017, 2026), breaks = c(2017, 2026)) +
-  #scale_y_continuous(expand = c(0, 0), limits = c(0, 10000), labels = scales::comma) +
+  scale_x_continuous(expand = c(0, 0.225), limits = c(2017, 2026), breaks = c(2017, 2026)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 35)) +
   #ggtitle("Stock Forecast, 2017 - 2027") +
-  labs(x = "Years", y = "Tonnes of Biomass") +
+  labs(x = "Years", y = "Thousands of Tonnes of Biomass") +
   theme_classic() +
   btheme
 
@@ -394,19 +396,21 @@ ggsave("fishy.png",
 
 huh = left_join(muh, vuh, by = "t")
 
+huh$s.y[1:5] = huh$s.x[1:4]
+
 try_hum = 
 ggplot(huh) +
-  geom_ribbon(aes(t, ymin = s.x, ymax = s.y), fill = "#F4B183", alpha = 0.50) +
-  geom_line(aes(t, s.y), color = "#F4B183", size = 3) +
-  geom_line(aes(t, s.x), color = "#1F4E79", size = 3) +
+  geom_segment(aes(x = -Inf, xend = 2026, y = 20, yend = 20), linetype = "dashed") +
+  geom_segment(aes(x = -Inf, xend = 2026, y = 12.5, yend = 12.5), linetype = "dashed") +
+  geom_ribbon(aes(t, ymin = s.x * 0.001, ymax = s.y * 0.001), fill = "#F4B183", alpha = 0.50) +
+  geom_line(aes(t, s.y * 0.001), color = "#F4B183", size = 3) +
+  geom_line(aes(t, s.x * 0.001), color = "#1F4E79", size = 3) +
   #annotate("text", x = 2019.1, y = 4300, label = "Target Biomass", size = 8, family = "Century Gothic") +
   #annotate("text", x = 2020, y = 2800, label = "Minimum Viable Biomass", size = 8, family = "Century Gothic") +
-  geom_segment(aes(x = -Inf, xend = 2026, y = 4000, yend = 4000), linetype = "dashed") +
-  geom_segment(aes(x = -Inf, xend = 2026, y = 2500, yend = 2500), linetype = "dashed") +
-  #scale_x_continuous(expand = c(0, 0.225), limits = c(2017, 2026), breaks = c(2017, 2026)) +
-  #scale_y_continuous(expand = c(0, 0), limits = c(0, 10000), labels = scales::comma) +
+  scale_x_continuous(expand = c(0, 0.225), limits = c(2017, 2026), breaks = c(2017, 2026)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 50)) +
   #ggtitle("Stock Forecast, 2017 - 2027") +
-  labs(x = "Years", y = "Tonnes of Biomass") +
+  labs(x = "Years", y = "Thousands of Tonnes of Biomass") +
   theme_classic() +
   btheme
 
