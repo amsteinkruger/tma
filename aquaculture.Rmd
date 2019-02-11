@@ -32,11 +32,10 @@ pkg <- c("readr",
 #update.packages(pkg, verbose = FALSE, quiet = TRUE)
 
 # Check out packages.
-lapply(pkg, library, character.only = TRUE)
+invisible(lapply(pkg, library, character.only = TRUE))
 
 #library(gg3D)
 ```
-
 
 ```{r btheme_presentable, echo = FALSE}
 
@@ -77,7 +76,7 @@ These are:
 6. Maw Prices at Weight
 7. Maw Revenues at Weight and Price
 8. Meat Revenues at Weight
-9. Feed Requirements at Weight | Maintenance Cost
+9. Feed Requirements at Weight | No-Harvest Cost
 10. Feed Requirement at Stocking | Harvest Cost
 
 We next compile bioeconomic inputs, intermediate results, and additional parameters for an iterative Faustmann model.
@@ -86,7 +85,7 @@ We program and run the Faustmann model for a single cage, ~~then for multiple ca
 
 Lastly, we create figures for intermediate calculations and results of the Faustmann model.
 
-#### Lengths at Age
+####Lengths at Age
 
 We estimate lengths at age from a Von Bertalanffy function.
 
@@ -113,33 +112,9 @@ vb_linf = 200
 vb_k    = 0.155 #0.22856
 vb_t0   = -0.65
 
-# Parameterization demo.
-#a = seq(1, 25)
-#l = fn_vb(vb_linf, vb_k, a, vb_t0)
-
-#plot(a, l)
-
-# Better graph for Goto.
-#ggvb =
-#ggplot() +
-#  geom_path(aes(a, l), colour = "firebrick") +
-#  labs(x = "Age (Years)", y = "Length (Centimeters)") +
-#  scale_y_continuous(expand = c(0, 0)) +
-#  ggtitle("Estimated Length-at-Age Function") +
-#  theme(axis.text.x = element_text(size = 8),
-#        axis.text.y = element_text(size = 8),
-#        legend.text = element_text(size = 8),
-#        axis.title.x = element_text(size = 9),
-#        axis.title.y = element_text(size = 9),
-#        legend.title = element_text(size = 9),
-#        plot.title = element_text(size = 9)) +
-#  theme_classic()
-
-#ggsave("ggvb.png", ggvb, width = 5.5, height = 3, dpi = 300)
-
 ```
 
-#####Age to Mortality
+####Mortalities at Age
 
 We estimate mortalities at age from a report by month over two years from Cygnus Ocean Farms, SA de CV.
 
@@ -168,14 +143,11 @@ am_reg = nls(m_months ~ b1 * exp(b2 * a_months), dat_m, start = list(b1 = 8.00, 
 am_reg_tidy = tidy(am_reg, conf.int = TRUE, conf.level = 0.95)
 dat_m_est = augment(am_reg)
 
-#ggplot(dat_m_est) +
-#  geom_point(aes(a_months, m_months)) +
-#  geom_path(aes(a_months, .fitted))
-
 ```
 
-Results plug into a mortality-at-age function:
+Results plug into a function:
 
+$M = \beta_1 * e^{\beta_2a}$
 
 Variable   | Definition                  | Value
 ---------- | --------------------------- | -----------
@@ -203,18 +175,18 @@ am_b2 = am_reg_tidy$estimate[2]
 
 ```
 
-#####Weight-Length Conversion
+####Weights at Length
 
 We estimate weights at age from a functional form and parameters values from INAPESCA (2018). **Hey Miguel, is this right?**
 
 $W = aL^b$
 
-Variable   | Definition
----------- | ---------------------------
-*W*        | Weight (Kilograms)
-*L*        | Length (Centimeters)
-*a*        | Parameter
-*b*        | Parameter
+Variable   | Definition                  | Value
+---------- | --------------------------- | -------
+*W*        | Weight (Kilograms)          |
+*L*        | Length (Centimeters)        |
+*a*        | Parameter                   | 0.000004128
+*b*        | Parameter                   | 3.246740000
 
 ```{r lw_function}
 
@@ -226,34 +198,11 @@ fn_lw = function(a, l, b){w = a * l ^ b
 wl_a = 0.000004128
 wl_b = 3.24674
 
-# Parameterization demo.
-l = seq(0, 200, by = 10)
-w = fn_lw(wl_a, l, wl_b)
-plot(l, w)
-
-# Better graph for Goto.
-gglw =
-ggplot() +
-  geom_path(aes(l, w), colour = "firebrick") +
-    labs(x = "Length (Centimeters)", y = "Weight (Kilograms)") +
-  scale_y_continuous(expand = c(0, 0)) +
-  ggtitle("Estimated Weight-at-Length Function") +
-  theme(axis.text.x = element_text(size = 8),
-        axis.text.y = element_text(size = 8),
-        legend.text = element_text(size = 8),
-        axis.title.x = element_text(size = 9),
-        axis.title.y = element_text(size = 9),
-        legend.title = element_text(size = 9),
-        plot.title = element_text(size = 9)) +
-  theme_classic()
-#gglw
-#ggsave("gglw.png", gglw, width = 5.5, height = 3, dpi = 300)
-
 ```
 
-#####Age to Count
+####Numbers at Age
 
-After mortality, any biomass in excess of optimal stocking density is harvested. Optimal density is 160,000 kilograms per cage at and after first salable size. First salable size is two kilograms. **We use optimal stocking density from ?!?!?! and HSWRI (2019).**
+After mortality, any biomass in excess of optimal stocking density is harvested. Optimal density is 160,000 kilograms per cage at and after first salable size. First salable size is two kilograms. **We use optimal stocking density from ?!?!?! and HSWRI (2019).** Implementation of trimming in the Faustmann model is only calculated in the model itself, not in an intermediate function.
 
 $T = n_t^* - n_{t-1}^* * m_{t-1}$
 
@@ -281,34 +230,22 @@ a_sale = (vb_t0 - 1 / vb_k * (log(1 - ((size / wl_a) ^ (1 / wl_b))/vb_linf))) # 
 nstart = nsale * (100 / (100 - fn_am_marg(a_sale, am_b1, am_b2))) * 
   (100 / (100 - fn_am_marg(1, am_b1, am_b2))) * 
   (100 / (100 - fn_am_marg(1, am_b1, am_b2)))
-#nstart = nsale / (1 - m_sale * 0.01)
-
-# Trimming is individuals harvested each year to keep stocking density below maximum after mortality.
-# Here, trimming is cumulative. The iterative implementation is more useful.
-#fn_nm = function(nstart, a, am_b1, am_b2){nm = nstart * (1 - 0.01 * fn_am_cumu(a, am_b1, am_b2))}
-#fn_nt = function(density, w, a, am_b1, am_b2, nstart){nt = ifelse(fn_nm(nstart, a, am_b1, am_b2) - fn_ns(density, w) > 0, 
-#                                                                  fn_nm(nstart, a, am_b1, am_b2) - fn_ns(density, w), 
-#                                                                  0)}
-
-ntrim = fn_nt(density, w, a, am_b1, am_b2, nstart)
-
-plot(a, ntrim)
 
 ```
 
-#####Weight-Maw Conversion
+####Maw Weights at Individual Weight
 
 For a stock of $n_{a, t}$ totoaba cultivated for *a* years in year *t* to weight $w_{a, t}$ for a total round weight of $x_{a, t}$, maw yield $y_{a, t}$ depends on wet maw yield ratio $c^{maw}_{a, t}$ and dry yield ratio $k$.
 
 $y^{maw}_{a, t} = w_{a, t}n_{a, t}c^{maw}_{a, t}k^{maw}_{dry}$
 
-Variable   | Definition
----------- | --------------------------------
-$y^{maw}$  | Cohort Dry Maw Yield (Kilograms)
-*w*        | Individual Round Weight (Kilograms)
-*n*        | Cohort Count
-$c^{maw}$  | Yield of maw from round weight.
-$k^{maw}$  | Yield of dry maw from wet maw.
+Variable   | Definition                          | Value
+---------- | ----------------------------------- | ----------
+$y^{maw}$  | Cohort Dry Maw Yield (Kilograms)    | 
+*w*        | Individual Round Weight (Kilograms) |
+*n*        | Cohort Count                        |
+$c^{maw}$  | Yield of maw from round weight.     | 0.0161
+$k^{maw}$  | Yield of dry maw from wet maw.      | 0.3100
 
 ```{r wm_function}
 
@@ -320,24 +257,24 @@ wm_k = 0.31
 
 ```
 
-#####Maw-Price Conversion
+####Maw Prices at Maw Weight and Market Supply
 
-Grams! It's all grams! Remember to convert.
+We estimate price from multiple regression of price per gram of maw on tonnes of dry maw supplied and grams per maw.
 
 ```{r mp_function}
 
 #fn_mp = function(w, b0, bw, bq, q, bc, c){pmaw = b0 + w ^ bw + bq * q + bc * c}
-fn_mp = function(w, b0, b1, b2, q){pmaw = (q * b1 + (w * 1000) ^ b2 + b0) * 1000}
+fn_mp = function(w, b0, b1, b2, q){pmaw = (q * b1 + (w * 1000) ^ b2 + b0) * 1000} # Factors of 1000 convert from grams to kilograms.
 
 # Parameters from regression.
 mp_b0 = 82.99177
 mp_b1 = -5.28312
 mp_b2 = 0.52540
-mp_q = 10 # Note that 14 fills in for a reasonable quantity at market from poaching.
-#mp_q has to be a vector
+mp_q = 10 # Note that 14 fills in for a reasonable quantity at market from poaching. In the Faustmann implementation, mp_q is lag quantity supplied.
+
 ```
 
-#####Maw-Revenue Conversion
+####Maw Revenues at Maw Price and Yield
 
 For a dry maw yield $y^{maw}$ in kilograms, revenue depends on price.
 
@@ -349,7 +286,7 @@ fn_mr = function(ymaw, pmaw){rmaw = ymaw * pmaw}
 
 ```
 
-#####Round-Revenue Conversion
+####Wet Weight Revenues at Yield
 
 For a stock of *n* totoaba cultivated for *a* years in year *t* for an individual round weight of $w_{a, t}$, revenue depends on price.
 
@@ -364,13 +301,13 @@ pround = 6.50 # Price from Sistema Nacional de Informacion e Integracion de Merc
 
 ```
 
-#####Feed Conversion Function
+####Feed Requirements at Weight
 
 We assume a constant daily feed requirement proprotional to organism mass. 
 
 Calculations for an alternative estimation of feed requirement follow.
 
-```{r fcr_data, eval = FALSE}
+```{r fcr_data, eval = FALSE, echo = FALSE}
 
 dat_fcr = read.csv("fcr.csv")
 
@@ -382,7 +319,7 @@ dat_fcr$feed = dat_fcr$feed / 1000
 
 ~~For reasons, we assume functional form $F = \beta_1 * w^{\beta_2}$~~
 
-```{r fcr_results, eval = FALSE}
+```{r fcr_results, eval = FALSE, echo = FALSE}
 
 # Specification for nonlinear regression:
 #fcr_reg = nls(feed ~ b1 * weight ^ b2, dat_fcr, start = list(b1 = 0.0268, b2 = - 1.855))
@@ -390,32 +327,6 @@ dat_fcr$feed = dat_fcr$feed / 1000
 # Clean up output:
 #fcr_reg_tidy = tidy(fcr_reg, conf.int = TRUE, conf.level = 0.95)
 #dat_fcr_est = augment(fcr_reg)
-
-#kable(fcr_reg_tidy)
-
-#ggplot(dat_fcr_est) +
-#  geom_point(aes(weight, feed)) +
-#  geom_point(aes(weight, .fitted, colour = "red"))
-
-# Better graph for Goto.
-#ggfcr =
-#ggplot(dat_fcr_est) +
-#  geom_point(aes(weight, feed), colour = "gray50") +
-#  geom_segment(aes(x = weight, y = feed, xend = weight, yend = .fitted), colour = "gray50") +
-#  geom_point(aes(weight, .fitted), colour = "firebrick") +
-#  labs(x = "Weight (Kilograms)", y = "Feed Requirement (Kilograms)") +
-#  scale_y_continuous(expand = c(0, 0)) +
-#  ggtitle("Estimated Feed-at-Weight Function") +
-#  theme(axis.text.x = element_text(size = 8),
-#        axis.text.y = element_text(size = 8),
-#        legend.text = element_text(size = 8),
-#        axis.title.x = element_text(size = 9),
-#        axis.title.y = element_text(size = 9),
-#        legend.title = element_text(size = 9),
-#        plot.title = element_text(size = 9)) +
-#  theme_classic()
-
-#ggsave("ggfcr.png", ggfcr, width = 5.5, height = 3, dpi = 300)
 
 ```
 
@@ -425,28 +336,27 @@ Variable   | Definition                  | Value
 ---------- | --------------------------- | -----------
 *w*        | Weight (Kilograms)          |
 *f*        | Cumulative Feed (Kilograms) |
-$\beta_1$  | Parameter                   | r fcr_reg_tidy$estimate[1]
-$\beta_2$  | Parameter                   | r fcr_reg_tidy$estimate[2]
+$\beta_1$  | Parameter                   | 1.00
+$\beta_2$  | Parameter                   | 0.01
 
 For convenience below, the derivative of feed-at-weight, i.e. instantaneous feed requirement, is also defined as:
 $f = \beta_1 \beta_2 w^{\beta_{1}-1}$
 
-```{r fcr_function, eval = FALSE}
+```{r fcr_function}
 
 # Set cumulative feed requirement.
 fn_f_cumu = function(w, b1, b2){F = b1 * w ^ b2}
 
 # Set marginal feed requirement.
-#fn_f_marg = function(w, b1, b2){f = b1 * b2 * w ^ (b2 - 1)}
 fn_f_marg = function(w, b1, b2){f = b1 * b2 * w}
 
 # Set parameters for reference.
-f_b1 = 0.01 #fcr_reg_tidy$estimate[1]
-f_b2 = 1.00 #fcr_reg_tidy$estimate[2]
+f_b1 = 0.01
+f_b2 = 1.00
 
 ```
 
-#####No-Harvest Cost
+####No-Harvest Cost
 
 We estimate the cost of maintaining a cohort in a cage from cohort size, cohort weight, marginal feed requirement, feed cost, and generalized overhead costs.
 
@@ -466,7 +376,9 @@ o = 170000 # Goto, source!
 
 ```
 
-#####Harvest Cost
+####Harvest Cost
+
+We estimate the cost of harvesting with instantaneous restocking from optimal stocking density at first age for optimal stocking density at first salable age, cost of fry for restocking, and generalized overhead costs.
 
 ```{r c_restock}
 
@@ -474,9 +386,64 @@ ch1 = nstart * 2 + o # Fry Cost (CREMES).
 
 ```
 
-##### Parameter Set-Up
+####Intermediate Results Summary
 
-```{r pars, eval = FALSE}
+With intermediate results ready for the Faustmann implementation, we run a few graphs out for later reference.
+
+```{r intermediate, echo = FALSE}
+
+# 1. Lengths at Age
+#    Set-Up.
+a = seq(1, 27)
+l = fn_vb(vb_linf, vb_k, a, vb_t0)
+
+#    Graph.
+ggvb =
+ggplot() +
+  geom_path(aes(a, l), colour = "firebrick") +
+  labs(x = "Age (Years)", y = "Length (Centimeters)") +
+  scale_y_continuous(expand = c(0, 0)) +
+  ggtitle("Estimated Lengths at Age") +
+  theme_classic()
+
+print(ggvb)
+
+# 2. Mortalities at Age
+#    Graph.
+ggma =
+ggplot(dat_m_est) +
+  geom_point(aes(a_months, m_months)) +
+  geom_path(aes(a_months, .fitted)) +
+  labs(x = "Age (Months)", y = "Mortality (%)") +
+  scale_y_continuous(expand = c(0, 0)) +
+  ggtitle("Estimated Mortalities at Age") +
+  theme_classic()
+
+print(ggma)
+
+# 3. Weights at Length
+#    Set-Up
+l = seq(0, 200, by = 10)
+w = fn_lw(wl_a, l, wl_b)
+
+#    Graph
+gglw =
+ggplot() +
+  geom_path(aes(l, w), colour = "firebrick") +
+  labs(x = "Length (Centimeters)", y = "Weight (Kilograms)") +
+  scale_y_continuous(expand = c(0, 0)) +
+  ggtitle("Estimated Weights at Length") +
+  theme_classic()
+
+print(gglw)
+
+```
+
+####Parameter Set-Up
+
+With intermediate results ready to plug into the Faustmann model, everything goes into a vector for model runs and a table for handy external reference.
+
+```{r pars, eval = FALSE, include = FALSE}
 
 # Define parameters for each low-level function in a high-level function of multiple harvests over time.
 var = c("start", 
@@ -571,9 +538,9 @@ tab = data.frame(num, fun, var, par00, par10, par01, par11)
 
 ```
 
-##### Single-Run Function
+####Single-Run Function
 
-```{r fun, eval = FALSE}
+```{r fun, eval = FALSE, include = FALSE}
 # Define a function for dynamic harvests over time.
 aq = function(par){t = as.numeric(vector(length = par[2]))  # First, initialize blank vectors for each variable.
                    a0 = as.numeric(vector(length = par[2]))
@@ -713,9 +680,9 @@ write.csv(output2, "output2.csv")
 
 ```
 
-##### Run 11 + Profit
+####Run 11 + Profit
 
-```{r run11, eval = FALSE}
+```{r run11, eval = FALSE, include = FALSE}
 
 # Run the dynamic harvest demo from parameters.
 output = aq(par11)
@@ -816,9 +783,9 @@ ggplot(tbl_pi, aes(t, pi_sum)) +
 
 ```
 
-##### Presentation Figures
+####Presentation Figures
 
-```{r run00_costs_presentation, eval = FALSE}
+```{r run00_costs_presentation, eval = FALSE, include = FALSE}
 
 # Run the dynamic harvest demo from parameters.
 output = aq(par00)
@@ -856,7 +823,7 @@ ggsave("cagecost_20190201.png",
 
 ```
 
-```{r growthrates, eval = FALSE}
+```{r growthrates, eval = FALSE, include = FALSE}
 
 fn_vb = function(linf, k, t, t_0){l = linf * ( 1 - exp( - k * ( t - t_0)))}
 
@@ -903,7 +870,7 @@ write.csv(weights,"weights.csv")
 
 ```
 
-```{r meatprofit, eval = FALSE}
+```{r meatprofit, eval = FALSE, include = FALSE}
 
 # Run the dynamic harvest demo from parameters.
 output = aq(par10)
@@ -943,7 +910,7 @@ ggsave("meat_20190201.png",
 
 ```
 
-```{r allprofit, eval = FALSE}
+```{r allprofit, eval = FALSE, include = FALSE}
 
 # Run the dynamic harvest demo from parameters.
 output = aq(par01)
@@ -981,7 +948,7 @@ ggsave("mbpi_20190201.png",
 
 ```
 
-```{r slapdash, eval = FALSE}
+```{r slapdash, eval = FALSE, include = FALSE}
 
 q = seq(0, 20)
 p = 83 - 5.28 * q + 39.48 ^ 0.525
@@ -1013,7 +980,7 @@ ggsave("slapdash.png",
 
 ```
 
-```{r run, eval = FALSE}
+```{r run, eval = FALSE, include = FALSE}
 
 # Run the dynamic harvest demo from parameters.
 output = aq(par11)
@@ -1059,7 +1026,7 @@ ggsave("faust.png",
 
 ```
 
-```{r garrettfunkygraphtime, eval = FALSE}
+```{r garrettfunkygraphtime, eval = FALSE, include = FALSE}
 
 library(readr)
 meatrev <- read_csv("~/GitHub/tma/meatrev.csv")
@@ -1084,10 +1051,6 @@ ggsave("meatrev.png",
        limitsize = FALSE, 
        bg = "transparent")
 
-
-```
-
-```{r inter_graphs, include = FALSE}
 
 ```
 
