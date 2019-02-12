@@ -372,7 +372,14 @@ fn_ch0 = function(w, b1, b2, cf, n, o){ch0 = n * cf * fn_f_marg(w, b1, b2) * 365
 ch0_cf = 2 # Intrafish (2019), pers. comm. Garrett Goto, Earth Ocean Farms S.A. de C.V. (2019).
 
 # Overhead, from eight cages for ten years down to one cage for one year.
-o = 170000 # Goto, source!
+o = 170000
+
+#pers. comm. Felipe Ramirez (10/16/2018), InnovaSea (11/5/2018); pers. comm. Tyler Korte (11/5/2018), Blue Ocean Mariculture; pers. comm. Earth Ocean Farms S.A. de C.V. (2018); Salary tabulator (2017 SHCP); Cygnus MIA (2017)
+
+#Costs for 8 AquaPods per year over ten years include: AquaPods ($140,000), Accessories ($420,000), Maintainence ($100,000), Net Cleaning ($80,000), Feed Boat ($40,000), Harvest Boat ($40,000), Eight Pangas ($12,000), Fuel ($25,155), Farm Employees ($112,000), Office Employees ($80,000), Leasing ($150,000), Other/misc ($100,000), HR/Office ($50,000)
+
+#Annual cost for 8 AquaPods (over 10 years) = $1,349,155
+#Annual cost for 1 AquaPod (over 10 years) = $1,349,155/8 = $168,644.38
 
 ```
 
