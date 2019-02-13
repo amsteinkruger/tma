@@ -855,7 +855,7 @@ ggsave("cagecost_20190201_present.png",
 
 ## Paper Graph 
 cost_paper = ggplot(tibble_rc, aes(t, val)) +
-      geom_line(size = 2, color = "#1F4E79") +
+      geom_line(size = 2, color = "black") +
       annotate("text", x = 8.5, y = 1.15, label = "Costs", size = 6, family = "Century Gothic") +
       scale_x_continuous(limits = c(1, 10), breaks = c(1, 2, 10), expand = c(0, 0.125)) +
       scale_y_continuous(limits = c(0, 3.000000), labels = scales::comma, expand = c(0, 0)) +
@@ -924,9 +924,9 @@ ggsave("weights_20190201_present.png",
 
 
 ## Paper Graph 
-w_plot_present = ggplot(weights) +
-      geom_line(aes(a, w_slow), size = 2, color = "#1F4E79") +
-      geom_line(aes(a, w_fast), size = 2, color = "#F4B183") +
+w_plot_paper = ggplot(weights) +
+      geom_line(aes(a, w_slow), size = 2, color = "black") +
+      geom_line(aes(a, w_fast), size = 2, color = "grey") +
       annotate("text", x = 23, y = 105, label = "Wild", size = 3, family = "Century Gothic") +
       annotate("text", x = 23, y = 128, label = "Aquaculture", size = 3, family = "Century Gothic") +
       labs(x = "Years", y = "Kilograms") +
@@ -994,7 +994,7 @@ meat_paper = ggplot(tibble_rc, aes(t, val, color = var)) +
       geom_path(size = 2) +
       annotate("text", x = 8.5, y = 1.15, label = "Costs", size = 4, family = "Century Gothic") +
       annotate("text", x = 9, y = 2.500000, label = "Revenues", size = 4, family = "Century Gothic") +
-      scale_color_manual(values = c("#F4B183", "#1F4E79")) +
+      scale_color_manual(values = c("black", "grey")) +
       labs(x = "Years", y = " Millions USD", color = "") +
       scale_x_continuous(limits = c(1, 10), breaks = c(1, 2, 3, 10),expand = c(0, 0.125)) +
       scale_y_continuous(limits = c(0, 3.000000), labels = scales::comma, expand = c(0, 0)) +
@@ -1057,7 +1057,7 @@ mbpi_paper = ggplot(tibble_rc, aes(t, val, color = var)) +
       geom_path(size = 2) +
       annotate("text", x = 8.5, y = 3, label = "Costs", size = 4, family = "Century Gothic") +
       annotate("text", x = 9, y = 31, label = "Revenues", size = 4, family = "Century Gothic") +
-      scale_color_manual(values = c("#F4B183", "#1F4E79")) +
+      scale_color_manual(values = c("black", "grey")) +
       labs(x = "Years", y = "Millions USD", color = "") +
       scale_x_continuous(expand = c(0, 0.125), limits = c(1, 10), breaks = c(1, 2, 10)) +
       scale_y_continuous(expand = c(0, 0), limits = c(0, 35)) +
@@ -1065,7 +1065,7 @@ mbpi_paper = ggplot(tibble_rc, aes(t, val, color = var)) +
       btheme_paper +
       theme(legend.position = "none")
 
-ggsave("mpbi_20190201_paper.png",
+ggsave("mbpi_20190201_paper.png",
        width = 5, 
        height = 3,
        units = c("in"),
@@ -1113,7 +1113,7 @@ ggsave("slapdash_present.png",
 
 slapdash_paper =
 ggplot(data = slapdat) +
-  geom_line(aes(q, p), color = "#1F4E79", size = 2) +
+  geom_line(aes(q, p), color = "black", size = 2) +
   labs(x = "Tonnes of Buche", y = "USD / Gram of Buche") +
   scale_x_continuous(expand = c(0, 0.125), breaks = c(0, 5, 10, 15, 17), limits = c(0, 17)) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 90)) +
@@ -1192,7 +1192,7 @@ aq11_paper = ggplot(tibble_rc, aes(t, val, color = var, group = group)) +
       scale_x_continuous(expand = c(0, 0.125), limits = c(1, 10), breaks = c(1, 2, 4, 8, 10)) +
       scale_y_continuous(expand = c(0, 0), limits = c(0, 17.000000), labels = scales::comma) +
       #ggtitle("Costs and Revenues for One Cage - Trimming and Harvest") +
-      scale_color_manual(values = c("#F4B183", "#1F4E79")) +
+      scale_color_manual(values = c("black", "grey")) +
       theme_classic() +
       btheme_paper +
       theme(legend.position = "none")
@@ -1237,8 +1237,8 @@ ggsave("meatrev_present.png",
 ## Paper Graph
 
 meatrev_paper = ggplot(meatrev, aes(x = t))+
-  geom_line(aes(y = tr), colour="#F4B183", size = 2) +
-  geom_line(aes(y = c), colour="#1F4E79", size = 2) +
+  geom_line(aes(y = tr), colour="black", size = 2) +
+  geom_line(aes(y = c), colour="grey", size = 2) +
   geom_segment(aes(x = 2, xend = 2, y = 0, yend = Inf), linetype = "dashed") +
   labs(x = "Years", y = "Millions USD", color = "") +
   scale_x_continuous(expand = c(0, 0.125), limits = c(1, 10), breaks = c(2, 4, 6, 8, 10)) +
