@@ -4,37 +4,7 @@ date: '`r Sys.Date()`'
 output: html_document
 ---
 
-```{r script, include = FALSE}
-
-knitr::read_chunk('setup.R')
-
-```
-
-```{r packages_list, include = FALSE, message = FALSE, error = FALSE, warning = FALSE}
-
-```
-
-```{r packages_inst, eval = FALSE, include = FALSE, message = FALSE, error = FALSE, warning = FALSE}
-
-```
-
-```{r packages_upda, eval = FALSE, include = FALSE, message = FALSE, error = FALSE, warning = FALSE}
-
-```
-
-```{r packages_libr, include = FALSE, message = FALSE, error = FALSE, warning = FALSE}
-
-```
-
-```{r fonts, include = FALSE, message = FALSE, error = FALSE, warning = FALSE}
-
-```
-
-```{r theme, include = FALSE, message = FALSE, error = FALSE, warning = FALSE}
-
-```
-
-```{r pkg_ins, echo = TRUE, warning = FALSE, message = FALSE}
+```{r pkg_ins, warning = FALSE, message = FALSE, echo = FALSE, results = 'hide'}
 
 rm(list=ls())
 
@@ -62,14 +32,14 @@ pkg <- c("readr",
 #update.packages(pkg, verbose = FALSE, quiet = TRUE)
 
 # Check out packages.
-lapply(pkg, library, character.only = TRUE)
+invisible(lapply(pkg, library, character.only = TRUE))
 
 #library(gg3D)
-
 ```
-```{r btheme}
 
-btheme =
+```{r btheme_present, echo = FALSE}
+
+btheme_present =
   theme(plot.title = element_text(hjust = 0.5, size = 32, family = "Century Gothic", face = "bold"), 
         rect = element_rect(fill = "transparent"),
         plot.background = element_rect(fill = "transparent", color = NA),
@@ -89,77 +59,105 @@ btheme =
 
 ```
 
+```{r btheme_paper, echo = FALSE}
+
+btheme_paper =
+  theme(plot.title = element_text(hjust = 0.5, size = 14, family = "Century Gothic", face = "bold"), 
+        rect = element_rect(fill = "transparent"),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        legend.position = "right",
+        legend.background = element_rect(fill = "transparent"),
+        legend.box.background = element_rect(fill = "transparent"),
+        legend.key = element_rect(fill="transparent", colour=NA),
+        legend.text = element_text(size = 12, family = "Century Gothic"),
+        legend.title = element_text(size = 14, family = "Century Gothic"),
+        panel.background = element_rect(fill = "transparent"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, family = "Century Gothic"),
+        axis.title.x = element_text(size = 10, family = "Century Gothic", face = "bold"),
+        axis.text.y = element_text(size = 8, family = "Century Gothic"),
+        axis.title.y = element_text(size = 10, family = "Century Gothic", face = "bold"))
+
+```
 
 
-#####Objective: Step through optimal rotations for a generic totoaba farm.
+###Objective: Step through optimal rotations for a generic totoaba farm.
 
-#####Age to Length
+####Introduction
+Our objective requires functions and inputs for the growth, mortality, trimming, and harvest of totoaba over *n* cages.
+
+We first build out intermediate functions to find both constant and variable parameter values.
+
+These are:
+
+1. Lengths at Age
+2. Mortalities at Age
+3. Weights at Length
+4. Numbers at Age
+5. Maw Yields at Length
+6. Maw Prices at Weight
+7. Maw Revenues at Weight and Price
+8. Meat Revenues at Weight
+9. Feed Requirements at Weight | No-Harvest Cost
+10. Feed Requirement at Stocking | Harvest Cost
+
+We next compile bioeconomic inputs, intermediate results, and additional parameters for an iterative Faustmann model.
+
+We program and run the Faustmann model for a single cage, ~~then for multiple cages, and finally for a sensitivity analysis~~.
+
+Lastly, we create figures for intermediate calculations and results of the Faustmann model.
+
+####Lengths at Age
+
+We estimate lengths at age from a Von Bertalanffy function.
+
+Our parameter estimates follow from INAPESCA (2018) and EOF (2018). **This section needs the whole estimation process from Excel.**
 
 $L(t) = L_\infty ( 1 - e^{ - K ( t - t_0 )})$
 
 Variable   | Definition                   | Value
----------- | ---------------------------  | --------------
+---------- | ---------------------------  | ---------
 *L*        | Length (Centimeters)         | 
-$L_\infty$ | Maximum Length (Centimeters) | 180.000000
-*K*        | Catabolic Constant (?!)      | 000.289291
+$L_\infty$ | Maximum Length (Centimeters) | 180.0000
+$K_{fi}$   | Catabolic Constant (INAPESCA)| 0.155000
+$K_{aq}$   | Catabolic Constant (EOF)     | 0.228560
 *t*        | Age (Years)                  | 
-$t_0$      | Age, *L* = 0                 | 000.000000
+$t_0$      | Age, *L* = 0                 | 0.000000
 
 ```{r al_function}
 
 # Von Bertalanffy function.
-fn_vb = function(linf, k, t, t_0){l = linf * ( 1 - exp( - k * ( t - t_0)))
-                                  return(l)}
+fn_vb = function(linf, k, t, t_0){l = linf * ( 1 - exp( - k * ( t - t_0)))}
 
 # Set parameter values for future reference.
-vb_linf = 200 # From 180 to 200.
-vb_k    = 0.155#0.22856
+vb_linf = 200
+vb_k    = 0.155 #0.22856
 vb_t0   = -0.65
-
-# Parameterization demo.
-#a = seq(1, 25)
-#l = fn_vb(vb_linf, vb_k, a, vb_t0)
-
-#plot(a, l)
-
-# Better graph for Goto.
-#ggvb =
-#ggplot() +
-#  geom_path(aes(a, l), colour = "firebrick") +
-#  labs(x = "Age (Years)", y = "Length (Centimeters)") +
-#  scale_y_continuous(expand = c(0, 0)) +
-#  ggtitle("Estimated Length-at-Age Function") +
-#  theme(axis.text.x = element_text(size = 8),
-#        axis.text.y = element_text(size = 8),
-#        legend.text = element_text(size = 8),
-#        axis.title.x = element_text(size = 9),
-#        axis.title.y = element_text(size = 9),
-#        legend.title = element_text(size = 9),
-#        plot.title = element_text(size = 9)) +
-#  theme_classic()
-
-#ggsave("ggvb.png", ggvb, width = 5.5, height = 3, dpi = 300)
 
 ```
 
-#####Age to Mortality
+####Mortalities at Age
 
-Cygnus Ocean Farms, SA de CV report mortality by month for two years.
+We estimate mortalities at age from a report by month over two years from Cygnus Ocean Farms, SA de CV.
+
+Supposing a mortality trend $m = \beta_1 * e^{\beta_2a}$, we use R function stats::nls to estimate parameters.
  
 ```{r am_data}
 
 a_months = seq(1, 24)
-m_months = c(rep(5.00, 2), rep(2.40, 2), rep(1.60, 2), rep(1.15, 2), rep(1.00, 3), rep(0.80, 3), 0.50, rep(0.40, 6), 0.30, rep(0.20, 2))
+m_months = c(rep(5.00, 2), 
+             rep(2.40, 2), 
+             rep(1.60, 2), 
+             rep(1.15, 2), 
+             rep(1.00, 3), 
+             rep(0.80, 3), 
+             0.50, 
+             rep(0.40, 6), 
+             0.30, 
+             rep(0.20, 2))
 
 dat_m = tibble(a_months, m_months)
-
-#plot(dat_m$a_months, dat_m$m_months)
-
-```
- 
-Supposing a mortality trend $m = \beta_1 * e^{\beta_2a}$, R function nls in package Stats 3.4.2 returns:
- 
-```{r am_results, echo = FALSE}
 
 # Specification for nonlinear regression:
 am_reg = nls(m_months ~ b1 * exp(b2 * a_months), dat_m, start = list(b1 = 8.00, b2 = - 1.00))
@@ -168,36 +166,11 @@ am_reg = nls(m_months ~ b1 * exp(b2 * a_months), dat_m, start = list(b1 = 8.00, 
 am_reg_tidy = tidy(am_reg, conf.int = TRUE, conf.level = 0.95)
 dat_m_est = augment(am_reg)
 
-#kable(am_reg_tidy)
-
-#ggplot(dat_m_est) +
-#  geom_point(aes(a_months, m_months)) +
-#  geom_path(aes(a_months, .fitted))
-
-# Better graph for Goto.
-#ggam =
-#ggplot(dat_m_est) +
-#  geom_point(aes(a_months, m_months), colour = "gray50") +
-#  geom_segment(aes(x = a_months, y = m_months, xend = a_months, yend = .fitted), colour = "gray50") +
-#  geom_point(aes(a_months, .fitted), colour = "firebrick") +
-#  labs(x = "Age (Months)", y = "Cohort Mortality (%)") +
-#  scale_y_continuous(expand = c(0, 0)) +
-#  ggtitle("Estimated Mortality-at-Age Function") +
-#  theme(axis.text.x = element_text(size = 8),
-#        axis.text.y = element_text(size = 8),
-#        legend.text = element_text(size = 8),
-#        axis.title.x = element_text(size = 9),
-#        axis.title.y = element_text(size = 9),
-#        legend.title = element_text(size = 9),
-#        plot.title = element_text(size = 9)) +
-#  theme_classic()
-
-#ggsave("ggam.png", ggam, width = 5.5, height = 3, dpi = 300)
-
 ```
 
- Those results plug into a mortality-at-age function:
+Results plug into a function:
 
+$M = \beta_1 * e^{\beta_2a}$
 
 Variable   | Definition                  | Value
 ---------- | --------------------------- | -----------
@@ -206,19 +179,18 @@ Variable   | Definition                  | Value
 $\beta_1$  | Parameter                   | `r am_reg_tidy$estimate[1]`
 $\beta_2$  | Parameter                   | `r am_reg_tidy$estimate[2]`
 
-~~To keep a realistic non-zero mortality-at-age estimate, we add a proportional mortality of 0.01 to each month of age.~~
+We annualize mortalities at age to match other data.
 
-For convenience below, the indefinite integral of mortality-at-age, i.e. cumulative mortality, is also defined as:
+To keep a realistic non-zero mortality-at-age estimate, we add an annualized proportional mortality of 0.01.
+
+The indefinite integral of mortality-at-age, i.e. cumulative mortality, is also defined as:
 $M = \frac{\beta_1 * e^{\beta_2a}}{\beta_2}$
 
 ```{r am_function}
 
-# Note conversion from months to years for ease of use later.
-
 # Set marginal mortality.
-fn_am_marg = function(a, b1, b2){m = b1 * exp(b2 * a * 12) + 1} #Assumed that mortality keeps at 1% forever
-
-# Cumulative mortality doesn't work the way you think it does - reconsider and work out a new functional form.
+fn_am_marg = function(a, b1, b2){m = b1 * exp(b2 * a * 12) + 1} # "+ 1" adds lower threshold of 0.01 on mortality.
+                                                                # "* 12" converts from months to years.
 
 # Set parameters for reference.
 am_b1 = am_reg_tidy$estimate[1]
@@ -226,16 +198,18 @@ am_b2 = am_reg_tidy$estimate[2]
 
 ```
 
-#####Weight-Length Conversion
+####Weights at Length
+
+We estimate weights at age from a functional form and parameters values from INAPESCA (2018). **Hey Miguel, is this right?**
 
 $W = aL^b$
 
-Variable   | Definition
----------- | ---------------------------
-*W*        | Weight (Kilograms)
-*L*        | Length (Centimeters)
-*a*        | Parameter
-*b*        | Parameter
+Variable   | Definition                  | Value
+---------- | --------------------------- | -------
+*W*        | Weight (Kilograms)          |
+*L*        | Length (Centimeters)        |
+*a*        | Parameter                   | 0.000004128
+*b*        | Parameter                   | 3.246740000
 
 ```{r lw_function}
 
@@ -247,34 +221,11 @@ fn_lw = function(a, l, b){w = a * l ^ b
 wl_a = 0.000004128
 wl_b = 3.24674
 
-# Parameterization demo.
-l = seq(0, 200, by = 10)
-w = fn_lw(wl_a, l, wl_b)
-plot(l, w)
-
-# Better graph for Goto.
-gglw =
-ggplot() +
-  geom_path(aes(l, w), colour = "firebrick") +
-    labs(x = "Length (Centimeters)", y = "Weight (Kilograms)") +
-  scale_y_continuous(expand = c(0, 0)) +
-  ggtitle("Estimated Weight-at-Length Function") +
-  theme(axis.text.x = element_text(size = 8),
-        axis.text.y = element_text(size = 8),
-        legend.text = element_text(size = 8),
-        axis.title.x = element_text(size = 9),
-        axis.title.y = element_text(size = 9),
-        legend.title = element_text(size = 9),
-        plot.title = element_text(size = 9)) +
-  theme_classic()
-#gglw
-#ggsave("gglw.png", gglw, width = 5.5, height = 3, dpi = 300)
-
 ```
 
-#####Age to Count
+####Numbers at Age
 
-After mortality, any biomass in excess of optimal stocking density is harvested. Optimal density is 160,000 kilograms per cage at and after first salable size. First salable size is 2 kilograms.
+After mortality, any biomass in excess of optimal stocking density is harvested. Optimal density is 160,000 kilograms per cage at and after first salable size. First salable size is two kilograms. **We use optimal stocking density from ?!?!?! and HSWRI (2019).** Implementation of trimming in the Faustmann model is only calculated in the model itself, not in an intermediate function.
 
 $T = n_t^* - n_{t-1}^* * m_{t-1}$
 
@@ -284,7 +235,7 @@ $T = n_t^* - n_{t-1}^* * m_{t-1}$
 density = 160000 # Goto or Miguel - is this from Felipe?
 
 # Size is first saleable size in kilograms.
-size = 3 # Communications with EOF (2018).
+size = 2 # Communications with EOF (2018).
 
 a = seq(1, 25)
 w = fn_lw(wl_a, fn_vb(vb_linf, vb_k, a, vb_t0), wl_b)
@@ -297,35 +248,27 @@ nsale = density / size
 # Casually, nstart = nsale + mort(a(l(wsale))).
 # Cumulative mortality to first saleable age:
 a_sale = (vb_t0 - 1 / vb_k * (log(1 - ((size / wl_a) ^ (1 / wl_b))/vb_linf))) # Inverse Von Bertalanffy.
-nstart = nsale * (100 / (100 - fn_am_marg(a_sale, am_b1, am_b2))) * (100 / (100 - fn_am_marg(1, am_b1, am_b2))) * (100 / (100 - fn_am_marg(1, am_b1, am_b2)))
-#nstart = nsale / (1 - m_sale * 0.01)
 
-# Trimming is individuals harvested each year to keep stocking density below maximum after mortality.
-# Here, trimming is cumulative. The iterative implementation is more useful.
-#fn_nm = function(nstart, a, am_b1, am_b2){nm = nstart * (1 - 0.01 * fn_am_cumu(a, am_b1, am_b2))}
-#fn_nt = function(density, w, a, am_b1, am_b2, nstart){nt = ifelse(fn_nm(nstart, a, am_b1, am_b2) - fn_ns(density, w) > 0, 
-#                                                                  fn_nm(nstart, a, am_b1, am_b2) - fn_ns(density, w), 
-#                                                                  0)}
-
-#ntrim = fn_nt(density, w, a, am_b1, am_b2, nstart)
-
-#plot(a, ntrim)
+# Initial stock to reach optimal density at first salable size:
+nstart = nsale * (100 / (100 - fn_am_marg(a_sale, am_b1, am_b2))) * 
+  (100 / (100 - fn_am_marg(1, am_b1, am_b2))) * 
+  (100 / (100 - fn_am_marg(1, am_b1, am_b2)))
 
 ```
 
-#####Weight-Maw Conversion
+####Maw Weights at Individual Weight
 
 For a stock of $n_{a, t}$ totoaba cultivated for *a* years in year *t* to weight $w_{a, t}$ for a total round weight of $x_{a, t}$, maw yield $y_{a, t}$ depends on wet maw yield ratio $c^{maw}_{a, t}$ and dry yield ratio $k$.
 
 $y^{maw}_{a, t} = w_{a, t}n_{a, t}c^{maw}_{a, t}k^{maw}_{dry}$
 
-Variable   | Definition
----------- | --------------------------------
-$y^{maw}$  | Cohort Dry Maw Yield (Kilograms)
-*w*        | Individual Round Weight (Kilograms)
-*n*        | Cohort Count
-$c^{maw}$  | Yield of maw from round weight.
-$k^{maw}$  | Yield of dry maw from wet maw.
+Variable   | Definition                          | Value
+---------- | ----------------------------------- | ----------
+$y^{maw}$  | Cohort Dry Maw Yield (Kilograms)    | 
+*w*        | Individual Round Weight (Kilograms) |
+*n*        | Cohort Count                        |
+$c^{maw}$  | Yield of maw from round weight.     | 0.0161
+$k^{maw}$  | Yield of dry maw from wet maw.      | 0.3100
 
 ```{r wm_function}
 
@@ -337,24 +280,24 @@ wm_k = 0.31
 
 ```
 
-#####Maw-Price Conversion
+####Maw Prices at Maw Weight and Market Supply
 
-Grams! It's all grams! Remember to convert.
+We estimate price from multiple regression of price per gram of maw on tonnes of dry maw supplied and grams per maw.
 
 ```{r mp_function}
 
 #fn_mp = function(w, b0, bw, bq, q, bc, c){pmaw = b0 + w ^ bw + bq * q + bc * c}
-fn_mp = function(w, b0, b1, b2, q){pmaw = (q * b1 + (w * 1000) ^ b2 + b0) * 1000}
+fn_mp = function(w, b0, b1, b2, q){pmaw = (q * b1 + (w * 1000) ^ b2 + b0) * 1000} # Factors of 1000 convert from grams to kilograms.
 
 # Parameters from regression.
 mp_b0 = 82.99177
 mp_b1 = -5.28312
 mp_b2 = 0.52540
-mp_q = 10 # Note that 14 fills in for a reasonable quantity at market from poaching.
-#mp_q has to be a vector
+mp_q = 10 # Note that 14 fills in for a reasonable quantity at market from poaching. In the Faustmann implementation, mp_q is lag quantity supplied.
+
 ```
 
-#####Maw-Revenue Conversion
+####Maw Revenues at Maw Price and Yield
 
 For a dry maw yield $y^{maw}$ in kilograms, revenue depends on price.
 
@@ -366,7 +309,7 @@ fn_mr = function(ymaw, pmaw){rmaw = ymaw * pmaw}
 
 ```
 
-#####Round-Revenue Conversion
+####Wet Weight Revenues at Yield
 
 For a stock of *n* totoaba cultivated for *a* years in year *t* for an individual round weight of $w_{a, t}$, revenue depends on price.
 
@@ -377,17 +320,17 @@ $R^{round}_{a, t} = w_{a, t} * n_{a, t} * p^{round}$
 fn_fr = function(w, n, pround){rround = w * n * pround}
 
 # Parameter from market research:
-pround = 6.50 # Source? Miguel?
+pround = 6.50 # Price from Sistema Nacional de Informacion e Integracion de Mercados (2019)
 
 ```
 
-#####Feed Conversion Function
+####Feed Requirements at Weight
 
-Note placeholder assumption of constant marginal feed requirement.
+We assume a constant daily feed requirement proprotional to organism mass. 
 
-~~Thanks, Goto!~~
+Calculations for an alternative estimation of feed requirement follow.
 
-```{r fcr_data, eval = FALSE}
+```{r fcr_data, eval = FALSE, echo = FALSE}
 
 dat_fcr = read.csv("fcr.csv")
 
@@ -399,40 +342,14 @@ dat_fcr$feed = dat_fcr$feed / 1000
 
 ~~For reasons, we assume functional form $F = \beta_1 * w^{\beta_2}$~~
 
-```{r fcr_results, eval = FALSE}
+```{r fcr_results, eval = FALSE, echo = FALSE}
 
 # Specification for nonlinear regression:
-fcr_reg = nls(feed ~ b1 * weight ^ b2, dat_fcr, start = list(b1 = 0.0268, b2 = - 1.855))
+#fcr_reg = nls(feed ~ b1 * weight ^ b2, dat_fcr, start = list(b1 = 0.0268, b2 = - 1.855))
 
 # Clean up output:
-fcr_reg_tidy = tidy(fcr_reg, conf.int = TRUE, conf.level = 0.95)
-dat_fcr_est = augment(fcr_reg)
-
-kable(fcr_reg_tidy)
-
-ggplot(dat_fcr_est) +
-  geom_point(aes(weight, feed)) +
-  geom_point(aes(weight, .fitted, colour = "red"))
-
-# Better graph for Goto.
-ggfcr =
-ggplot(dat_fcr_est) +
-  geom_point(aes(weight, feed), colour = "gray50") +
-  geom_segment(aes(x = weight, y = feed, xend = weight, yend = .fitted), colour = "gray50") +
-  geom_point(aes(weight, .fitted), colour = "firebrick") +
-  labs(x = "Weight (Kilograms)", y = "Feed Requirement (Kilograms)") +
-  scale_y_continuous(expand = c(0, 0)) +
-  ggtitle("Estimated Feed-at-Weight Function") +
-  theme(axis.text.x = element_text(size = 8),
-        axis.text.y = element_text(size = 8),
-        legend.text = element_text(size = 8),
-        axis.title.x = element_text(size = 9),
-        axis.title.y = element_text(size = 9),
-        legend.title = element_text(size = 9),
-        plot.title = element_text(size = 9)) +
-  theme_classic()
-
-#ggsave("ggfcr.png", ggfcr, width = 5.5, height = 3, dpi = 300)
+#fcr_reg_tidy = tidy(fcr_reg, conf.int = TRUE, conf.level = 0.95)
+#dat_fcr_est = augment(fcr_reg)
 
 ```
 
@@ -442,32 +359,31 @@ Variable   | Definition                  | Value
 ---------- | --------------------------- | -----------
 *w*        | Weight (Kilograms)          |
 *f*        | Cumulative Feed (Kilograms) |
-$\beta_1$  | Parameter                   | `r fcr_reg_tidy$estimate[1]`
-$\beta_2$  | Parameter                   | `r fcr_reg_tidy$estimate[2]`
+$\beta_1$  | Parameter                   | 1.00
+$\beta_2$  | Parameter                   | 0.01
 
 For convenience below, the derivative of feed-at-weight, i.e. instantaneous feed requirement, is also defined as:
 $f = \beta_1 \beta_2 w^{\beta_{1}-1}$
 
 ```{r fcr_function}
 
-# Regression to constant marginal feed requirement.
-
 # Set cumulative feed requirement.
 fn_f_cumu = function(w, b1, b2){F = b1 * w ^ b2}
 
 # Set marginal feed requirement.
-#fn_f_marg = function(w, b1, b2){f = b1 * b2 * w ^ (b2 - 1)}
 fn_f_marg = function(w, b1, b2){f = b1 * b2 * w}
 
 # Set parameters for reference.
-f_b1 = 0.01 #fcr_reg_tidy$estimate[1]
-f_b2 = 1.00 #fcr_reg_tidy$estimate[2]
+f_b1 = 0.01
+f_b2 = 1.00
 
 ```
 
-#####No-Harvest Cost
+####No-Harvest Cost
 
-Thanks, Goto!
+We estimate the cost of maintaining a cohort in a cage from cohort size, cohort weight, marginal feed requirement, feed cost, and generalized overhead costs.
+
+$c_{h = 0} = n_a * c_f * f(w) + o$
 
 ```{r c_stock}
 
@@ -476,14 +392,23 @@ fn_ch0 = function(w, b1, b2, cf, n, o){ch0 = n * cf * fn_f_marg(w, b1, b2) * 365
 
 # Parameters.
 #  Cost, USD/kg.
-ch0_cf = 2
+ch0_cf = 2 # Intrafish (2019), pers. comm. Garrett Goto, Earth Ocean Farms S.A. de C.V. (2019).
+
 # Overhead, from eight cages for ten years down to one cage for one year.
 o = 170000
 
+#pers. comm. Felipe Ramirez (10/16/2018), InnovaSea (11/5/2018); pers. comm. Tyler Korte (11/5/2018), Blue Ocean Mariculture; pers. comm. Earth Ocean Farms S.A. de C.V. (2018); Salary tabulator (2017 SHCP); Cygnus MIA (2017)
+
+#Costs for 8 AquaPods per year over ten years include: AquaPods ($140,000), Accessories ($420,000), Maintainence ($100,000), Net Cleaning ($80,000), Feed Boat ($40,000), Harvest Boat ($40,000), Eight Pangas ($12,000), Fuel ($25,155), Farm Employees ($112,000), Office Employees ($80,000), Leasing ($150,000), Other/misc ($100,000), HR/Office ($50,000)
+
+#Annual cost for 8 AquaPods (over 10 years) = $1,349,155
+#Annual cost for 1 AquaPod (over 10 years) = $1,349,155/8 = $168,644.38
+
 ```
 
+####Harvest Cost
 
-#####Harvest Cost
+We estimate the cost of harvesting with instantaneous restocking from optimal stocking density at first age for optimal stocking density at first salable age, cost of fry for restocking, and generalized overhead costs.
 
 ```{r c_restock}
 
@@ -491,9 +416,64 @@ ch1 = nstart * 2 + o # Fry Cost (CREMES).
 
 ```
 
-##### Parameter Set-Up
+####Intermediate Results Summary
 
-```{r pars}
+With intermediate results ready for the Faustmann implementation, we run a few graphs out for later reference.
+
+```{r intermediate, echo = FALSE}
+
+# 1. Lengths at Age
+#    Set-Up.
+a = seq(1, 27)
+l = fn_vb(vb_linf, vb_k, a, vb_t0)
+
+#    Graph.
+ggvb =
+ggplot() +
+  geom_path(aes(a, l), colour = "firebrick") +
+  labs(x = "Age (Years)", y = "Length (Centimeters)") +
+  scale_y_continuous(expand = c(0, 0)) +
+  ggtitle("Estimated Lengths at Age") +
+  theme_classic()
+
+print(ggvb)
+
+# 2. Mortalities at Age
+#    Graph.
+ggma =
+ggplot(dat_m_est) +
+  geom_point(aes(a_months, m_months)) +
+  geom_path(aes(a_months, .fitted)) +
+  labs(x = "Age (Months)", y = "Mortality (%)") +
+  scale_y_continuous(expand = c(0, 0)) +
+  ggtitle("Estimated Mortalities at Age") +
+  theme_classic()
+
+print(ggma)
+
+# 3. Weights at Length
+#    Set-Up
+l = seq(0, 200, by = 10)
+w = fn_lw(wl_a, l, wl_b)
+
+#    Graph
+gglw =
+ggplot() +
+  geom_path(aes(l, w), colour = "firebrick") +
+  labs(x = "Length (Centimeters)", y = "Weight (Kilograms)") +
+  scale_y_continuous(expand = c(0, 0)) +
+  ggtitle("Estimated Weights at Length") +
+  theme_classic()
+
+print(gglw)
+
+```
+
+####Parameter Set-Up
+
+With intermediate results ready to plug into the Faustmann model, everything goes into a vector for model runs and a table for handy external reference.
+
+```{r pars, eval = FALSE, include = FALSE}
 
 # Define parameters for each low-level function in a high-level function of multiple harvests over time.
 var = c("start", 
@@ -588,9 +568,9 @@ tab = data.frame(num, fun, var, par00, par10, par01, par11)
 
 ```
 
-##### Single-Run Function
+####Single-Run Function
 
-```{r fun}
+```{r fun, eval = FALSE, include = FALSE}
 # Define a function for dynamic harvests over time.
 aq = function(par){t = as.numeric(vector(length = par[2]))  # First, initialize blank vectors for each variable.
                    a0 = as.numeric(vector(length = par[2]))
@@ -730,9 +710,9 @@ write.csv(output2, "output2.csv")
 
 ```
 
-##### Run 11 + Profit
+####Run 11 + Profit
 
-```{r run11}
+```{r run11, eval = FALSE, include = FALSE}
 
 # Run the dynamic harvest demo from parameters.
 output = aq(par11)
@@ -833,9 +813,9 @@ ggplot(tbl_pi, aes(t, pi_sum)) +
 
 ```
 
-##### Presentation Figures
+####Presentation Figures
 
-```{r run00_costs_presentation}
+```{r run00_costs_presentation, eval = FALSE, include = FALSE}
 
 # Run the dynamic harvest demo from parameters.
 output = aq(par00)
@@ -853,7 +833,9 @@ tibble_rc = output %>%
   mutate(val = val * 0.000001)
 
 # Plot cumulative revenues and costs through harvest cycles.
-cost = ggplot(tibble_rc, aes(t, val)) +
+
+## Presentation Graph
+cost_present = ggplot(tibble_rc, aes(t, val)) +
       geom_line(size = 3, color = "#1F4E79") +
       annotate("text", x = 8.5, y = 1.15, label = "Costs", size = 9, family = "Century Gothic") +
       scale_x_continuous(limits = c(1, 10), breaks = c(1, 2, 10), expand = c(0, 0.125)) +
@@ -861,9 +843,9 @@ cost = ggplot(tibble_rc, aes(t, val)) +
       theme_classic() +
       #ggtitle("Costs for One Cage") +
       labs( x = "Years", y = "Millions USD") +
-      btheme
+      btheme_present
 
-ggsave("cagecost_20190201.png",
+ggsave("cagecost_20190201_present.png",
        width = 720, 
        height = 490, 
        dpi = 300, 
@@ -871,9 +853,31 @@ ggsave("cagecost_20190201.png",
        limitsize = FALSE, 
        bg = "transparent")
 
+## Paper Graph 
+cost_paper = ggplot(tibble_rc, aes(t, val)) +
+      geom_line(size = 2, color = "black") +
+      annotate("text", x = 8.5, y = 1.15, label = "Costs", size = 6, family = "Century Gothic") +
+      scale_x_continuous(limits = c(1, 10), breaks = c(1, 2, 10), expand = c(0, 0.125)) +
+      scale_y_continuous(limits = c(0, 3.000000), labels = scales::comma, expand = c(0, 0)) +
+      theme_classic() +
+      #ggtitle("Costs for One Cage") +
+      labs( x = "Years", y = "Millions USD") +
+      btheme_paper
+
+ggsave("cagecost_20190201_paper.png",
+       width = 5, 
+       height = 3,
+       units = c("in"),
+       dpi = 300, 
+       device = "png", 
+       limitsize = FALSE, 
+       bg = "transparent")
+
+
+
 ```
 
-```{r growthrates}
+```{r growthrates, eval = FALSE, include = FALSE}
 
 fn_vb = function(linf, k, t, t_0){l = linf * ( 1 - exp( - k * ( t - t_0)))}
 
@@ -897,7 +901,9 @@ w_fast = fn_lw(wl_a, fn_vb(vb_linf, vb_k_fast, a, vb_t0), wl_b)
 
 weights = data.frame(a, w_slow, w_fast)
 
-w_plot = ggplot(weights) +
+## Presentation Graph
+
+w_plot_present = ggplot(weights) +
       geom_line(aes(a, w_slow), size = 3, color = "#1F4E79") +
       geom_line(aes(a, w_fast), size = 3, color = "#F4B183") +
       annotate("text", x = 23, y = 105, label = "Wild", size = 9, family = "Century Gothic") +
@@ -906,9 +912,9 @@ w_plot = ggplot(weights) +
       scale_x_continuous(limits = c(0, 27), breaks = c(0, 10, 20, 27), expand = c(0, 0.125)) +
       scale_y_continuous(limits = c(0, 150), labels = scales::comma, expand = c(0, 0)) +
       theme_classic() +
-      btheme
+      btheme_present
 
-ggsave("weights_20190201.png",
+ggsave("weights_20190201_present.png",
        width = 720, 
        height = 490, 
        dpi = 300, 
@@ -916,11 +922,33 @@ ggsave("weights_20190201.png",
        limitsize = FALSE, 
        bg = "transparent")
 
+
+## Paper Graph 
+w_plot_paper = ggplot(weights) +
+      geom_line(aes(a, w_slow), size = 2, color = "black") +
+      geom_line(aes(a, w_fast), size = 2, color = "grey") +
+      annotate("text", x = 23, y = 105, label = "Wild", size = 3, family = "Century Gothic") +
+      annotate("text", x = 23, y = 128, label = "Aquaculture", size = 3, family = "Century Gothic") +
+      labs(x = "Years", y = "Kilograms") +
+      scale_x_continuous(limits = c(0, 27), breaks = c(0, 10, 20, 27), expand = c(0, 0.125)) +
+      scale_y_continuous(limits = c(0, 150), labels = scales::comma, expand = c(0, 0)) +
+      theme_classic() +
+      btheme_paper
+
+ggsave("weights_20190201_paper.png",
+       width = 5, 
+       height = 3,
+       units = c("in"),
+       dpi = 300, 
+       device = "png", 
+       limitsize = FALSE, 
+       bg = "transparent")
+
 write.csv(weights,"weights.csv")
 
 ```
 
-```{r meatprofit}
+```{r meatprofit, eval = FALSE, include = FALSE}
 
 # Run the dynamic harvest demo from parameters.
 output = aq(par10)
@@ -937,7 +965,9 @@ tibble_rc$val[1] = NA
 
 
 # Plot cumulative revenues and costs through harvest cycles.
-meat = ggplot(tibble_rc, aes(t, val, color = var)) +
+
+##Presentation Graph
+meat_present = ggplot(tibble_rc, aes(t, val, color = var)) +
       geom_segment(aes(x = 3, xend = 3, y = 0, yend = Inf), linetype = "dashed") +
       geom_path(size = 3) +
       annotate("text", x = 8.5, y = 1.15, label = "Costs", size = 9, family = "Century Gothic") +
@@ -946,10 +976,10 @@ meat = ggplot(tibble_rc, aes(t, val, color = var)) +
       labs(x = "Years", y = " Millions USD", color = "") +
       scale_x_continuous(limits = c(1, 10), breaks = c(1, 2, 3, 10),expand = c(0, 0.125)) +
       scale_y_continuous(limits = c(0, 3.000000), labels = scales::comma, expand = c(0, 0)) +
-      btheme +
+      btheme_present +
       theme(legend.position = "none")
 
-ggsave("meat_20190201.png", 
+ggsave("meat_20190201_present.png", 
        width = 720, 
        height = 490, 
        dpi = 300, 
@@ -957,10 +987,33 @@ ggsave("meat_20190201.png",
        limitsize = FALSE, 
        bg = "transparent")
 
+## Paper Graph
+
+meat_paper = ggplot(tibble_rc, aes(t, val, color = var)) +
+      geom_segment(aes(x = 3, xend = 3, y = 0, yend = Inf), linetype = "dashed") +
+      geom_path(size = 2) +
+      annotate("text", x = 8.5, y = 1.15, label = "Costs", size = 4, family = "Century Gothic") +
+      annotate("text", x = 9, y = 2.500000, label = "Revenues", size = 4, family = "Century Gothic") +
+      scale_color_manual(values = c("black", "grey")) +
+      labs(x = "Years", y = " Millions USD", color = "") +
+      scale_x_continuous(limits = c(1, 10), breaks = c(1, 2, 3, 10),expand = c(0, 0.125)) +
+      scale_y_continuous(limits = c(0, 3.000000), labels = scales::comma, expand = c(0, 0)) +
+      btheme_paper +
+      theme(legend.position = "none")
+
+ggsave("meat_20190201_paper.png",
+       width = 5, 
+       height = 3,
+       units = c("in"),
+       dpi = 300, 
+       device = "png", 
+       limitsize = FALSE, 
+       bg = "transparent")
+
 
 ```
 
-```{r allprofit}
+```{r allprofit, eval = FALSE, include = FALSE}
 
 # Run the dynamic harvest demo from parameters.
 output = aq(par01)
@@ -975,7 +1028,10 @@ tibble_rc = output %>%
 tibble_rc$val[1] = NA
 
 # Plot cumulative revenues and costs through harvest cycles.
-mbpi = ggplot(tibble_rc, aes(t, val, color = var)) +
+
+##Presentation Graph 
+
+mbpi_present = ggplot(tibble_rc, aes(t, val, color = var)) +
       geom_path(size = 3) +
       annotate("text", x = 8.5, y = 3, label = "Costs", size = 9, family = "Century Gothic") +
       annotate("text", x = 9, y = 31, label = "Revenues", size = 9, family = "Century Gothic") +
@@ -984,10 +1040,10 @@ mbpi = ggplot(tibble_rc, aes(t, val, color = var)) +
       scale_x_continuous(expand = c(0, 0.125), limits = c(1, 10), breaks = c(1, 2, 10)) +
       scale_y_continuous(expand = c(0, 0), limits = c(0, 35)) +
       theme_classic() +
-      btheme +
+      btheme_present +
       theme(legend.position = "none")
 
-ggsave("mbpi_20190201.png", 
+ggsave("mbpi_20190201_present.png", 
        width = 720, 
        height = 490, 
        dpi = 300, 
@@ -995,10 +1051,33 @@ ggsave("mbpi_20190201.png",
        limitsize = FALSE, 
        bg = "transparent")
 
+## Paper Graph
+
+mbpi_paper = ggplot(tibble_rc, aes(t, val, color = var)) +
+      geom_path(size = 2) +
+      annotate("text", x = 8.5, y = 3, label = "Costs", size = 4, family = "Century Gothic") +
+      annotate("text", x = 9, y = 31, label = "Revenues", size = 4, family = "Century Gothic") +
+      scale_color_manual(values = c("black", "grey")) +
+      labs(x = "Years", y = "Millions USD", color = "") +
+      scale_x_continuous(expand = c(0, 0.125), limits = c(1, 10), breaks = c(1, 2, 10)) +
+      scale_y_continuous(expand = c(0, 0), limits = c(0, 35)) +
+      theme_classic() +
+      btheme_paper +
+      theme(legend.position = "none")
+
+ggsave("mbpi_20190201_paper.png",
+       width = 5, 
+       height = 3,
+       units = c("in"),
+       dpi = 300, 
+       device = "png", 
+       limitsize = FALSE, 
+       bg = "transparent")
+
 
 ```
 
-```{r slapdash}
+```{r slapdash, eval = FALSE, include = FALSE}
 
 q = seq(0, 20)
 p = 83 - 5.28 * q + 39.48 ^ 0.525
@@ -1009,7 +1088,9 @@ ptl = rep(0, 21)
 
 slapdat = data.frame(q, p, phh, phl, pth, ptl)
 
-slapdash =
+## Presentation Graph
+
+slapdash_present =
 ggplot(data = slapdat) +
   geom_line(aes(q, p), color = "#1F4E79", size = 3) +
   labs(x = "Tonnes of Buche", y = "USD / Gram of Buche") +
@@ -1017,10 +1098,10 @@ ggplot(data = slapdat) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 90)) +
   #ggtitle("Demand for Dry Maw at First Harvest Size") +
   theme_classic() +
-  btheme
+  btheme_present
 
 #widescreen
-ggsave("slapdash.png", 
+ggsave("slapdash_present.png", 
        width = 720, 
        height = 490,   
        dpi = 300, 
@@ -1028,9 +1109,30 @@ ggsave("slapdash.png",
        limitsize = FALSE, 
        bg = "transparent")
 
+## Paper Graph
+
+slapdash_paper =
+ggplot(data = slapdat) +
+  geom_line(aes(q, p), color = "black", size = 2) +
+  labs(x = "Tonnes of Buche", y = "USD / Gram of Buche") +
+  scale_x_continuous(expand = c(0, 0.125), breaks = c(0, 5, 10, 15, 17), limits = c(0, 17)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 90)) +
+  #ggtitle("Demand for Dry Maw at First Harvest Size") +
+  theme_classic() +
+  btheme_paper
+
+ggsave("slapdash_paper.png",
+       width = 5, 
+       height = 3,
+       units = c("in"),
+       dpi = 300, 
+       device = "png", 
+       limitsize = FALSE, 
+       bg = "transparent")
+
 ```
 
-```{r run}
+```{r run, eval = FALSE, include = FALSE}
 
 # Run the dynamic harvest demo from parameters.
 output = aq(par11)
@@ -1048,7 +1150,9 @@ tibble_rc$val[5] = NA
 tibble_rc$val[9] = NA
 
 # Plot cumulative revenues and costs through harvest cycles.
-aq11 = ggplot(tibble_rc, aes(t, val, color = var, group = group)) +
+
+## Presentation Graph
+aq11_present = ggplot(tibble_rc, aes(t, val, color = var, group = group)) +
       geom_segment(aes(x = 4, xend = 4, y = 0, yend = Inf), linetype = "dashed") +
       geom_segment(aes(x = 8, xend = 8, y = 0, yend = Inf), linetype = "dashed") +
       geom_line(size = 3) +
@@ -1062,11 +1166,11 @@ aq11 = ggplot(tibble_rc, aes(t, val, color = var, group = group)) +
       #ggtitle("Costs and Revenues for One Cage - Trimming and Harvest") +
       scale_color_manual(values = c("#F4B183", "#1F4E79")) +
       theme_classic() +
-      btheme +
+      btheme_present +
       theme(legend.position = "none")
 
 #widescreen
-ggsave("faust.png", 
+ggsave("faust_present.png", 
        width = 720, 
        height = 490,  
        dpi = 300, 
@@ -1074,14 +1178,44 @@ ggsave("faust.png",
        limitsize = FALSE, 
        bg = "transparent")
 
+## Paper Graph
+
+aq11_paper = ggplot(tibble_rc, aes(t, val, color = var, group = group)) +
+      geom_segment(aes(x = 4, xend = 4, y = 0, yend = Inf), linetype = "dashed") +
+      geom_segment(aes(x = 8, xend = 8, y = 0, yend = Inf), linetype = "dashed") +
+      geom_line(size = 2) +
+      annotate("text", x = 5.35, y = 16.5, label = "800kg Dry Buche", size = 3, family = "Century Gothic") +
+      annotate("text", x = 8.55, y = 16.5, label = "800kg", size = 3, family = "Century Gothic") +
+      annotate("text", x = 10, y = 2.5, label = "C", size = 4, family = "Century Gothic") +
+      annotate("text", x = 10, y = 10.5, label = "R", size = 4, family = "Century Gothic") +
+      labs(x = "Years", y = "Millions USD", color = "") +
+      scale_x_continuous(expand = c(0, 0.125), limits = c(1, 10), breaks = c(1, 2, 4, 8, 10)) +
+      scale_y_continuous(expand = c(0, 0), limits = c(0, 17.000000), labels = scales::comma) +
+      #ggtitle("Costs and Revenues for One Cage - Trimming and Harvest") +
+      scale_color_manual(values = c("black", "grey")) +
+      theme_classic() +
+      btheme_paper +
+      theme(legend.position = "none")
+
+ggsave("faust_paper.png",
+       width = 5, 
+       height = 3,
+       units = c("in"),
+       dpi = 300, 
+       device = "png", 
+       limitsize = FALSE, 
+       bg = "transparent")
+
 ```
 
-```{r garrett's funky graph time}
+```{r garrettfunkygraphtime, eval = FALSE, include = FALSE}
 
 library(readr)
 meatrev <- read_csv("~/GitHub/tma/meatrev.csv")
 
-ggplot(meatrev, aes(x = t))+
+## Presentation graph
+
+meatrev_present = ggplot(meatrev, aes(x = t))+
   geom_line(aes(y = tr), colour="#F4B183", size = 3) +
   geom_line(aes(y = c), colour="#1F4E79", size = 3) +
   geom_segment(aes(x = 2, xend = 2, y = 0, yend = Inf), linetype = "dashed") +
@@ -1089,15 +1223,35 @@ ggplot(meatrev, aes(x = t))+
   scale_x_continuous(expand = c(0, 0.125), limits = c(1, 10), breaks = c(2, 4, 6, 8, 10)) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 3), labels = scales::comma) +
   theme(legend.position = "none") +
-  btheme
+  btheme_present
 
 
-#widescreen
-ggsave("meatrev.png", 
+ggsave("meatrev_present.png", 
        width = 720, 
        height = 490,  
        dpi = 300, 
        device = png, 
+       limitsize = FALSE, 
+       bg = "transparent")
+
+## Paper Graph
+
+meatrev_paper = ggplot(meatrev, aes(x = t))+
+  geom_line(aes(y = tr), colour="black", size = 2) +
+  geom_line(aes(y = c), colour="grey", size = 2) +
+  geom_segment(aes(x = 2, xend = 2, y = 0, yend = Inf), linetype = "dashed") +
+  labs(x = "Years", y = "Millions USD", color = "") +
+  scale_x_continuous(expand = c(0, 0.125), limits = c(1, 10), breaks = c(2, 4, 6, 8, 10)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 3), labels = scales::comma) +
+  theme(legend.position = "none") +
+  btheme_paper
+
+ggsave("meatrev_paper.png",
+       width = 5, 
+       height = 3,
+       units = c("in"),
+       dpi = 300, 
+       device = "png", 
        limitsize = FALSE, 
        bg = "transparent")
 

@@ -4,15 +4,7 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
-##### Packages
-
-Options for installation and updates are hashed out. Packages are checked out in a batch through lapply().
-
-gg3d - a package for graphics in 3 dimensions - requires installation from Github through devtools.
-
-If you're interested in a better option for package handling, learning packrat would be neat, but hasn't paid off so far.
-
-```{r pkg_ins, echo = TRUE, warning = FALSE, message = FALSE}
+```{r pkg_ins, include= FALSE, warning = FALSE, message = FALSE}
 
 rm(list=ls())
 
@@ -40,106 +32,31 @@ pkg <- c("readr",
 #update.packages(pkg, verbose = FALSE, quiet = TRUE)
 
 # Check out packages.
-lapply(pkg, library, character.only = TRUE)
+invisible(lapply(pkg, library, character.only = TRUE))
 
 #library(gg3D)
 
 ```
 
-####Objective: Step through optimal aggregate harvest in an open access fishery.
-1. Build a toy model for tests and demos.
-2. Replicate INAPESCA's population model. 
-3. Adapt methods to a 10-year forecast.
-4. Add price-sensitive effort under open access.
-5. Parameterize the model over historic recruitment, stock, and catch data.
-
-
-##### 1. Toy Model
-
-```{r age_struct_toy, eval = FALSE}
-
-# Build a matrix to fill.
-# Matrix of numbers at age by year.
-mat_a = matrix(nrow = 10, ncol = 5)
-
-# Vector for initial numbers at age.
-v_init = seq(5, 1)
-
-# Vectors for proportional mortalities by age. NB: Survival, not mortality.
-v_mort_first = 0.5
-v_mort_rest = c(0.85, 0.875, 0.90, 1)
-
-# Vector for proportional fecundities at age. Each fecund fish returns two fish. 
-v_fec_rest = rep(0.25, 4)
-
-# Plug initial numbers into the matrix.
-mat_a[1,] = v_init
-
-# Run one-shot test.
-mat_a[2, 2:5] = mat_a[1, 1:4] * v_mort_rest
-mat_a[2, 1] = sum(mat_a[1, 2:5] * v_fec_rest * 3)
-
-# Set up first test.
-fun_test = function(nrow, ncol){mat_a = matrix(nrow = nrow, ncol = ncol)
-                                v_init = seq(5, 1)
-                                v_mort_first = 0.5
-                                v_mort_rest = c(0.85, 0.875, 0.90, 1)
-                                v_fec_rest = rep(0.25, 4)
-                                mat_a[1,] = v_init
-                                for(i in 2:nrow){mat_a[i, 2:5] = mat_a[i - 1, 1:4] * v_mort_rest
-                                                 mat_a[i, 1] = sum(mat_a[i - 1, 2:5] * v_fec_rest * 3)/(1 + mat_a[i - 1, 1] / 250)}
-                                  
-                                return(mat_a)}
-
-# Run first test.
-uh = fun_test(50, 5)
-
-# Reshape data for easier plotting.
-duh = data.frame(uh)
-
-mut = mutate(duh, t = seq(0, 49))
-
-melt = reshape2::melt(mut, id.vars = "t")
-
-# Plot in two dimensions.
-toy_plot = 
-ggplot(melt, aes(t, value, color = variable)) +
-  geom_line()
-
-print(toy_plot)
-
-# Plot in three dimensions. WHY IS THIS SO BROKEN
-#toy_plot3 = 
-#ggplot(melt, aes(x = variable, z = t, y = value, color = variable)) +
-#  ggtitle("Toy Stock") +
-#  theme_void() + 
-#  theme(legend.position = "none") +
-#  axes_3D() +
-#  stat_3D(geom = "point", phi = 90, theta = 270) +
-#  scale_color_brewer(palette = "RdBu")
-
-```
-
-##### 1. Totoaba Model
+###Objective: Step through optimal aggregate harvest in an open access fishery.
+1. Replicate INAPESCA's population model. 
+2. Adapt methods to a 10-year forecast.
+3. Add price-sensitive effort under open access.
+4. Parameterize the model over historic recruitment, stock, and catch data.
 
  * Each component requires specification of a function from available data and existing models.
   + Right now, each component is specified as a vector, which is convenient but not adequate for what we're doing.
   + Turning everything into functions, or keeping things as functions instead of vectors, is the next step for more complex loops.
 
-* Build a matrix of numbers at age by year.
+####1. Population Model
 
-```{r age_struct_tma_mat}
-
-# Matrix of numbers at age by year.
-mat_a = matrix(nrow = 50, ncol = 27)
-
-```
-
+#####a. Initial Numbers at Age
 * Build an initial age structure - numbers at age - for the population, using INAPESCA's lower estimate for 2017 biomass and True's function for a stable age structure.
-+ Consider testing True's function against a longer simulation.
-+ PUT YOUR LATEX FUNCTIONS FOR TRUE'S FUNCTION IN HERE
+ + Structure from True (2018).
+ 
+$N_a = 121.99 * 10^{-0.214a}$
 
-```{r age_struct_tma_ninit}
+```{r ninit}
 
 # Vector for initial n at a.
 #  Assign initial biomass from INAPESCA estimate.
@@ -169,29 +86,36 @@ afreq = fun_a_n(a)
 wfreq = afreq * w
 #  Weights at age, but useful.
 winit = wfreq * (1 / sum(wfreq)) * biomass_init
-#  Numbers at age to seed the model. That wasn't so hard, right?
+#  Numbers at age to seed the model.
 ninit = winit / w
-plot(ninit)
 
 ```
 
-* Build survival (i.e. 1 - F) at age. It's constant, so it's not really exciting.
-+ PUT THAT LATEX FUNCTION THAT RETURNS A CONSTANT MORTALITY IN HERE
+#####b. Natural Mortalities
+* Build constant survival after natural mortality at age. 
 
-```{r age_struct_tma_natmort}
+Total Mortality at Age:
+$N_a = N_0e^{-M_a}$
 
-# Vector for proportional natural mortalities at age. NB: Survival, not mortality. From INAPESCA (2018) / Cisneros-Mata et al. (1995).
-v_mort = rep(0.78, 27)
+Marginal Mortality at Age:
+$N_a = N_{a-1}e^{-M_a}$
+
+```{r nmort}
+
+# Function for proportional marginal survival at age. From INAPESCA (2018) / Cisneros-Mata et al. (1995).
+fun_a_mort = function(n, m){s = n * exp(-m)}
 
 ```
 
+#####c. Poaching Mortalities
 * Build poaching mortalities at age from INAPESCA data. 
 + Instead of using numbers from 2016 - 2017, sums by age are taken over all years of sampling for a higher *n*.
 + Whether this is the best option is open to debate and guidance from advisors.
-+ The function fit to mortalities-at-age is a Weibull probability density function. Others might work better. This one was chosen from eyeballing and Google.
-+ PUT YOUR LATEX FUNCTIONS IN HERE
++ The function fit to mortalities-at-age is a Weibull probability density function. *Alternative functions were not tested.*
 
-```{r age_struct_tma_fismort}
++ $f(a) = x \frac{\beta}{\eta} (\frac{T - \gamma}{\eta})^{\beta - 1}e^{-(\frac{T - \gamma}{\eta})^{\beta}}$
+
+```{r fishing, echo = FALSE, warning = FALSE}
 # Vector for proportional poaching mortalities at age.
 #  Read in values for size-selective poaching from INAPESCA (2018); n = 1147 from 9 periods, 1963 - 2017.
 v_select_data = 
@@ -200,7 +124,7 @@ v_select_data =
   mutate(age = seq(1, 26)) %>% 
   rename(n = ".")
 
-#  Estimate fit for a Weibull probability density function, because the internet said so. Try weibull.com/hotwire/issue14/relbasics14.htm
+#  Estimate fit for a Weibull probability density function. Try weibull.com/hotwire/issue14/relbasics14.htm
 nls_select = nls(v_select_data$n ~ ifelse(is.na(x * (a / b) * ((v_select_data$age - c) / b) ^ (a - 1) * exp(-((v_select_data$age - c) / b ) ^ a)),
                                           0,
                                           x * (a / b) * ((v_select_data$age - c) / b) ^ (a - 1) * exp(-((v_select_data$age - c) / b ) ^ a)),
@@ -220,9 +144,15 @@ fun_select = function(x, a, b, c, t){n = ifelse(is.na(x * (a / b) * ((t - c) / b
 
 v_select_fit = fun_select(nls_tidy$estimate[1], nls_tidy$estimate[2], nls_tidy$estimate[3], nls_tidy$estimate[4], seq(1, 26))
 
+
+plot_weib =
 ggplot() + 
-  geom_point(aes(seq(1, 26), v_select_fit), color = "Red") + 
-  geom_point(aes(seq(1, 26), v_select_data$n), color = "Green")
+  geom_line(aes(seq(1, 26), v_select_fit), color = "Firebrick4") + 
+  geom_point(aes(seq(1, 26), v_select_data$n)) +
+  labs(x = "Age", y = "Catch") +
+  theme_classic()
+
+print(plot_weib)
 
 #  Consider fixing the upper tail. Those residuals probably matter.
 
@@ -233,36 +163,52 @@ simple_fun_select = function(t){n =
                                 nls_tidy$estimate[1] * (nls_tidy$estimate[2] / nls_tidy$estimate[3]) * ((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3]) ^ (nls_tidy$estimate[2] - 1) * exp(-((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3] ) ^ nls_tidy$estimate[2]))
                                 return(n)}
 
-#  Integrate over ages of interest. Those should probably be a universal parameter at this point. Consider fixing.
-int_select = integrate(simple_fun_select, lower = 0, upper = 29)
+#  Integrate over ages of interest.
+int_select = integrate(simple_fun_select, lower = 0, upper = 27)
 
 #  Transform fitted values for poaching selectivity into a probability distribution function using the integral of the unidimensional function.
-v_select_pdf = fun_select(nls_tidy$estimate[1], nls_tidy$estimate[2], nls_tidy$estimate[3], nls_tidy$estimate[4], seq(0, 29)) * 1 / int_select$value
+fun_poach = function(t){n = ifelse(is.na((nls_tidy$estimate[1] / int_select$value) * (nls_tidy$estimate[2] / nls_tidy$estimate[3]) * ((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3]) ^ (nls_tidy$estimate[2] - 1) * exp(-((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3] ) ^ nls_tidy$estimate[2])), 
+                                    0, 
+                                    (nls_tidy$estimate[1] / int_select$value) * (nls_tidy$estimate[2] / nls_tidy$estimate[3]) * ((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3]) ^ (nls_tidy$estimate[2] - 1) * exp(-((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3] ) ^ nls_tidy$estimate[2]))}
 
 #  Transform 2017 catch into 2017 catch-at-age in weight, then transform that sucker into catch-at-age in numbers, then make it proportions again.
 #  Make this comment better.
-catch = 1400000 # kilograms from tonnes. INAPESCA (2018).
-v_select_n = catch * v_select_pdf / w # Check your conversion! You did this in the middle of the night, check it!
-v_select_use = v_select_n/ninit # Diagnostic plot indicates you should really, really fix the residuals on the selectivity estimation.
+#catch = 1400000 # kilograms from tonnes. INAPESCA (2018).
+#v_select_n = catch * v_select_pdf / w # Check your conversion! You did this in the middle of the night, check it!
+#v_select_use = v_select_n/ninit # Diagnostic plot indicates you should really, really fix the residuals on the selectivity estimation.
 
 ```
 
+Variable   | Definition                          | Value
+---------- | ----------------------------------- | ---------------------------
+*f*        | Poaching Mortality                  |
+*a*        | Age                                 |
+*x*        | Scale Parameter (1)                 | `r nls_tidy$estimate[1]`
+$\beta$    | Weibull Slope (Shape Parameter)     | `r nls_tidy$estimate[2]`
+$\eta$     | Scale Parameter (2)                 | `r nls_tidy$estimate[3]`
+$\gamma$   | Location Parameter                  | `r nls_tidy$estimate[4]`
+
+#####d. Bycatch Mortalities
 * Build bycatch mortalities at age from INAPESCA data.
 + These are proportions at age, but since INAPESCA's data is a narrow spread around one year of age, it's easiest to just make bycatch a proportion of juveniles at one age.
-+ This needs fixing if we increase resolution to months.
++ Since this is a constant value, it's not stored in a function.
 
-```{r age_struct_tma_bycmort}
+```{r bycatch}
 
 # Value for proportional bycatch mortalities at age.
-bymort_init = 80000 # INAPESCA (2018) - estimated for 2011 - 2017 by some sort of credible method, probably.
-bymort = 1 - bymort_init / ninit[2] # Instead of distributing bycatch mortalities, we concentrate them on one age (1) for lack of length-at-age resolution.
+bymort = 1 - 80000 / ninit[2] # Instead of distributing bycatch mortalities, we concentrate them on one age (1) for lack of length-at-age resolution. 
+                              # INAPESCA (2018) - estimated for 2011 - 2017.
 
 ```
 
-* Build proportional fecundities at age from INAPESCA estimates of maturation and egg production by weight.
-+ PUT YOUR LATEX FUNCTIONS IN HERE
+#####e. Reproduction
+* Build reproduction afrom INAPESCA estimates of maturation and egg production by weight.
 
-```{r age_struct_tma_fec}
+Maturation:
+$
+
+
+```{r fecundities}
 
 # Vector for proportional fecundities at age. From INAPESCA (2018) / Valenzuela-Quiñonez (2014).
 #  Turn lengths into mm.
@@ -288,9 +234,12 @@ v_eggs = v_eggs_w * v_fec * v_eggs_surv
 
 ```
 
+
+#####f. Iteration
+
 * Model w/ vectors, not functions.
 
-```{r age_struct_tma_ENTER_THE_MATRIX}
+```{r hoof, eval = FALSE, include = FALSE}
 # Plug initial numbers into the matrix.
 mat_a[1,] = ninit
 
@@ -306,9 +255,10 @@ fun_test = function(nrow, ncol, ninit, v_mort, bymort, v_select_use, v_eggs, k, 
 
 ```
 
+#####g. Model Runs
 * Run your runs.
 
-```{r age_struct_tma_run}
+```{r age_struct_tma_run, eval = FALSE, include = FALSE}
 
 # Run first test.
 uh = fun_test(10, 27, ninit, v_mort, bymort, v_select_use, v_eggs, 50000, w)
@@ -319,9 +269,10 @@ wvh = sweep(vh, MARGIN = 2, w, '*')
 
 ```
 
+#####h. Plots
 * Plot your runs.
 
-```{r age_struct_tma_ploots}
+```{r age_struct_tma_ploots, eval = FALSE, include = FALSE}
 
 # Using weights! Weights, not numbers!
 # Reshape for a basic plot.
@@ -424,7 +375,7 @@ ggsave("fishier.png",
 
 ```
 
-```{r otherploots}
+```{r otherploots, eval = FALSE, include = FALSE}
 melt$variable = str_remove(melt$variable, "X")
 melt$variable = as.numeric(melt$variable)
 
