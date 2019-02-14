@@ -66,7 +66,7 @@ biomass_init = 32399000 # median biomass estimate from INAPESCA (2018) in kilogr
 #  Assign functional form for frequencies at age from True (2018). See notes on symposium presentation. Check whether curve describes numbers at age.
 #fun_a_n = function(a){121.99 * 10 ^ (-0.214 * a)}
 # Alternative distribution for tests.
-fun_a_n = function(a){121.99 * 10 ^ (-0.09 * a)}
+fun_a_n = function(a){121.99 * 10 ^ (-0.09 * a)} # Number's made-up for fun and plausibility tests.
 
 #  Convert numbers at age to sums of weights at age to work from total biomass back to numbers at age.
 fun_a_l = function(a, linf, k, t0){l = linf * (1 - exp(-k * (a - t0)))} # INAPESCA (2018): 200, 0.155, -0.65. See notes for alternatives.
@@ -105,7 +105,7 @@ $N_a = N_{a-1}e^{-M_a}$
 # Function for proportional marginal survival at age. From INAPESCA (2018) / Cisneros-Mata et al. (1995).
 fun_a_mort = function(n, m){s = n * exp(-m)}
 
-m = 0.26
+m = 0.26 # Also from INAPESCA (2018) / Cisneros-Mata et al. (1995).
 
 ```
 
