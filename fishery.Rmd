@@ -51,7 +51,7 @@ invisible(lapply(pkg, library, character.only = TRUE))
 ####1. Population Model
 
 #####a. Initial Numbers at Age
-* Build an initial age structure - numbers at age - for the population, using INAPESCA's lower estimate for 2017 biomass and True's function for a stable age structure.
+* Build an initial age structure - numbers at age - from using INAPESCA's median biomass estimate for 2017 and True's function for a stable age structure.
  + Structure from True (2018).
  
 $N_a = 121.99 * 10^{-0.214a}$
@@ -74,7 +74,7 @@ fun_l_w = function(a, l, b){w = a * l ^ b} # INAPESCA (2018) / Anda-Montañez et
 
 # Calculations:
 #  Vector of ages.
-a = seq(0, 26)
+a = seq(1, 27)
 #  Vector of lengths.
 l = fun_a_l(a, 200, 0.155, -0.65)
 #  Vector of weights.
@@ -104,6 +104,8 @@ $N_a = N_{a-1}e^{-M_a}$
 
 # Function for proportional marginal survival at age. From INAPESCA (2018) / Cisneros-Mata et al. (1995).
 fun_a_mort = function(n, m){s = n * exp(-m)}
+
+m = 0.26
 
 ```
 
@@ -144,18 +146,6 @@ fun_select = function(x, a, b, c, t){n = ifelse(is.na(x * (a / b) * ((t - c) / b
 
 v_select_fit = fun_select(nls_tidy$estimate[1], nls_tidy$estimate[2], nls_tidy$estimate[3], nls_tidy$estimate[4], seq(1, 26))
 
-
-plot_weib =
-ggplot() + 
-  geom_line(aes(seq(1, 26), v_select_fit), color = "Firebrick4") + 
-  geom_point(aes(seq(1, 26), v_select_data$n)) +
-  labs(x = "Age", y = "Catch") +
-  theme_classic()
-
-print(plot_weib)
-
-#  Consider fixing the upper tail. Those residuals probably matter.
-
 #  Use parameters to restate the function on a single dimension (age) for integration.
 simple_fun_select = function(t){n = 
                                 ifelse(is.na(nls_tidy$estimate[1] * (nls_tidy$estimate[2] / nls_tidy$estimate[3]) * ((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3]) ^ (nls_tidy$estimate[2] - 1) * exp(-((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3] ) ^ nls_tidy$estimate[2])),
@@ -170,6 +160,17 @@ int_select = integrate(simple_fun_select, lower = 0, upper = 27)
 fun_poach = function(t){n = ifelse(is.na((nls_tidy$estimate[1] / int_select$value) * (nls_tidy$estimate[2] / nls_tidy$estimate[3]) * ((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3]) ^ (nls_tidy$estimate[2] - 1) * exp(-((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3] ) ^ nls_tidy$estimate[2])), 
                                     0, 
                                     (nls_tidy$estimate[1] / int_select$value) * (nls_tidy$estimate[2] / nls_tidy$estimate[3]) * ((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3]) ^ (nls_tidy$estimate[2] - 1) * exp(-((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3] ) ^ nls_tidy$estimate[2]))}
+
+plot_weib =
+ggplot() + 
+  geom_line(aes(seq(1, 26, by = 0.01), simple_fun_select(seq(1, 26, by = 0.01))), color = "Firebrick4") + 
+  geom_point(aes(seq(1, 26), v_select_data$n)) +
+  labs(x = "Age", y = "Catch") +
+  theme_classic()
+
+print(plot_weib)
+
+#  Consider fixing the upper tail. Those residuals probably matter.
 
 #  Transform 2017 catch into 2017 catch-at-age in weight, then transform that sucker into catch-at-age in numbers, then make it proportions again.
 #  Make this comment better.
@@ -196,62 +197,218 @@ $\gamma$   | Location Parameter                  | `r nls_tidy$estimate[4]`
 ```{r bycatch}
 
 # Value for proportional bycatch mortalities at age.
-bymort = 1 - 80000 / ninit[2] # Instead of distributing bycatch mortalities, we concentrate them on one age (1) for lack of length-at-age resolution. 
+bymort = 1 - 80000 / ninit[2] # Instead of distributing bycatch mortalities, we concentrate them on one age (2) for lack of length-at-age resolution. 
                               # INAPESCA (2018) - estimated for 2011 - 2017.
 
 ```
 
 #####e. Reproduction
-* Build reproduction afrom INAPESCA estimates of maturation and egg production by weight.
+* Build reproduction from INAPESCA estimates of maturation and egg production by weight.
 
-Maturation:
-$
+Maturation at Length | INAPESCA (2018)
 
+$r(l) = (1+e^{\alpha(l-\beta))^{-1}}$ 
 
-```{r fecundities}
+Variable   | Definition                          | Value
+---------- | ----------------------------------- | ---------------------------
+*r*        | Proportion of Mature Females        |
+*l*        | Length (millimeters)                |
+$\alpha$   | Parameter                           | 0.0099
+$\beta$    | Length for $r = 50$                 | 1333.31
 
-# Vector for proportional fecundities at age. From INAPESCA (2018) / Valenzuela-Quiñonez (2014).
-#  Turn lengths into mm.
-lmm = l * 10
-#  Set function.
-fun_fec = function(lmm){1 / (1 + exp(-0.0099 * (lmm - 1333.31)))}
-#  Transform vector of lengths at age to fecundities.
-v_fec = fun_fec(lmm)
+Egg Production at Weight | INAPESCA (2018), Valenzuela-Quiñonez (2014)
 
-# Vector for production of fecund hembras at age by way of length.
-#  Set function for eggs per kilogram of total weight of mature fish.
-fun_eggs = function(l){221.76 * exp(0.0047 * l)} # Valenzuela-Quiñonez (2014); used with Anda-Montañez et al. (2013) for mean by INAPESCA (2018).
+$e(w) = \alpha e^{\beta w}$ 
 
-#  Get values corresponding to vector of lengths.
-v_eggs_l = fun_eggs(l)
+Variable   | Definition                          | Value
+---------- | ----------------------------------- | ---------------------------
+*e*        | Egg Production                      |
+*a*        | Age                                 |
+*w*        | Weight                              |
+$\alpha$   | Parameter                           | 221.76
+$\beta$    | Parameter                           | 0.0047
 
-#  Get values corresponding to vector of weights - this works out to be egg production at age before accounting for maturation.
-v_eggs_w = v_eggs_l * w
+Survival (Egg-Juvenile) | INAPESCA (2018), CREMES (201?)
 
-# So account for maturation and survival, dummy. Survival from egg to juvenile from INAPESCA (2018). Reference against True (2018).
-v_eggs_surv = 0.3 * 0.9 * 0.95 * 0.1
-v_eggs = v_eggs_w * v_fec * v_eggs_surv
+Stage               | Proportional Survival
+------------------- | ----------------------
+*Viable Eggs*       | 0.70
+*Fertilized Eggs*   | 0.90
+*Hatched Larvae*    | 0.95
+*Successful Larvae* | 0.10 
+
+Total Recruitment | INAPESCA (2018), Shepherd (1982)
+
+$N_{0, t} = \frac{\alpha N_{a, t-1}}{[1 + (N_{a, t-1} / \beta)]^{\delta}}$
+
+Variable   | Definition                          | Value
+---------- | ----------------------------------- | ---------------------------
+$N_{0, t}$ | Recruits                            |
+$N_{a, t}$ | Cohort of Age *a*                   |
+$\alpha$   | Parameter                           | 131.35
+$\beta$    | Parameter                           | 3.07
+$\delta$   | Parameter                           | 1.639951478
+
+```{r recruitment}
+
+fun_mat = function(a, l, a_mat, b_mat){r = 1 / (1 + exp(a_mat * (l * 10 - b_mat)))} # Proportion of mature females.
+  
+fun_egg = function(a, l, w, n, r, a_egg, b_egg){e = n * w * r * a_egg * exp(b_egg * l * 10)} # Egg production.
+  
+fun_sur = function(e, a_sur, b_sur, c_sur, d_sur){s = e * a_sur * b_sur * c_sur * d_sur} # Survival from egg to juvenile.
+
+fun_rec = function(n, a_rec, b_rec, d_rec){n0 = (a_rec * n) / ((1 + n / b_rec) ^ d_rec)} # Total recruitment. Use this one.
 
 ```
 
+#####f0.5. Parameters
+
+With intermediate results ready to plug into the Faustmann model, everything goes into a vector for model runs and a table for handy external reference.
+
+```{r pars, eval = FALSE, include = FALSE}
+
+# Define parameters for each low-level function in a high-level function of multiple harvests over time.
+var = c("rows",
+        "cols",
+        "biom_init",
+        "a_ninit",
+        "b_ninit",
+        "linf",
+        "k,",
+        "t0",
+        "a_lw",
+        "b_lw",
+        "m",
+        "x_f",
+        "b_f",
+        "n_f",
+        "y_f",
+        "bymort",
+        "a_rec",
+        "b_rec",
+        "d_rec")
+
+par = c(10, 
+        27,
+        200,
+        32399000,
+        121.99,
+        -0.09,
+        0.155,
+        -0.65,
+        0.000005,
+        3.0635,
+        0.26,
+        974.4340378,
+        1.745196,
+        3.1966691,
+        3.8386018,
+        0.60,
+        131.35,
+        3.07,
+        1.639951478)
+
+units = c("Years",
+          "Years",
+          "Kilograms",
+          "-",
+          "-",
+          "Centimeters",
+          "Years (Inverse)",
+          "Years",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "%",
+          "-",
+          "-",
+          "-")
+
+fun = c(rep("All", 2),
+        rep("Initial Age Distribution", 3),
+        rep("Von Bertalanffy", 3),
+        rep("Weight-Length", 2),
+        "Natural Mortality",
+        rep("Poaching Selectivity", 4),
+        "Bycatch Mortality",
+        rep("Recruitment", 3))
+
+num = seq(1, length(var))
+
+tab = data.frame(num, fun, var, par)
+
+# Save parameters to working directory.
+#kable(tab, digits = 2) %>%
+#  kable_styling() %>%
+#  save_kable(file = "partab.html", self_contained = T)
+
+```
 
 #####f. Iteration
 
-* Model w/ vectors, not functions.
+* Model w/ loops and functions.
 
 ```{r hoof, eval = FALSE, include = FALSE}
-# Plug initial numbers into the matrix.
-mat_a[1,] = ninit
 
-# Set up first test.
-fun_test = function(nrow, ncol, ninit, v_mort, bymort, v_select_use, v_eggs, k, w){
-                                mat_a = matrix(nrow = nrow, ncol = ncol)
-                                mat_a[1,] = ninit
-                                for(i in 2:nrow){mat_a[i, 3:27] = mat_a[i - 1, 2:26] * v_mort[3:27] * (1 - v_select_use[3:27])
-                                                 mat_a[i, 2] = mat_a[i - 1, 1] * v_mort[2] * bymort * (1 - v_select_use[2])
-                                                 mat_a[i, 1] = sum(mat_a[i - 1, 1:27] * v_eggs) / (1 + sum(mat_a[i - 1, 1:27] * w) / k)} # Note alpha.
-                                  
-                                return(mat_a)}
+# Set up the whole damn thing. Template.
+fi = function(par){counts = matrix(nrow = par[1], ncol = par[2])
+                   e = as.numeric(vector(length = par[1]))
+                   counts[1,] = seq(1, par[2])
+                   e[1] = 5
+                   
+                   for(i in 2:par[1]){
+                     for(j in 2:par[2]){
+                     e[i] = e[i - 1] + 1
+                     counts[i, j] = counts[i - 1, j - 1] + e[i - 1]
+                     }
+                   counts[i, 1] = sum(counts[i - 1, 2:par[2]])
+                   }
+                   
+                   return(counts)
+                   
+                   }
+
+# Set up the whole damn thing, but really this time.
+# NB: This is still far from working - refer to the mock-up above for the basic nested loop structure. That one does work.
+fi = function(par){
+                   # Build objects to fill.
+                   n = matrix(nrow = par[1], ncol = par[2]) # Build a matrix of numbers at age.
+                   m = matrix(nrow = par[1], ncol = par[2]) # Build a matrix of natural mortalities at age.
+                   b = matrix(nrow = par[1], ncol = par[2]) # Build a matrix of bycatch at age.
+                   y = matrix(nrow = par[1], ncol = par[2]) # Build a matrix of catch at age.
+                   r = as.numeric(vector(length = par[1]))  # Build a vector of recruitment at age.
+                   e = as.numeric(vector(length = par[1]))  # Build a vector of effort. This is the variable for optimization in the economic component.
+                   r = as.numeric(vector(length = par[1]))  # Build a vector of total revenues.
+                   c = as.numeric(vector(length = par[1]))  # Build a vector of total costs.
+                   
+                   # Add initial values.
+                   n[1,] = ninit # Age distribution for first year, e.g. 2017.
+                   m[1,]
+                   b[1,] = 1 # Bycatch survival by cohort for first year.
+                   b[1, 2] = n[1, 2] * par[16] # Bycatch survival for the single cohort affected by bycatch for first year.
+                   y[1,] = # Catch by cohort for first year.
+                   r[1] = fun_rec(sum(n[1, 2:par[2]]), par[17], par[18], par[19]) # Recruitment for first year.
+                   e[1] = 5 # Effort for first year.
+                   r[1] = 5 # Revenues for first year.
+                   c[1] = 5 # Costs for first year.
+                   
+                   # Loop through the period of interest.
+                   for(i in 2:par[1]){
+                     for(j in 2:par[2]){
+                     e[i] = e[i - 1] + 1
+                     n[i, j] = counts[i - 1, j - 1] + e[i - 1]
+                     }
+                   n[i, 1] = sum(counts[i - 1, 2:par[2]])
+                   }
+                   
+                   # Get results.
+                   n(counts)
+                   
+                   }
 
 ```
 
