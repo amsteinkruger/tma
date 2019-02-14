@@ -37,9 +37,9 @@ invisible(lapply(pkg, library, character.only = TRUE))
 #library(gg3D)
 ```
 
-```{r btheme_presentable, echo = FALSE}
+```{r btheme_present, echo = FALSE}
 
-btheme =
+btheme_present =
   theme(plot.title = element_text(hjust = 0.5, size = 32, family = "Century Gothic", face = "bold"), 
         rect = element_rect(fill = "transparent"),
         plot.background = element_rect(fill = "transparent", color = NA),
@@ -58,6 +58,29 @@ btheme =
         axis.title.y = element_text(size = 24, family = "Century Gothic", face = "bold"))
 
 ```
+
+```{r btheme_paper, echo = FALSE}
+
+btheme_paper =
+  theme(plot.title = element_text(hjust = 0.5, size = 14, family = "Century Gothic", face = "bold"), 
+        rect = element_rect(fill = "transparent"),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        legend.position = "right",
+        legend.background = element_rect(fill = "transparent"),
+        legend.box.background = element_rect(fill = "transparent"),
+        legend.key = element_rect(fill="transparent", colour=NA),
+        legend.text = element_text(size = 12, family = "Century Gothic"),
+        legend.title = element_text(size = 14, family = "Century Gothic"),
+        panel.background = element_rect(fill = "transparent"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, family = "Century Gothic"),
+        axis.title.x = element_text(size = 10, family = "Century Gothic", face = "bold"),
+        axis.text.y = element_text(size = 8, family = "Century Gothic"),
+        axis.title.y = element_text(size = 10, family = "Century Gothic", face = "bold"))
+
+```
+
 
 ###Objective: Step through optimal rotations for a generic totoaba farm.
 
@@ -810,7 +833,9 @@ tibble_rc = output %>%
   mutate(val = val * 0.000001)
 
 # Plot cumulative revenues and costs through harvest cycles.
-cost = ggplot(tibble_rc, aes(t, val)) +
+
+## Presentation Graph
+cost_present = ggplot(tibble_rc, aes(t, val)) +
       geom_line(size = 3, color = "#1F4E79") +
       annotate("text", x = 8.5, y = 1.15, label = "Costs", size = 9, family = "Century Gothic") +
       scale_x_continuous(limits = c(1, 10), breaks = c(1, 2, 10), expand = c(0, 0.125)) +
@@ -818,15 +843,37 @@ cost = ggplot(tibble_rc, aes(t, val)) +
       theme_classic() +
       #ggtitle("Costs for One Cage") +
       labs( x = "Years", y = "Millions USD") +
-      btheme
+      btheme_present
 
-ggsave("cagecost_20190201.png",
+ggsave("cagecost_20190201_present.png",
        width = 720, 
        height = 490, 
        dpi = 300, 
        device = png, 
        limitsize = FALSE, 
        bg = "transparent")
+
+## Paper Graph 
+cost_paper = ggplot(tibble_rc, aes(t, val)) +
+      geom_line(size = 2, color = "black") +
+      annotate("text", x = 8.5, y = 1.15, label = "Costs", size = 6, family = "Century Gothic") +
+      scale_x_continuous(limits = c(1, 10), breaks = c(1, 2, 10), expand = c(0, 0.125)) +
+      scale_y_continuous(limits = c(0, 3.000000), labels = scales::comma, expand = c(0, 0)) +
+      theme_classic() +
+      #ggtitle("Costs for One Cage") +
+      labs( x = "Years", y = "Millions USD") +
+      btheme_paper
+
+ggsave("cagecost_20190201_paper.png",
+       width = 5, 
+       height = 3,
+       units = c("in"),
+       dpi = 300, 
+       device = "png", 
+       limitsize = FALSE, 
+       bg = "transparent")
+
+
 
 ```
 
@@ -854,7 +901,9 @@ w_fast = fn_lw(wl_a, fn_vb(vb_linf, vb_k_fast, a, vb_t0), wl_b)
 
 weights = data.frame(a, w_slow, w_fast)
 
-w_plot = ggplot(weights) +
+## Presentation Graph
+
+w_plot_present = ggplot(weights) +
       geom_line(aes(a, w_slow), size = 3, color = "#1F4E79") +
       geom_line(aes(a, w_fast), size = 3, color = "#F4B183") +
       annotate("text", x = 23, y = 105, label = "Wild", size = 9, family = "Century Gothic") +
@@ -863,13 +912,35 @@ w_plot = ggplot(weights) +
       scale_x_continuous(limits = c(0, 27), breaks = c(0, 10, 20, 27), expand = c(0, 0.125)) +
       scale_y_continuous(limits = c(0, 150), labels = scales::comma, expand = c(0, 0)) +
       theme_classic() +
-      btheme
+      btheme_present
 
-ggsave("weights_20190201.png",
+ggsave("weights_20190201_present.png",
        width = 720, 
        height = 490, 
        dpi = 300, 
        device = png, 
+       limitsize = FALSE, 
+       bg = "transparent")
+
+
+## Paper Graph 
+w_plot_paper = ggplot(weights) +
+      geom_line(aes(a, w_slow), size = 2, color = "black") +
+      geom_line(aes(a, w_fast), size = 2, color = "grey") +
+      annotate("text", x = 23, y = 105, label = "Wild", size = 3, family = "Century Gothic") +
+      annotate("text", x = 23, y = 128, label = "Aquaculture", size = 3, family = "Century Gothic") +
+      labs(x = "Years", y = "Kilograms") +
+      scale_x_continuous(limits = c(0, 27), breaks = c(0, 10, 20, 27), expand = c(0, 0.125)) +
+      scale_y_continuous(limits = c(0, 150), labels = scales::comma, expand = c(0, 0)) +
+      theme_classic() +
+      btheme_paper
+
+ggsave("weights_20190201_paper.png",
+       width = 5, 
+       height = 3,
+       units = c("in"),
+       dpi = 300, 
+       device = "png", 
        limitsize = FALSE, 
        bg = "transparent")
 
@@ -894,7 +965,9 @@ tibble_rc$val[1] = NA
 
 
 # Plot cumulative revenues and costs through harvest cycles.
-meat = ggplot(tibble_rc, aes(t, val, color = var)) +
+
+##Presentation Graph
+meat_present = ggplot(tibble_rc, aes(t, val, color = var)) +
       geom_segment(aes(x = 3, xend = 3, y = 0, yend = Inf), linetype = "dashed") +
       geom_path(size = 3) +
       annotate("text", x = 8.5, y = 1.15, label = "Costs", size = 9, family = "Century Gothic") +
@@ -903,14 +976,37 @@ meat = ggplot(tibble_rc, aes(t, val, color = var)) +
       labs(x = "Years", y = " Millions USD", color = "") +
       scale_x_continuous(limits = c(1, 10), breaks = c(1, 2, 3, 10),expand = c(0, 0.125)) +
       scale_y_continuous(limits = c(0, 3.000000), labels = scales::comma, expand = c(0, 0)) +
-      btheme +
+      btheme_present +
       theme(legend.position = "none")
 
-ggsave("meat_20190201.png", 
+ggsave("meat_20190201_present.png", 
        width = 720, 
        height = 490, 
        dpi = 300, 
        device = png, 
+       limitsize = FALSE, 
+       bg = "transparent")
+
+## Paper Graph
+
+meat_paper = ggplot(tibble_rc, aes(t, val, color = var)) +
+      geom_segment(aes(x = 3, xend = 3, y = 0, yend = Inf), linetype = "dashed") +
+      geom_path(size = 2) +
+      annotate("text", x = 8.5, y = 1.15, label = "Costs", size = 4, family = "Century Gothic") +
+      annotate("text", x = 9, y = 2.500000, label = "Revenues", size = 4, family = "Century Gothic") +
+      scale_color_manual(values = c("black", "grey")) +
+      labs(x = "Years", y = " Millions USD", color = "") +
+      scale_x_continuous(limits = c(1, 10), breaks = c(1, 2, 3, 10),expand = c(0, 0.125)) +
+      scale_y_continuous(limits = c(0, 3.000000), labels = scales::comma, expand = c(0, 0)) +
+      btheme_paper +
+      theme(legend.position = "none")
+
+ggsave("meat_20190201_paper.png",
+       width = 5, 
+       height = 3,
+       units = c("in"),
+       dpi = 300, 
+       device = "png", 
        limitsize = FALSE, 
        bg = "transparent")
 
@@ -932,7 +1028,10 @@ tibble_rc = output %>%
 tibble_rc$val[1] = NA
 
 # Plot cumulative revenues and costs through harvest cycles.
-mbpi = ggplot(tibble_rc, aes(t, val, color = var)) +
+
+##Presentation Graph 
+
+mbpi_present = ggplot(tibble_rc, aes(t, val, color = var)) +
       geom_path(size = 3) +
       annotate("text", x = 8.5, y = 3, label = "Costs", size = 9, family = "Century Gothic") +
       annotate("text", x = 9, y = 31, label = "Revenues", size = 9, family = "Century Gothic") +
@@ -941,14 +1040,37 @@ mbpi = ggplot(tibble_rc, aes(t, val, color = var)) +
       scale_x_continuous(expand = c(0, 0.125), limits = c(1, 10), breaks = c(1, 2, 10)) +
       scale_y_continuous(expand = c(0, 0), limits = c(0, 35)) +
       theme_classic() +
-      btheme +
+      btheme_present +
       theme(legend.position = "none")
 
-ggsave("mbpi_20190201.png", 
+ggsave("mbpi_20190201_present.png", 
        width = 720, 
        height = 490, 
        dpi = 300, 
        device = png, 
+       limitsize = FALSE, 
+       bg = "transparent")
+
+## Paper Graph
+
+mbpi_paper = ggplot(tibble_rc, aes(t, val, color = var)) +
+      geom_path(size = 2) +
+      annotate("text", x = 8.5, y = 3, label = "Costs", size = 4, family = "Century Gothic") +
+      annotate("text", x = 9, y = 31, label = "Revenues", size = 4, family = "Century Gothic") +
+      scale_color_manual(values = c("black", "grey")) +
+      labs(x = "Years", y = "Millions USD", color = "") +
+      scale_x_continuous(expand = c(0, 0.125), limits = c(1, 10), breaks = c(1, 2, 10)) +
+      scale_y_continuous(expand = c(0, 0), limits = c(0, 35)) +
+      theme_classic() +
+      btheme_paper +
+      theme(legend.position = "none")
+
+ggsave("mbpi_20190201_paper.png",
+       width = 5, 
+       height = 3,
+       units = c("in"),
+       dpi = 300, 
+       device = "png", 
        limitsize = FALSE, 
        bg = "transparent")
 
@@ -966,7 +1088,9 @@ ptl = rep(0, 21)
 
 slapdat = data.frame(q, p, phh, phl, pth, ptl)
 
-slapdash =
+## Presentation Graph
+
+slapdash_present =
 ggplot(data = slapdat) +
   geom_line(aes(q, p), color = "#1F4E79", size = 3) +
   labs(x = "Tonnes of Buche", y = "USD / Gram of Buche") +
@@ -974,14 +1098,35 @@ ggplot(data = slapdat) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 90)) +
   #ggtitle("Demand for Dry Maw at First Harvest Size") +
   theme_classic() +
-  btheme
+  btheme_present
 
 #widescreen
-ggsave("slapdash.png", 
+ggsave("slapdash_present.png", 
        width = 720, 
        height = 490,   
        dpi = 300, 
        device = png, 
+       limitsize = FALSE, 
+       bg = "transparent")
+
+## Paper Graph
+
+slapdash_paper =
+ggplot(data = slapdat) +
+  geom_line(aes(q, p), color = "black", size = 2) +
+  labs(x = "Tonnes of Buche", y = "USD / Gram of Buche") +
+  scale_x_continuous(expand = c(0, 0.125), breaks = c(0, 5, 10, 15, 17), limits = c(0, 17)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 90)) +
+  #ggtitle("Demand for Dry Maw at First Harvest Size") +
+  theme_classic() +
+  btheme_paper
+
+ggsave("slapdash_paper.png",
+       width = 5, 
+       height = 3,
+       units = c("in"),
+       dpi = 300, 
+       device = "png", 
        limitsize = FALSE, 
        bg = "transparent")
 
@@ -1005,7 +1150,9 @@ tibble_rc$val[5] = NA
 tibble_rc$val[9] = NA
 
 # Plot cumulative revenues and costs through harvest cycles.
-aq11 = ggplot(tibble_rc, aes(t, val, color = var, group = group)) +
+
+## Presentation Graph
+aq11_present = ggplot(tibble_rc, aes(t, val, color = var, group = group)) +
       geom_segment(aes(x = 4, xend = 4, y = 0, yend = Inf), linetype = "dashed") +
       geom_segment(aes(x = 8, xend = 8, y = 0, yend = Inf), linetype = "dashed") +
       geom_line(size = 3) +
@@ -1019,15 +1166,43 @@ aq11 = ggplot(tibble_rc, aes(t, val, color = var, group = group)) +
       #ggtitle("Costs and Revenues for One Cage - Trimming and Harvest") +
       scale_color_manual(values = c("#F4B183", "#1F4E79")) +
       theme_classic() +
-      btheme +
+      btheme_present +
       theme(legend.position = "none")
 
 #widescreen
-ggsave("faust.png", 
+ggsave("faust_present.png", 
        width = 720, 
        height = 490,  
        dpi = 300, 
        device = png, 
+       limitsize = FALSE, 
+       bg = "transparent")
+
+## Paper Graph
+
+aq11_paper = ggplot(tibble_rc, aes(t, val, color = var, group = group)) +
+      geom_segment(aes(x = 4, xend = 4, y = 0, yend = Inf), linetype = "dashed") +
+      geom_segment(aes(x = 8, xend = 8, y = 0, yend = Inf), linetype = "dashed") +
+      geom_line(size = 2) +
+      annotate("text", x = 5.35, y = 16.5, label = "800kg Dry Buche", size = 3, family = "Century Gothic") +
+      annotate("text", x = 8.55, y = 16.5, label = "800kg", size = 3, family = "Century Gothic") +
+      annotate("text", x = 10, y = 2.5, label = "C", size = 4, family = "Century Gothic") +
+      annotate("text", x = 10, y = 10.5, label = "R", size = 4, family = "Century Gothic") +
+      labs(x = "Years", y = "Millions USD", color = "") +
+      scale_x_continuous(expand = c(0, 0.125), limits = c(1, 10), breaks = c(1, 2, 4, 8, 10)) +
+      scale_y_continuous(expand = c(0, 0), limits = c(0, 17.000000), labels = scales::comma) +
+      #ggtitle("Costs and Revenues for One Cage - Trimming and Harvest") +
+      scale_color_manual(values = c("black", "grey")) +
+      theme_classic() +
+      btheme_paper +
+      theme(legend.position = "none")
+
+ggsave("faust_paper.png",
+       width = 5, 
+       height = 3,
+       units = c("in"),
+       dpi = 300, 
+       device = "png", 
        limitsize = FALSE, 
        bg = "transparent")
 
@@ -1038,7 +1213,9 @@ ggsave("faust.png",
 library(readr)
 meatrev <- read_csv("~/GitHub/tma/meatrev.csv")
 
-ggplot(meatrev, aes(x = t))+
+## Presentation graph
+
+meatrev_present = ggplot(meatrev, aes(x = t))+
   geom_line(aes(y = tr), colour="#F4B183", size = 3) +
   geom_line(aes(y = c), colour="#1F4E79", size = 3) +
   geom_segment(aes(x = 2, xend = 2, y = 0, yend = Inf), linetype = "dashed") +
@@ -1046,15 +1223,35 @@ ggplot(meatrev, aes(x = t))+
   scale_x_continuous(expand = c(0, 0.125), limits = c(1, 10), breaks = c(2, 4, 6, 8, 10)) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 3), labels = scales::comma) +
   theme(legend.position = "none") +
-  btheme
+  btheme_present
 
 
-#widescreen
-ggsave("meatrev.png", 
+ggsave("meatrev_present.png", 
        width = 720, 
        height = 490,  
        dpi = 300, 
        device = png, 
+       limitsize = FALSE, 
+       bg = "transparent")
+
+## Paper Graph
+
+meatrev_paper = ggplot(meatrev, aes(x = t))+
+  geom_line(aes(y = tr), colour="black", size = 2) +
+  geom_line(aes(y = c), colour="grey", size = 2) +
+  geom_segment(aes(x = 2, xend = 2, y = 0, yend = Inf), linetype = "dashed") +
+  labs(x = "Years", y = "Millions USD", color = "") +
+  scale_x_continuous(expand = c(0, 0.125), limits = c(1, 10), breaks = c(2, 4, 6, 8, 10)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 3), labels = scales::comma) +
+  theme(legend.position = "none") +
+  btheme_paper
+
+ggsave("meatrev_paper.png",
+       width = 5, 
+       height = 3,
+       units = c("in"),
+       dpi = 300, 
+       device = "png", 
        limitsize = FALSE, 
        bg = "transparent")
 
