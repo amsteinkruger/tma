@@ -375,11 +375,11 @@ try_sum =
 ggplot(muh, aes(t, s * 0.001)) +
   geom_segment(aes(x = -Inf, xend = Inf, y = 20, yend = 20), linetype = "dashed") +
   geom_segment(aes(x = -Inf, xend = Inf, y = 12.5, yend = 12.5), linetype = "dashed") +
-  #annotate("text", x = 2019.1, y = 4300, label = "Target Biomass", size = 8, family = "Century Gothic") +
-  #annotate("text", x = 2020, y = 2800, label = "Minimum Viable Biomass", size = 8, family = "Century Gothic") +
+  annotate("text", x = 2019.1, y = 21, label = "Target Biomass", size = 8, family = "Century Gothic") +
+  annotate("text", x = 2020, y = 13.5, label = "Minimum Viable Biomass", size = 8, family = "Century Gothic") +
   geom_line(size = 3, color = "#1F4E79") +
-  #scale_x_continuous(expand = c(0, 0.225), limits = c(2017, 2026), breaks = c(2017, 2026)) +
-  #scale_y_continuous(expand = c(0, 0), limits = c(0, 35)) +
+  scale_x_continuous(expand = c(0, 0.225), limits = c(2017, 2026), breaks = c(2017, 2026)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 40)) +
   #ggtitle("Stock Forecast, 2017 - 2027") +
   labs(x = "Years", y = "Thousands of Tonnes of Biomass") +
   theme_classic() +
@@ -405,10 +405,10 @@ ggplot(huh) +
   geom_ribbon(aes(t, ymin = s.x * 0.001, ymax = s.y * 0.001), fill = "#F4B183", alpha = 0.50) +
   geom_line(aes(t, s.y * 0.001), color = "#F4B183", size = 3) +
   geom_line(aes(t, s.x * 0.001), color = "#1F4E79", size = 3) +
-  #annotate("text", x = 2019.1, y = 4300, label = "Target Biomass", size = 8, family = "Century Gothic") +
-  #annotate("text", x = 2020, y = 2800, label = "Minimum Viable Biomass", size = 8, family = "Century Gothic") +
-  #scale_x_continuous(expand = c(0, 0.225), limits = c(2017, 2026), breaks = c(2017, 2026)) +
-  #scale_y_continuous(expand = c(0, 0), limits = c(0, 50)) +
+  annotate("text", x = 2019.1, y = 21, label = "Target Biomass", size = 8, family = "Century Gothic") +
+  annotate("text", x = 2020, y = 13.5, label = "Minimum Viable Biomass", size = 8, family = "Century Gothic") +
+  scale_x_continuous(expand = c(0, 0.225), limits = c(2017, 2026), breaks = c(2017, 2026)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 40)) +
   #ggtitle("Stock Forecast, 2017 - 2027") +
   labs(x = "Years", y = "Thousands of Tonnes of Biomass") +
   theme_classic() +
