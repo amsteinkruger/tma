@@ -112,6 +112,7 @@ m = 0.26 # Also from INAPESCA (2018) / Cisneros-Mata et al. (1995).
 #####c. Poaching Mortalities
 * Build poaching mortalities at age from INAPESCA data. 
 + Instead of using numbers from 2016 - 2017, sums by age are taken over all years of sampling for a higher *n*.
++ ~~We use numbers for sampled catch at age and numbers at age from 2017.~~
 + Whether this is the best option is open to debate and guidance from advisors.
 + The function fit to mortalities-at-age is a Weibull probability density function. *Alternative functions were not tested.*
 
@@ -121,7 +122,8 @@ m = 0.26 # Also from INAPESCA (2018) / Cisneros-Mata et al. (1995).
 # Vector for proportional poaching mortalities at age.
 #  Read in values for size-selective poaching from INAPESCA (2018); n = 1147 from 9 periods, 1963 - 2017.
 v_select_data = 
-  c(6, 9, 15, 60, 191, 281, 165, 133, 82, 33, 27, 21, 17, 10, 12, 16, 8, 15, 9, 12, 7, 9, 5, 2, 2, 0) %>% 
+  c(6, 9, 15, 60, 191, 281, 165, 133, 82, 33, 27, 21, 17, 10, 12, 16, 8, 15, 9, 12, 7, 9, 5, 2, 2, 0) %>% # All years.
+  #c(0, 0, 0, 0, 7, 11, 7, 13, 8, 10, 8, 10, 11, 4, 8, 9, 2, 8, 3, 8, 1, 3, 2, 2, 2, 0) %>% # 2017
   data.frame() %>% 
   mutate(age = seq(1, 26)) %>% 
   rename(n = ".")
@@ -131,20 +133,12 @@ nls_select = nls(v_select_data$n ~ ifelse(is.na(x * (a / b) * ((v_select_data$ag
                                           0,
                                           x * (a / b) * ((v_select_data$age - c) / b) ^ (a - 1) * exp(-((v_select_data$age - c) / b ) ^ a)),
                  v_select_data, 
-                 start = list(x = 3000, a = 2.5, b = 10, c = -3), 
+                 start = list(x = 30, a = 2.5, b = 10, c = -3), 
                  lower = list(0, 0, 0, -Inf),
                  algorithm = "port")
 
 #  Tibbulate nonlinear estimation.
 nls_tidy = tidy(nls_select)
-
-#  Plot fit against actual values.
-fun_select = function(x, a, b, c, t){n = ifelse(is.na(x * (a / b) * ((t - c) / b) ^ (a - 1) * exp(-((t - c) / b ) ^ a)),
-                                                0,
-                                                x * (a / b) * ((t - c) / b) ^ (a - 1) * exp(-((t - c) / b ) ^ a))
-                                     return(n)}
-
-v_select_fit = fun_select(nls_tidy$estimate[1], nls_tidy$estimate[2], nls_tidy$estimate[3], nls_tidy$estimate[4], seq(1, 26))
 
 #  Use parameters to restate the function on a single dimension (age) for integration.
 simple_fun_select = function(t){n = 
@@ -154,7 +148,7 @@ simple_fun_select = function(t){n =
                                 return(n)}
 
 #  Integrate over ages of interest.
-int_select = integrate(simple_fun_select, lower = 0, upper = 27)
+int_select = integrate(simple_fun_select, lower = 1, upper = 27)
 
 #  Transform fitted values for poaching selectivity into a probability distribution function using the integral of the unidimensional function.
 fun_poach = function(t){n = ifelse(is.na((nls_tidy$estimate[1] / int_select$value) * (nls_tidy$estimate[2] / nls_tidy$estimate[3]) * ((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3]) ^ (nls_tidy$estimate[2] - 1) * exp(-((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3] ) ^ nls_tidy$estimate[2])), 
@@ -303,7 +297,7 @@ par = c(10,
         1.745196,
         3.1966691,
         3.8386018,
-        0.60,
+        0.40,
         131.35,
         3.07,
         1.639951478)
@@ -350,11 +344,11 @@ tab = data.frame(num, fun, var, par)
 
 #####f. Iteration
 
-* Model w/ loops and functions.
+* Model w/ loops and functions run from a vector of parameters.
 
 ```{r hoof, eval = FALSE, include = FALSE}
 
-# Set up the whole damn thing. Template.
+# Set up the whole thing. Template.
 fi = function(par){counts = matrix(nrow = par[1], ncol = par[2])
                    e = as.numeric(vector(length = par[1]))
                    counts[1,] = seq(1, par[2])
@@ -372,7 +366,6 @@ fi = function(par){counts = matrix(nrow = par[1], ncol = par[2])
                    
                    }
 
-# Set up the whole damn thing, but really this time.
 # NB: This is still far from working - refer to the mock-up above for the basic nested loop structure. That one does work.
 fi = function(par){
                    # Build objects to fill.
@@ -382,33 +375,68 @@ fi = function(par){
                    y = matrix(nrow = par[1], ncol = par[2]) # Build a matrix of catch at age.
                    r = as.numeric(vector(length = par[1]))  # Build a vector of recruitment at age.
                    e = as.numeric(vector(length = par[1]))  # Build a vector of effort. This is the variable for optimization in the economic component.
+                   p = as.numeric(vector(length = par[1]))  # Build a vector of prices at age.
                    r = as.numeric(vector(length = par[1]))  # Build a vector of total revenues.
                    c = as.numeric(vector(length = par[1]))  # Build a vector of total costs.
+                   a = as.numeric(vector(length = par[1]))  # Build a vector of ages for easier reference.
                    
                    # Add initial values.
+                   a = seq(1, par[2])
+                   
                    n[1,] = ninit # Age distribution for first year, e.g. 2017.
-                   m[1,]
-                   b[1,] = 1 # Bycatch survival by cohort for first year.
-                   b[1, 2] = n[1, 2] * par[16] # Bycatch survival for the single cohort affected by bycatch for first year.
-                   y[1,] = # Catch by cohort for first year.
+                   
+                   m[1,] = n[1,] * par[11] # Natural mortalities.
+                   
+                   b[1,] = (n[1,] - n[1,] * m[1,]) * 0 # Bycatch mortalities by cohort for first year.
+                   b[1, 2] = (n[1, 2] - n[1, 2] * m[1, 2]) * par[16] # Bycatch mortality for the single cohort actually affected.
+                   
+                   p[1] = 100 # Price for first year. 100 is absolutely arbitrary - just spinning things up.
+                   
+                   e[1] = 100 # Effort for first year. 100 is absolutely arbitrary - just spinning things up.                   
+                   
+                   y[1,] = n[1,] * 0.1 # Catch for first year by cohort. Arbitrary for spin-up.
+                   #for(i in 1:par[2]){y[1, j] = e[1] * fun_poach(a[j]) * n[1, j]} # Catch by cohort for first year.
+                     
                    r[1] = fun_rec(sum(n[1, 2:par[2]]), par[17], par[18], par[19]) # Recruitment for first year.
-                   e[1] = 5 # Effort for first year.
-                   r[1] = 5 # Revenues for first year.
-                   c[1] = 5 # Costs for first year.
+
+                   #rev[1] = sum(y[1,]) * p[1] # Revenues for first year.
+                   #c[1] = e[1] * 5 # Costs for first year.
                    
                    # Loop through the period of interest.
                    for(i in 2:par[1]){
                      for(j in 2:par[2]){
-                     e[i] = e[i - 1] + 1
+                     n[i, j] = n[i - 1, j - 1] - m[i - 1, j - 1] - b[i - 1, j - 1] - y[i - 1, j - 1]
+                     
+                     m[i, j] = n[i, j] * (1 - par[11])
+                     
+                     b[i, j] = (n[i, j] - m[i, j]) * 1
+                     b[i, 2] = (n[i, j] - m[i, j]) * par[16]
+                     
+                     
+                       
+                       e[i] = e[i - 1] + 1
                      n[i, j] = counts[i - 1, j - 1] + e[i - 1]
                      }
+                   
                    n[i, 1] = sum(counts[i - 1, 2:par[2]])
+                   
+                   p[i] = 100
+                   
+                   e[i] = 100
+                   
+                   #r
+                   #c
+                   
                    }
                    
                    # Get results.
-                   n(counts)
+                   return(list("n" = n, "m" = m))
                    
                    }
+
+output = fi(par)
+
+print(output$n)
 
 ```
 
