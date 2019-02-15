@@ -259,7 +259,7 @@ fun_rec = function(n, a_rec, b_rec, d_rec){n0 = (a_rec * n) / ((1 + n / b_rec) ^
 
 With intermediate results ready to plug into the Faustmann model, everything goes into a vector for model runs and a table for handy external reference.
 
-```{r pars, eval = FALSE, include = FALSE}
+```{r pars}
 
 # Define parameters for each low-level function in a high-level function of multiple harvests over time.
 var = c("rows",
@@ -346,9 +346,14 @@ tab = data.frame(num, fun, var, par)
 
 * Model w/ loops and functions run from a vector of parameters.
 
-```{r hoof, eval = FALSE, include = FALSE}
+* Next steps for 2/16:
++ finish selectivity/catchability estimation in section (c) above
++ estimate a back-of-the-envelope stiffness parameter
++ incorporate loose parameters into the full set
 
-# Set up the whole thing. Template.
+```{r hoof}
+
+# Build a quick demo of nested loops in a function for reference.
 fi = function(par){counts = matrix(nrow = par[1], ncol = par[2])
                    e = as.numeric(vector(length = par[1]))
                    counts[1,] = seq(1, par[2])
@@ -366,6 +371,7 @@ fi = function(par){counts = matrix(nrow = par[1], ncol = par[2])
                    
                    }
 
+# Build the real thing.
 # NB: This is still far from working - refer to the mock-up above for the basic nested loop structure. That one does work.
 fi = function(par){
                    # Build objects to fill.
@@ -373,15 +379,15 @@ fi = function(par){
                    m = matrix(nrow = par[1], ncol = par[2]) # Build a matrix of natural mortalities at age.
                    b = matrix(nrow = par[1], ncol = par[2]) # Build a matrix of bycatch at age.
                    y = matrix(nrow = par[1], ncol = par[2]) # Build a matrix of catch at age.
-                   r = as.numeric(vector(length = par[1]))  # Build a vector of recruitment at age.
+                   a = matrix(nrow = par[1], ncol = par[2]) # Build a matrix of ages for reference in functions.
+                   rec = as.numeric(vector(length = par[1]))  # Build a vector of recruitment at age.
                    e = as.numeric(vector(length = par[1]))  # Build a vector of effort. This is the variable for optimization in the economic component.
                    p = as.numeric(vector(length = par[1]))  # Build a vector of prices at age.
-                   r = as.numeric(vector(length = par[1]))  # Build a vector of total revenues.
+                   rev = as.numeric(vector(length = par[1]))  # Build a vector of total revenues.
                    c = as.numeric(vector(length = par[1]))  # Build a vector of total costs.
-                   a = as.numeric(vector(length = par[1]))  # Build a vector of ages for easier reference.
                    
                    # Add initial values.
-                   a = seq(1, par[2])
+                   a = col(a)
                    
                    n[1,] = ninit # Age distribution for first year, e.g. 2017.
                    
@@ -392,12 +398,12 @@ fi = function(par){
                    
                    p[1] = 100 # Price for first year. 100 is absolutely arbitrary - just spinning things up.
                    
-                   e[1] = 100 # Effort for first year. 100 is absolutely arbitrary - just spinning things up.                   
+                   e[1] = 120 # Effort in boats/season for 2017 (INAPESCA 2018). Get this into par.                  
                    
                    y[1,] = n[1,] * 0.1 # Catch for first year by cohort. Arbitrary for spin-up.
                    #for(i in 1:par[2]){y[1, j] = e[1] * fun_poach(a[j]) * n[1, j]} # Catch by cohort for first year.
                      
-                   r[1] = fun_rec(sum(n[1, 2:par[2]]), par[17], par[18], par[19]) # Recruitment for first year.
+                   rec[1] = fun_rec(sum(n[1, 2:par[2]]), par[17], par[18], par[19]) # Recruitment for first year.
 
                    #rev[1] = sum(y[1,]) * p[1] # Revenues for first year.
                    #c[1] = e[1] * 5 # Costs for first year.
@@ -409,29 +415,27 @@ fi = function(par){
                      
                      m[i, j] = n[i, j] * (1 - par[11])
                      
-                     b[i, j] = (n[i, j] - m[i, j]) * 1
-                     b[i, 2] = (n[i, j] - m[i, j]) * par[16]
-                     
-                     
-                       
-                       e[i] = e[i - 1] + 1
-                     n[i, j] = counts[i - 1, j - 1] + e[i - 1]
+                     b[i, j] = (n[i, j] - m[i, j]) * 0 # This is one of three clunky ways to implement bycatch - the other two are a long function or another line for n[i, 2].
+                     b[i, 2] = (n[i, j] - m[i, j]) * par[16] # ^^^
                      }
-                   
-                   n[i, 1] = sum(counts[i - 1, 2:par[2]])
-                   
-                   p[i] = 100
-                   
-                   e[i] = 100
-                   
-                   #r
-                   #c
-                   
+                     
+                     n[i, 1] = rec[i - 1]
+                     
+                     p[i] = 100 # but really: p = B0 - B1 * q[i - 1] + a ^ B2, where q is quantity supplied in tonnes and a is cohort, i.e. j, converted into grams of buche per fish.
+                    
+                     e[i] = e[i - 1] + 1 # but really: e[i - 1] + eta * (r[i - 1] - c[i - 1]), where eta is the drag on fisher responses to profitability.
+                     
+                     for(j in 2:par[2]){
+                     y[i, j] = (n[i, j] - m[i, j] - b[i, j]) * 0.0001 * e[i] * fun_poach(a[i, j]) # Identify selectivity and catchability to get this right.
+                     }
+                     
+                     rec[i] = fun_rec(sum(n[i, 2:par[2]]), par[17], par[18], par[19])
+                     
+                     c[i] = e[i] * 5 # Get an actual cost into par.
+                     
                    }
-                   
                    # Get results.
-                   return(list("n" = n, "m" = m))
-                   
+                   return(list("n" = n, "y" = y))
                    }
 
 output = fi(par)
