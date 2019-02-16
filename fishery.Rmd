@@ -109,7 +109,7 @@ m = 0.26 # Also from INAPESCA (2018) / Cisneros-Mata et al. (1995).
 
 ```
 
-#####c. Poaching Mortalities
+#####c. Selectivities at Age, Effort, Catchability, and Catches at Age (THIS SECTION IS SPAGHETII PLEASE SEND HELP)
 * Build poaching mortalities at age from INAPESCA data. 
 + Instead of using numbers from 2016 - 2017, sums by age are taken over all years of sampling for a higher *n*.
 + ~~We use numbers for sampled catch at age and numbers at age from 2017.~~
@@ -122,10 +122,10 @@ m = 0.26 # Also from INAPESCA (2018) / Cisneros-Mata et al. (1995).
 # Vector for proportional poaching mortalities at age.
 #  Read in values for size-selective poaching from INAPESCA (2018); n = 1147 from 9 periods, 1963 - 2017.
 v_select_data = 
-  c(6, 9, 15, 60, 191, 281, 165, 133, 82, 33, 27, 21, 17, 10, 12, 16, 8, 15, 9, 12, 7, 9, 5, 2, 2, 0) %>% # All years.
+  c(6, 9, 15, 60, 191, 281, 165, 133, 82, 33, 27, 21, 17, 10, 12, 16, 8, 15, 9, 12, 7, 9, 5, 2, 2, 0, 0) %>% # All years.
   #c(0, 0, 0, 0, 7, 11, 7, 13, 8, 10, 8, 10, 11, 4, 8, 9, 2, 8, 3, 8, 1, 3, 2, 2, 2, 0) %>% # 2017
   data.frame() %>% 
-  mutate(age = seq(1, 26)) %>% 
+  mutate(age = seq(1, 27)) %>% 
   rename(n = ".")
 
 #  Estimate fit for a Weibull probability density function. Try weibull.com/hotwire/issue14/relbasics14.htm
@@ -155,22 +155,52 @@ fun_poach = function(t){n = ifelse(is.na((nls_tidy$estimate[1] / int_select$valu
                                     0, 
                                     (nls_tidy$estimate[1] / int_select$value) * (nls_tidy$estimate[2] / nls_tidy$estimate[3]) * ((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3]) ^ (nls_tidy$estimate[2] - 1) * exp(-((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3] ) ^ nls_tidy$estimate[2]))}
 
+# Plot the fucntion - not the PDF values, just the original values.
 plot_weib =
 ggplot() + 
-  geom_line(aes(seq(1, 26, by = 0.01), simple_fun_select(seq(1, 26, by = 0.01))), color = "Firebrick4") + 
-  geom_point(aes(seq(1, 26), v_select_data$n)) +
+  geom_line(aes(seq(1, 27, by = 0.01), simple_fun_select(seq(1, 27, by = 0.01))), color = "Firebrick4") + 
+  geom_point(aes(seq(1, 27), v_select_data$n)) +
   labs(x = "Age", y = "Catch") +
   theme_classic()
 
 print(plot_weib)
 
-#  Consider fixing the upper tail. Those residuals probably matter.
+# Get to selectivity at age from average proportional catch at age through catches at age, numbers at age, and effort in 2017. Catchability estimate is a bonus.
+catch = 1400000 # kilograms from tonnes. INAPESCA (2018).
+effort = 120 # boat-years in 2017. INAPESCA (2018).
+v_select_n = catch * fun_poach(a) / w # Get to catches at age in numbers with catch, proportional catch at age, and weights at age.
+v_select_use = v_select_n/(ninit * effort) # Get to just selectivities and catchability by dividing out numbers at age and effort.
 
-#  Transform 2017 catch into 2017 catch-at-age in weight, then transform that sucker into catch-at-age in numbers, then make it proportions again.
-#  Make this comment better.
-#catch = 1400000 # kilograms from tonnes. INAPESCA (2018).
-#v_select_n = catch * v_select_pdf / w # Check your conversion! You did this in the middle of the night, check it!
-#v_select_use = v_select_n/ninit # Diagnostic plot indicates you should really, really fix the residuals on the selectivity estimation.
+# Fit an ONLY SORT OF DIFFERENT Weibull distribution to selectivities and catchability. The integral of this gets you to a factor that happens to be catchability. I guess. Maybe.
+# Names are reused because a) lazy and b) the first estimate won't matter after the second one's done.
+nls_select = nls(v_select_use ~ ifelse(is.na(x * (a / b) * ((v_select_data$age - c) / b) ^ (a - 1) * exp(-((v_select_data$age - c) / b ) ^ a)),
+                                          0,
+                                          x * (a / b) * ((v_select_data$age - c) / b) ^ (a - 1) * exp(-((v_select_data$age - c) / b ) ^ a)),
+                 v_select_data, 
+                 start = list(x = 1, a = 2.5, b = 10, c = -3), 
+                 lower = list(0, 0, 0, -Inf),
+                 algorithm = "port")
+
+#  Tibbulate nonlinear estimation.
+nls_tidy = tidy(nls_select)
+
+#  Use parameters to restate the function on a single dimension (age) for integration.
+simple_fun_select = function(t){n = 
+                                ifelse(is.na(nls_tidy$estimate[1] * (nls_tidy$estimate[2] / nls_tidy$estimate[3]) * ((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3]) ^ (nls_tidy$estimate[2] - 1) * exp(-((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3] ) ^ nls_tidy$estimate[2])),
+                                0,
+                                nls_tidy$estimate[1] * (nls_tidy$estimate[2] / nls_tidy$estimate[3]) * ((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3]) ^ (nls_tidy$estimate[2] - 1) * exp(-((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3] ) ^ nls_tidy$estimate[2]))
+                                return(n)}
+
+#  Integrate over ages of interest.
+int_select = integrate(simple_fun_select, lower = 1, upper = 27)
+
+# Look, that's catchability!
+q = int_select$value
+
+#  Transform fitted values for poaching selectivity into a probability distribution function using the integral of the unidimensional function.
+fun_poach = function(t){n = ifelse(is.na((nls_tidy$estimate[1] / int_select$value) * (nls_tidy$estimate[2] / nls_tidy$estimate[3]) * ((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3]) ^ (nls_tidy$estimate[2] - 1) * exp(-((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3] ) ^ nls_tidy$estimate[2])), 
+                                    0, 
+                                    (nls_tidy$estimate[1] / int_select$value) * (nls_tidy$estimate[2] / nls_tidy$estimate[3]) * ((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3]) ^ (nls_tidy$estimate[2] - 1) * exp(-((t - nls_tidy$estimate[4]) / nls_tidy$estimate[3] ) ^ nls_tidy$estimate[2]))}
 
 ```
 
@@ -255,9 +285,8 @@ fun_rec = function(n, a_rec, b_rec, d_rec){n0 = (a_rec * n) / ((1 + n / b_rec) ^
 
 ```
 
-#####f0.5. Parameters
-
-With intermediate results ready to plug into the Faustmann model, everything goes into a vector for model runs and a table for handy external reference.
+#####f. Parameters
+With intermediate results ready to plug in, everything goes into a vector for model runs and a table for handy external reference.
 
 ```{r pars}
 
@@ -280,7 +309,8 @@ var = c("rows",
         "bymort",
         "a_rec",
         "b_rec",
-        "d_rec")
+        "d_rec",
+        "q")
 
 par = c(10, 
         27,
@@ -292,7 +322,7 @@ par = c(10,
         -0.65,
         0.000005,
         3.0635,
-        0.26,
+        0.22,
         974.4340378,
         1.745196,
         3.1966691,
@@ -300,7 +330,8 @@ par = c(10,
         0.40,
         131.3474453,
         30700.00,
-        1.639951478)
+        1.639951478,
+        q)
 
 units = c("Years",
           "Years",
@@ -320,7 +351,8 @@ units = c("Years",
           "%",
           "-",
           "-",
-          "-")
+          "-",
+          "Catchability")
 
 fun = c(rep("All", 2),
         rep("Initial Age Distribution", 3),
@@ -329,7 +361,8 @@ fun = c(rep("All", 2),
         "Natural Mortality",
         rep("Poaching Selectivity", 4),
         "Bycatch Mortality",
-        rep("Recruitment", 3))
+        rep("Recruitment", 3),
+        "Catchability")
 
 num = seq(1, length(var))
 
@@ -342,14 +375,15 @@ tab = data.frame(num, fun, var, par)
 
 ```
 
-#####f. Iteration
+#####g. Iteration
 
 * Model w/ loops and functions run from a vector of parameters.
 
-* Next steps for 2/16:
-+ finish selectivity/catchability estimation in section (c) above
-+ estimate a back-of-the-envelope stiffness parameter
-+ incorporate loose parameters into the full set
+* Next steps for 2/17:
++ build and fill price matrix
++ build and fill revenue vector
++ get effort parameterized with stiffness.
++ Consider optimization frameworks for stiffness and / or effort (mutually exclusive by implementation).
 
 ```{r hoof}
 
@@ -394,13 +428,13 @@ fi = function(par){
                    m[1,] = n[1,] * par[11] # Natural mortalities.
                    
                    b[1,] = (n[1,] - n[1,] * m[1,]) * 0 # Bycatch mortalities by cohort for first year.
-                   b[1, 2] = (n[1, 2] - n[1, 2] * m[1, 2]) * par[16] # Bycatch mortality for the single cohort actually affected.
+                   b[1, 2] = (n[1, 2] - m[1, 2]) * par[16] # Bycatch mortality for the single cohort actually affected.
                    
                    p[1] = 100 # Price for first year. 100 is absolutely arbitrary - just spinning things up.
                    
-                   e[1] = 120 # Effort in boats/season for 2017 (INAPESCA 2018). Get this into par.                  
+                   e[1] = 120 # Effort in boats/season for 2017 (INAPESCA 2018).                  
                    
-                   y[1,] = n[1,] * 0.1 # Catch for first year by cohort. Arbitrary for spin-up.
+                   y[1,] = (n[1,] - m[1,] - b[1,]) * par[20] * e[1] * fun_poach(a[1,]) # Catch for first year by cohort. Arbitrary for spin-up.
                    #for(i in 1:par[2]){y[1, j] = e[1] * fun_poach(a[j]) * n[1, j]} # Catch by cohort for first year.
                      
                    rec[1] = fun_rec(sum(n[1, 2:par[2]]), par[17], par[18], par[19]) # Recruitment for first year.
@@ -415,222 +449,64 @@ fi = function(par){
                      n[i, j] = n[i - 1, j - 1]  - m[i - 1, j - 1] - b[i - 1, j - 1] - y[i - 1, j - 1]
                      
                      # Natural mortalities for time i and cohort j are numbers for the same multipled by a constant factor for marginal mortality.
-                     m[i, j] = n[i, j] * (1 - par[11])
+                     m[i, j] = n[i, j] * par[11]
                      
                      # Bycatch is 0 for all cohorts except the second, which loses a constant proportion for each time step.
                      b[i, j] = 0 # This is one of three clunky ways to implement bycatch - the other two are a long function or another line for n[i, 2].
                      b[i, 2] = (n[i, j] - m[i, j]) * par[16] # ^^^
-                     b[i, 1] = 0
                      
                      }
                      
-                     # Numbers for time i and the first cohort are recruitment for all 
+                     # Numbers for time i and first cohort.
                      n[i, 1] = rec[i - 1]
                      
-                     # Natural mortalities for time i and the first cohort.
+                     # Natural mortalities for time i and first cohort.
                      m[i, 1] = n[i, 1] * (1 - par[11])
                      
+                     # Bycatch mortality for time i and first cohort.
+                     b[i, 1] = 0
+                     
+                     # Gram price for buche before ... is this the best way to do this?
                      p[i] = 100 # but really: p = B0 - B1 * q[i - 1] + a ^ B2, where q is quantity supplied in tonnes and a is cohort, i.e. j, converted into grams of buche per fish.
                     
                      e[i] = e[i - 1] + 1 # but really: e[i - 1] + eta * (r[i - 1] - c[i - 1]), where eta is the drag on fisher responses to profitability.
                      
                      for(j in 2:par[2]){
-                     y[i, j] = (n[i, j] - m[i, j] - b[i, j]) * 0.0001 * e[i] * fun_poach(a[i, j]) # Identify selectivity and catchability to get this right.
+                     y[i, j] = (n[i, j] - m[i, j] - b[i, j]) * par[20] * e[i] * fun_poach(a[i, j]) # Identify selectivity and catchability to get this right.
                      y[i, 1] = 0
                      }
                      
+                     # Recruitment for time i.
                      rec[i] = fun_rec(sum(n[i, 2:par[2]]), par[17], par[18], par[19])
                      
-                     #rev[i] =
+                     #rev[i] = numbers in y[] to lengths to weights to prices - note need for sum production in tonnes
                      
-                     c[i] = e[i] * 5 # Get an actual cost into par.
+                     c[i] = e[i] * 100000 # Estimate from per-trip cost estimate scaled up by 140 trips each year and rounding.
                      
                    }
                    # Get results.
-                   return(list("n" = n, "y" = y, "m" = m, "b" = b))
+                   return(list("n" = n, "y" = y, "m" = m, "b" = b, "e" = e, "rec" = rec))
                    }
+
+
+```
+
+#####h. Model Runs
+* Run your runs.
+
+```{r run}
 
 output = fi(par)
 
-print(output$n)
-
 ```
 
-#####g. Model Runs
-* Run your runs.
-
-```{r age_struct_tma_run, eval = FALSE, include = FALSE}
-
-# Run first test.
-uh = fun_test(10, 27, ninit, v_mort, bymort, v_select_use, v_eggs, 50000, w)
-vh = fun_test(10, 27, ninit, v_mort, bymort, v_select_use * 0, v_eggs, 50000, w)
-
-wuh = sweep(uh, MARGIN = 2, w, '*')
-wvh = sweep(vh, MARGIN = 2, w, '*')
-
-```
-
-#####h. Plots
+#####i. Plots
 * Plot your runs.
 
-```{r age_struct_tma_ploots, eval = FALSE, include = FALSE}
+```{r plot}
 
-# Using weights! Weights, not numbers!
-# Reshape for a basic plot.
-duh = data.frame(uh) %>% 
-  mutate(t = seq(0, 9)) %>% 
-  melt(id.vars = "t")
-
-# Plot.
-try_age =
-ggplot(duh, aes(t, value, color = variable)) +
-  geom_line()
-
-# Reshape and fiddle for a presentable plot.
-muh = data.frame(wuh) %>% 
-  mutate(t = seq(2020, 2029)) %>% 
-  melt(id.vars = "t") %>%
-  group_by(t) %>% 
-  summarise(s = sum(value)) %>% 
-  mutate(s = s * 0.001) %>% 
-  mutate(t = t - 3)
-
-# Ditto, but for the counterfactual plot.
-vuh = data.frame(wvh) %>% 
-  mutate(t = seq(2020, 2029)) %>% 
-  melt(id.vars = "t") %>%
-  group_by(t) %>% 
-  summarise(s = sum(value)) %>% 
-  mutate(s = s * 0.001) %>% 
-  mutate(t = t - 3)
-
-# Theming chunk.
-btheme =  theme(plot.title = element_text(hjust = 0.5, size = 32, family = "Century Gothic", face = "bold"), 
-          rect = element_rect(fill = "transparent"),
-          plot.background = element_rect(fill = "transparent", color = NA),
-          legend.position = "right",
-          legend.background = element_rect(fill = "transparent"),
-          legend.box.background = element_rect(fill = "transparent"),
-          legend.key = element_rect(fill="transparent", colour=NA),
-          legend.text = element_text(size = 16, family = "Century Gothic"),
-          legend.title = element_text(size = 18, family = "Century Gothic"),
-          panel.background = element_rect(fill = "transparent"),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          axis.text.x = element_text(size = 18, family = "Century Gothic"),
-          axis.title.x = element_text(size = 24, family = "Century Gothic", face = "bold"),
-          axis.text.y = element_text(size = 18, family = "Century Gothic"),
-          axis.title.y = element_text(size = 24, family = "Century Gothic", face = "bold"))
-
-# Presentable plot.
-try_sum = 
-ggplot(muh, aes(t, s * 0.001)) +
-  geom_segment(aes(x = -Inf, xend = Inf, y = 20, yend = 20), linetype = "dashed") +
-  geom_segment(aes(x = -Inf, xend = Inf, y = 12.5, yend = 12.5), linetype = "dashed") +
-  annotate("text", x = 2019.1, y = 21, label = "Target Biomass", size = 8, family = "Century Gothic") +
-  annotate("text", x = 2020, y = 13.5, label = "Minimum Viable Biomass", size = 8, family = "Century Gothic") +
-  geom_line(size = 3, color = "#1F4E79") +
-  scale_x_continuous(expand = c(0, 0.225), limits = c(2017, 2026), breaks = c(2017, 2026)) +
-  scale_y_continuous(expand = c(0, 0), limits = c(0, 40)) +
-  #ggtitle("Stock Forecast, 2017 - 2027") +
-  labs(x = "Years", y = "Thousands of Tonnes of Biomass") +
-  theme_classic() +
-  btheme
-
-# Save.
-ggsave("fishy.png", 
-       width = 720, 
-       height = 490,
-       dpi = 300, 
-       device = png, 
-       limitsize = FALSE, 
-       bg = "transparent")
-
-huh = left_join(muh, vuh, by = "t")
-
-huh$s.y[1:5] = huh$s.x[1:4]
-
-try_hum = 
-ggplot(huh) +
-  geom_segment(aes(x = -Inf, xend = 2026, y = 20, yend = 20), linetype = "dashed") +
-  geom_segment(aes(x = -Inf, xend = 2026, y = 12.5, yend = 12.5), linetype = "dashed") +
-  geom_ribbon(aes(t, ymin = s.x * 0.001, ymax = s.y * 0.001), fill = "#F4B183", alpha = 0.50) +
-  geom_line(aes(t, s.y * 0.001), color = "#F4B183", size = 3) +
-  geom_line(aes(t, s.x * 0.001), color = "#1F4E79", size = 3) +
-  annotate("text", x = 2019.1, y = 21, label = "Target Biomass", size = 8, family = "Century Gothic") +
-  annotate("text", x = 2020, y = 13.5, label = "Minimum Viable Biomass", size = 8, family = "Century Gothic") +
-  scale_x_continuous(expand = c(0, 0.225), limits = c(2017, 2026), breaks = c(2017, 2026)) +
-  scale_y_continuous(expand = c(0, 0), limits = c(0, 40)) +
-  #ggtitle("Stock Forecast, 2017 - 2027") +
-  labs(x = "Years", y = "Thousands of Tonnes of Biomass") +
-  theme_classic() +
-  btheme
-
-ggsave("fishier.png", 
-       width = 720, 
-       height = 490,
-       dpi = 300, 
-       device = png, 
-       limitsize = FALSE, 
-       bg = "transparent")
+for(i in 1:27){
+  plot(output$n[, i])
+}
 
 ```
-
-```{r otherploots, eval = FALSE, include = FALSE}
-melt$variable = str_remove(melt$variable, "X")
-melt$variable = as.numeric(melt$variable)
-
-try3 = 
-ggplot(melt, aes(x = variable, z = value, y = t, color = variable)) +
-  ggtitle("Numbers at Age for 25 Years, Ages 1 - 30") +
-  theme_void() + 
-  theme(legend.position = "none") +
-  #axes_3D() + 
-  stat_3D(geom = "point", phi = 45, theta = 135) +
-  scale_color_distiller(palette = "RdBu")
-
-tryfirst = 
-ggplot(filter(melt, variable == 1), aes(x = variable, z = value, y = t, color = variable)) +
-  ggtitle("Numbers at Age for 25 Years, Ages 1 - 30") +
-  theme_void() + 
-  theme(legend.position = "none") +
-  #axes_3D() + 
-  stat_3D(geom = "point", phi = 45, theta = 135) +
-  scale_color_distiller(palette = "RdBu")
-
-trysecond = 
-ggplot(filter(melt, variable < 11 & variable > 1), aes(x = variable, z = value, y = t, color = variable)) +
-  ggtitle("Numbers at Age for 25 Years, Ages 2 - 10") +
-  theme_void() + 
-  theme(legend.position = "none",
-        plot.title = element_text(size = 8)) +
-  #axes_3D() + 
-  stat_3D(geom = "point", phi = 45, theta = 135) +
-  scale_color_distiller(palette = "Purples")
-
-trythird = 
-ggplot(filter(melt, variable < 21 & variable > 10), aes(x = variable, z = value, y = t, color = variable)) +
-  ggtitle("Numbers at Age for 25 Years, Ages 11 - 20") +
-  theme_void() + 
-  theme(legend.position = "none",
-        plot.title = element_text(size = 8)) +
-  #axes_3D() + 
-  stat_3D(geom = "point", phi = 45, theta = 135) +
-  scale_color_distiller(palette = "Reds")
-
-tryfourth = 
-ggplot(filter(melt, variable < 31 & variable > 20), aes(x = variable, z = value, y = t, color = variable)) +
-  ggtitle("Numbers at Age for 25 Years, Ages 21 - 30") +
-  theme_void() + 
-  theme(legend.position = "none",
-        plot.title = element_text(size = 8)) +
-  #axes_3D() + 
-  stat_3D(geom = "point", phi = 45, theta = 135) +
-  scale_color_distiller(palette = "Oranges")
-
-ggsave("f1plot.png", plot = trysecond, dpi = 300, width = 3.25, height = 4.5)
-ggsave("f2plot.png", plot = trythird, dpi = 300, width = 3.25, height = 4.5)
-ggsave("f3plot.png", plot = tryfourth, dpi = 300, width = 3.25, height = 4.5)
-
-```
-
