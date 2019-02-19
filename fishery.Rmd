@@ -22,7 +22,8 @@ pkg <- c("readr",
          "cowplot",
          "kableExtra",
          "reshape2",
-         "devtools")
+         "devtools",
+         "gridExtra")
 
 # Install packages.
 #install.packages(pkg, verbose = FALSE, quiet = TRUE)
@@ -61,7 +62,7 @@ $N_a = 121.99 * 10^{-0.214a}$
 # Vector for initial n at a.
 #  Assign initial biomass from INAPESCA estimate.
 #  Try the lower bound on the 95% CI of INAPESCA's 2017 estimate from surveys.
-biomass_init = 32399000 # median biomass estimate from INAPESCA (2018) in kilograms.
+biomass_init = 13000000 #32399000 # median biomass estimate from INAPESCA (2018) in kilograms.
 
 #  Assign functional form for frequencies at age from True (2018). See notes on symposium presentation. Check whether curve describes numbers at age.
 #fun_a_n = function(a){121.99 * 10 ^ (-0.214 * a)}
@@ -105,8 +106,8 @@ $N_a = N_{a-1}e^{-M_a}$
 # Function for proportional marginal survival at age. From INAPESCA (2018) / Cisneros-Mata et al. (1995).
 fun_a_mort = function(n, m){s = n * exp(-m)}
 
-m = 0.26 # Also from INAPESCA (2018) / Cisneros-Mata et al. (1995).
-
+m = 0.268 # Also from INAPESCA (2018) / Cisneros-Mata et al. (1995).
+s = fun_a_mort(1, m)
 ```
 
 #####c. Selectivities at Age, Effort, Catchability, and Catches at Age (THIS SECTION IS SPAGHETII PLEASE SEND HELP)
@@ -301,7 +302,7 @@ var = c("rows",
         "t0",
         "a_lw",
         "b_lw",
-        "m",
+        "s",
         "x_f",
         "b_f",
         "n_f",
@@ -322,7 +323,7 @@ par = c(10,
         -0.65,
         0.000005,
         3.0635,
-        0.22,
+        s,
         974.4340378,
         1.745196,
         3.1966691,
@@ -425,7 +426,7 @@ fi = function(par){
                    
                    n[1,] = ninit # Age distribution for first year, e.g. 2017.
                    
-                   m[1,] = n[1,] * par[11] # Natural mortalities.
+                   m[1,] = n[1,] * (1 - par[11]) # Natural mortalities.
                    
                    b[1,] = (n[1,] - n[1,] * m[1,]) * 0 # Bycatch mortalities by cohort for first year.
                    b[1, 2] = (n[1, 2] - m[1, 2]) * par[16] # Bycatch mortality for the single cohort actually affected.
@@ -449,7 +450,7 @@ fi = function(par){
                      n[i, j] = n[i - 1, j - 1]  - m[i - 1, j - 1] - b[i - 1, j - 1] - y[i - 1, j - 1]
                      
                      # Natural mortalities for time i and cohort j are numbers for the same multipled by a constant factor for marginal mortality.
-                     m[i, j] = n[i, j] * par[11]
+                     m[i, j] = n[i, j] * (1 - par[11])
                      
                      # Bycatch is 0 for all cohorts except the second, which loses a constant proportion for each time step.
                      b[i, j] = 0 # This is one of three clunky ways to implement bycatch - the other two are a long function or another line for n[i, 2].
@@ -471,6 +472,10 @@ fi = function(par){
                     
                      e[i] = e[i - 1] + 1 # but really: e[i - 1] + eta * (r[i - 1] - c[i - 1]), where eta is the drag on fisher responses to profitability.
                      
+                     #rev[i] = #numbers in y[] to lengths to weights to prices - note need for sum production in tonnes
+                     
+                     #c[i] = e[i] * 100000 # Estimate from per-trip cost estimate scaled up by 140 trips each year and rounding.
+                     
                      for(j in 2:par[2]){
                      y[i, j] = (n[i, j] - m[i, j] - b[i, j]) * par[20] * e[i] * fun_poach(a[i, j]) # Identify selectivity and catchability to get this right.
                      y[i, 1] = 0
@@ -478,10 +483,6 @@ fi = function(par){
                      
                      # Recruitment for time i.
                      rec[i] = fun_rec(sum(n[i, 2:par[2]]), par[17], par[18], par[19])
-                     
-                     #rev[i] = numbers in y[] to lengths to weights to prices - note need for sum production in tonnes
-                     
-                     c[i] = e[i] * 100000 # Estimate from per-trip cost estimate scaled up by 140 trips each year and rounding.
                      
                    }
                    # Get results.
@@ -505,8 +506,44 @@ output = fi(par)
 
 ```{r plot}
 
-for(i in 1:27){
-  plot(output$n[, i])
-}
+# Plots by age for all ages.
+#for(i in 1:27){plot(output$n[, i])}
+
+# Tabular output.
+#print(output$n)
+
+# Plots of numbers and catch by age for three sets of ages (1-6, 7-15, 16:27).
+#par(mfrow = c(2, 3))
+#plot(rowSums(output$n[, 1:6]))
+#plot(rowSums(output$n[, 7:15]))
+#plot(rowSums(output$n[, 16:27]))
+#plot(rowSums(output$y[, 1:6]))
+#plot(rowSums(output$y[, 7:15]))
+#plot(rowSums(output$y[, 16:27]))
+
+# Ditto, but with a prettier output.
+njuv = rowSums(output$n[, 1:6])
+nmat = rowSums(output$n[, 7:15])
+nold = rowSums(output$n[, 16:27])
+yjuv = rowSums(output$y[, 1:6])
+ymat = rowSums(output$y[, 7:15])
+yold = rowSums(output$y[, 16:27])
+
+dat_fig = cbind(njuv, nmat, nold, yjuv, ymat, yold) %>% 
+  melt() %>% 
+  mutate(log = log(value))
+
+plot_fig = 
+  ggplot(dat_fig) + 
+  geom_point(aes(x = Var1, y = log)) +
+  facet_wrap(~ Var2)
+
+ggsave("plot_fig.png", plot_fig, width = 6.5, height = 6.75)
 
 ```
+
+<center>
+
+![](plot_fig.png)
+
+</center>
