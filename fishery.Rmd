@@ -496,26 +496,7 @@ tab = data.frame(num, fun, var, par)
 
 ```{r hoof}
 
-# Build a quick demo of nested loops in a function for reference.
-fi = function(par){counts = matrix(nrow = par[1], ncol = par[2])
-                   e = as.numeric(vector(length = par[1]))
-                   counts[1,] = seq(1, par[2])
-                   e[1] = 5
-                   
-                   for(i in 2:par[1]){
-                     for(j in 2:par[2]){
-                     e[i] = e[i - 1] + 1
-                     counts[i, j] = counts[i - 1, j - 1] + e[i - 1]
-                     }
-                   counts[i, 1] = sum(counts[i - 1, 2:par[2]])
-                   }
-                   
-                   return(counts)
-                   
-                   }
-
-# Build the real thing.
-# NB: This is still far from working - refer to the mock-up above for the basic nested loop structure. That one does work.
+# Build the model.
 fi = function(par){
                    # Build objects to fill.
                    n = matrix(nrow = par[1], ncol = par[2]) # Build a matrix of numbers at age.
@@ -539,18 +520,16 @@ fi = function(par){
                    b[1,] = (n[1,] - n[1,] * m[1,]) * 0 # Bycatch mortalities by cohort for first year.
                    b[1, 2] = (n[1, 2] - m[1, 2]) * par[16] # Bycatch mortality for the single cohort actually affected.
                    
-                   p[1] = 100 # Price for first year. 100 is absolutely arbitrary - just spinning things up.
-                   
                    e[1] = 120 # Effort in boats/season for 2017 (INAPESCA 2018).                  
                    
                    y[1,] = (n[1,] - m[1,] - b[1,]) * par[20] * e[1] * fun_poach(a[1,]) # Catch for first year by cohort. Arbitrary for spin-up.
-                   #for(i in 1:par[2]){y[1, j] = e[1] * fun_poach(a[j]) * n[1, j]} # Catch by cohort for first year.
-                     
+                  
+                   p[1] = (10000 - 0.0161 * 0.31 * 38.78 * sum(y[1,])) # Placeholder for first price. Remember conversion.
+                   rev[1] = p[1] * sum(y[1,]) # Revenues for first year.
+                   c[1] = e[1] * 100000 # Costs for first year. Placeholder! 
+                   
                    rec[1] = fun_rec(sum(n[1, 2:par[2]]), par[17], par[18], par[19]) # Recruitment for first year.
 
-                   #rev[1] = sum(y[1,]) * p[1] # Revenues for first year.
-                   #c[1] = e[1] * 5 # Costs for first year.
-                   
                    # Loop.
                    for(i in 2:par[1]){
                      for(j in 2:par[2]){
@@ -575,19 +554,23 @@ fi = function(par){
                      # Bycatch mortality for time i and first cohort.
                      b[i, 1] = 0
                      
-                     # Gram price for buche before ... is this the best way to do this?
-                     p[i] = 100 # but really: p = B0 - B1 * q[i - 1] + a ^ B2, where q is quantity supplied in tonnes and a is cohort, i.e. j, converted into grams of buche per fish.
-                    
-                     e[i] = e[i - 1] + 1 # but really: e[i - 1] + eta * (r[i - 1] - c[i - 1]), where eta is the drag on fisher responses to profitability.
+                     # Effort for time and all cohorts from past effort, revenues, costs, and a stiffness parameter.
+                     e[i] = e[i - 1] + 0.000000003 * (rev[i - 1] - c[i - 1]) # Placeholder! The tiny number is eta, a stiffness parameter. See the Conrad text.
                      
-                     #rev[i] = #numbers in y[] to lengths to weights to prices - note need for sum production in tonnes
-                     
-                     #c[i] = e[i] * 100000 # Estimate from per-trip cost estimate scaled up by 140 trips each year and rounding.
-                     
+                     # Catches from effort and the rest.
                      for(j in 2:par[2]){
                      y[i, j] = (n[i, j] - m[i, j] - b[i, j]) * par[20] * e[i] * fun_poach(a[i, j]) # Identify selectivity and catchability to get this right.
                      y[i, 1] = 0
                      }
+                     
+                     # Prices - placeholder version! Beware! Should scale reasonably well to kilograms though.
+                     p[i] = (10000 - 0.0161 * 0.31 * 38.78 * sum(y[i,])) # Beware also the hard-coded conversion from round weight to dry buche.
+                     
+                     # Revenues.
+                     rev[i] = p[i] * sum(y[i,]) # Placeholder!
+                     
+                     # Costs.
+                     c[i] = e[i] * 100000 # Placeholder!
                      
                      # Recruitment for time i.
                      rec[i] = fun_rec(sum(n[i, 2:par[2]]), par[17], par[18], par[19])
@@ -600,7 +583,12 @@ fi = function(par){
                    tidyn$var = "Numbers"
                    tidyy = melt(y)
                    tidyy$var = "Catches"
-                   tidy = bind_rows(tidyn, tidyy)
+                   #tidye$e = e # Fix hashed-out section to get explicit effort for graphing, etc.
+                   #tidye$Var1 = seq(1, 10)
+                   #tidye$Var2 = NA
+                   #tidye$var = "Effort"
+                   #tidye = select(tidye, tidye$Var1, tidye$Var2, var)
+                   tidy = bind_rows(tidyn, tidyy)#, tidye)
                    tidy$group = ifelse(tidy$Var2 < 4, "Machorro", ifelse(tidy$Var2 < 21, "Pre-Adulto", "Adulto")) # Bins from AS2 pers. comm. Cisneros 2019.
                    tidy = rename(tidy, Year = Var1, Age = Var2, Result = value, Variable = var, Group = group)
                    
