@@ -381,6 +381,7 @@ tab = data.frame(num, fun, var, par)
 
 # Define parameters for each low-level function in a high-level function of multiple harvests over time.
 #  Choose a number of runs. For a set of estimates including worst-case, best-case, and case-we-think-is-most-likely, there are always no fewer than three runs.
+#  This should maybe be chunk 'runs?'
 runs = 3
 
 # Set parameters for the "use" case - whatever values we're most interested in.
@@ -409,13 +410,13 @@ paruse = c(10,
 #  This is different from optimistic / pessimistic cases - because a) it just is and b) the change from paruse is absolutely arbitrary in this version.
 #  This is also just a mock-up. Remember to fix it.
 parmin = paruse
-parmin[4] = 20000000
+parmin[17] = 100
 
 # Set parameters for the maximum case - the highest reasonable values for each parameter.
 #  This is different . . ..
 #  This is also just a mock-up. Remember to fix it.
 parmax = paruse
-parmax[4] = 40000000
+parmax[17] = 150
 
 # Stick things into a matrix for runs.
 par = as.matrix(cbind(paruse, parmin, parmax))
@@ -593,26 +594,20 @@ fi = function(par){
                      
                    }
                    
-                   # Tidy results: years, ages, and values into a dataframe.
+                   # Tidy results: years, ages, and values into a dataframe. Add efforts, revenues, and costs sometime.
+                   # HEY PIPE THIS %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% 
                    tidyn = melt(n)
-                   tidyn$var = "n"
+                   tidyn$var = "Numbers"
                    tidyy = melt(y)
-                   tidyy$var = "y"
+                   tidyy$var = "Catches"
                    tidy = bind_rows(tidyn, tidyy)
-                   
-                   # melt numbers and catches
-                   # append catches to numbers
-                   # ...and anything else you want to throw in, e.g. effort and profit
-                   # return that sucker
-                   
-                   
+                   tidy$group = ifelse(tidy$Var2 < 4, "Machorro", ifelse(tidy$Var2 < 21, "Pre-Adulto", "Adulto")) # Bins from AS2 pers. comm. Cisneros 2019.
+                   tidy = rename(tidy, Year = Var1, Age = Var2, Result = value, Variable = var, Group = group)
                    
                    # Get results.
-                   #return(list("n" = n, "y" = y, "m" = m, "b" = b, "e" = e, "rec" = rec))
+                   return(tidy)
+                   
                    }
-
-# NB: after group call with JCV, figuring out a tidy output from the function - e.g. dataframe of harvests and catches by year and cohort - is on the to-do list.
-#  This also simplifies extraction of values from a loop or lapply approach to sensitivity analysis / multiple runs. But it'll take a second to implement.
 
 ```
 
@@ -628,15 +623,17 @@ output = fi(paruse)
 
 ```{r runs}
 
-# Create lists of outputs.
-numbers = list()
-catches = list()
+# Build a home for results of runs.
+results = list()
 
-# Loop through parameter sets. Each parameter set is a vector [, i] in matrix 'par.' Each list fills with whatever output$ is specified in the loop.
-#  If something breaks, try checking whether dimensions of matrix 'par' match global parameter 'runs' and the length of each parameter vector expected by function 'fi().'
+# Loop through parameter sets.
 for(i in 1:runs){output = fi(par[, i])
-                 numbers[[i]] = output$n
-                 catches[[i]] = output$y}
+                 output$Run = i
+                 results[[i]] = output
+                 }
+
+# Go from list to dataframe for easier processing.
+results = bind_rows(results)
 
 ```
 
@@ -644,64 +641,22 @@ for(i in 1:runs){output = fi(par[, i])
 #####i. Plots
 * Plot your runs.
 
-```{r plot}
-
-# Plots by age for all ages.
-#for(i in 1:27){plot(output$n[, i])}
-
-# Tabular output.
-#print(output$n)
-
-# Plots of numbers and catch by age for three sets of ages (1-6, 7-15, 16:27).
-#par(mfrow = c(2, 3))
-#plot(rowSums(output$n[, 1:6]))
-#plot(rowSums(output$n[, 7:15]))
-#plot(rowSums(output$n[, 16:27]))
-#plot(rowSums(output$y[, 1:6]))
-#plot(rowSums(output$y[, 7:15]))
-#plot(rowSums(output$y[, 16:27]))
-
-# Ditto, but with a prettier output.
-njuv = rowSums(output$n[, 1:6])
-nmat = rowSums(output$n[, 7:15])
-nold = rowSums(output$n[, 16:27])
-yjuv = rowSums(output$y[, 1:6])
-ymat = rowSums(output$y[, 7:15])
-yold = rowSums(output$y[, 16:27])
-
-dat_fig = cbind(njuv, nmat, nold, yjuv, ymat, yold) %>% 
-  melt() %>% 
-  mutate(log = log(value))
-
-plot_fig = 
-  ggplot(dat_fig) + 
-  geom_point(aes(x = Var1, y = log)) +
-  facet_wrap(~ Var2)
-
-ggsave("plot_fig.png", plot_fig, width = 6.5, height = 6.75)
-
-```
-
 ```{r plots}
 
-# so we're going for graphs using three vectors each
-# but the three-vector approach has to be scaleable so we're really looking for a many-vector approach demo'd over three vectors
-# for two variables' matrices
-# with subsetting for three age groups
-# ugh
+# Wrangle a summary of numbers and catches by group and run for each year.
+results_sum = results %>%
+  group_by(Year, Variable, Group, Run) %>% 
+  summarize(Sum = sum(Result)) %>% 
+  mutate(Log = log(Sum)) %>% 
+  ungroup()
 
-# build a data frame to fill as a multiple of matrix length, age groups, and runs
+# Plot the summary numbers.
+plot_fig = 
+  ggplot(results_sum) +
+  geom_line(aes(x = Year, y = Sum, group = Run, color = Run)) +
+  facet_grid(vars(Variable), vars(Group))
 
-# build out dynamic metadata, i.e. years, ages (in groups?), and statistic label (numbers or catches,)
-
-for(i in 1:runs){juvnumbers = lapply(numbers[i], `[`, ,1:6)
-                 juvcatches = lapply(catches[i], `[`, ,1:6)
-                 juvnsum = rowSums(juvnumbers)
-                 juvcsum = rowSums(juvcatches)
-                }
-
-
-
+ggsave("plot_fig.png", plot_fig, dpi = 300, width = 6.5, height = 6.5)
 
 ```
 
