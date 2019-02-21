@@ -592,10 +592,27 @@ fi = function(par){
                      rec[i] = fun_rec(sum(n[i, 2:par[2]]), par[17], par[18], par[19])
                      
                    }
+                   
+                   # Tidy results: years, ages, and values into a dataframe.
+                   tidyn = melt(n)
+                   tidyn$var = "n"
+                   tidyy = melt(y)
+                   tidyy$var = "y"
+                   tidy = bind_rows(tidyn, tidyy)
+                   
+                   # melt numbers and catches
+                   # append catches to numbers
+                   # ...and anything else you want to throw in, e.g. effort and profit
+                   # return that sucker
+                   
+                   
+                   
                    # Get results.
-                   return(list("n" = n, "y" = y, "m" = m, "b" = b, "e" = e, "rec" = rec))
+                   #return(list("n" = n, "y" = y, "m" = m, "b" = b, "e" = e, "rec" = rec))
                    }
 
+# NB: after group call with JCV, figuring out a tidy output from the function - e.g. dataframe of harvests and catches by year and cohort - is on the to-do list.
+#  This also simplifies extraction of values from a loop or lapply approach to sensitivity analysis / multiple runs. But it'll take a second to implement.
 
 ```
 
@@ -604,15 +621,22 @@ fi = function(par){
 
 ```{r run}
 
+# Create a list of output matrices and vectors from function 'fi().'
 output = fi(paruse)
 
 ```
 
 ```{r runs}
 
-for(i in 1:runs){fi(par[, i])
-                
-                 stuff[[i]] = i}
+# Create lists of outputs.
+numbers = list()
+catches = list()
+
+# Loop through parameter sets. Each parameter set is a vector [, i] in matrix 'par.' Each list fills with whatever output$ is specified in the loop.
+#  If something breaks, try checking whether dimensions of matrix 'par' match global parameter 'runs' and the length of each parameter vector expected by function 'fi().'
+for(i in 1:runs){output = fi(par[, i])
+                 numbers[[i]] = output$n
+                 catches[[i]] = output$y}
 
 ```
 
@@ -659,6 +683,25 @@ ggsave("plot_fig.png", plot_fig, width = 6.5, height = 6.75)
 ```
 
 ```{r plots}
+
+# so we're going for graphs using three vectors each
+# but the three-vector approach has to be scaleable so we're really looking for a many-vector approach demo'd over three vectors
+# for two variables' matrices
+# with subsetting for three age groups
+# ugh
+
+# build a data frame to fill as a multiple of matrix length, age groups, and runs
+
+# build out dynamic metadata, i.e. years, ages (in groups?), and statistic label (numbers or catches,)
+
+for(i in 1:runs){juvnumbers = lapply(numbers[i], `[`, ,1:6)
+                 juvcatches = lapply(catches[i], `[`, ,1:6)
+                 juvnsum = rowSums(juvnumbers)
+                 juvcsum = rowSums(juvcatches)
+                }
+
+
+
 
 ```
 
