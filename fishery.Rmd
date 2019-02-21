@@ -289,7 +289,7 @@ fun_rec = function(n, a_rec, b_rec, d_rec){n0 = (a_rec * n) / ((1 + n / b_rec) ^
 #####f. Parameters
 With intermediate results ready to plug in, everything goes into a vector for model runs and a table for handy external reference.
 
-```{r pars}
+```{r partab}
 
 # Define parameters for each low-level function in a high-level function of multiple harvests over time.
 var = c("rows",
@@ -333,6 +333,112 @@ par = c(10,
         30700.00,
         1.639951478,
         q)
+
+units = c("Years",
+          "Years",
+          "Kilograms",
+          "-",
+          "-",
+          "Centimeters",
+          "Years (Inverse)",
+          "Years",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "%",
+          "-",
+          "-",
+          "-",
+          "Catchability")
+
+fun = c(rep("All", 2),
+        rep("Initial Age Distribution", 3),
+        rep("Von Bertalanffy", 3),
+        rep("Weight-Length", 2),
+        "Natural Mortality",
+        rep("Poaching Selectivity", 4),
+        "Bycatch Mortality",
+        rep("Recruitment", 3),
+        "Catchability")
+
+num = seq(1, length(var))
+
+tab = data.frame(num, fun, var, par)
+
+# Save parameters to working directory.
+#kable(tab, digits = 2) %>%
+#  kable_styling() %>%
+#  save_kable(file = "partab.html", self_contained = T)
+
+```
+
+```{r parstab}
+
+# Define parameters for each low-level function in a high-level function of multiple harvests over time.
+#  Choose a number of runs. For a set of estimates including worst-case, best-case, and case-we-think-is-most-likely, there are always no fewer than three runs.
+runs = 3
+
+# Set parameters for the "use" case - whatever values we're most interested in.
+paruse = c(10, 
+           27,
+           200,
+           32399000,
+           121.99,
+           -0.09,
+           0.155,
+           -0.65,
+           0.000005,
+           3.0635,
+           s,
+           974.4340378,
+           1.745196,
+           3.1966691,
+           3.8386018,
+           0.40,
+           131.3474453,
+           30700.00,
+           1.639951478,
+           q)
+
+# Set parameters for the minimum case - the lowest reasonable values for each parameter.
+#  This is different from optimistic / pessimistic cases - because a) it just is and b) the change from paruse is absolutely arbitrary in this version.
+#  This is also just a mock-up. Remember to fix it.
+parmin = paruse
+parmin[4] = 20000000
+
+# Set parameters for the maximum case - the highest reasonable values for each parameter.
+#  This is different . . ..
+#  This is also just a mock-up. Remember to fix it.
+parmax = paruse
+parmax[4] = 40000000
+
+# Stick things into a matrix for runs.
+par = as.matrix(cbind(paruse, parmin, parmax))
+
+var = c("rows",
+        "cols",
+        "biom_init",
+        "a_ninit",
+        "b_ninit",
+        "linf",
+        "k,",
+        "t0",
+        "a_lw",
+        "b_lw",
+        "s",
+        "x_f",
+        "b_f",
+        "n_f",
+        "y_f",
+        "bymort",
+        "a_rec",
+        "b_rec",
+        "d_rec",
+        "q")
 
 units = c("Years",
           "Years",
@@ -497,9 +603,18 @@ fi = function(par){
 
 ```{r run}
 
-output = fi(par)
+output = fi(paruse)
 
 ```
+
+```{r runs}
+
+for(i in 1:runs){fi(par[, i])
+                
+                 stuff[[i]] = i}
+
+```
+
 
 #####i. Plots
 * Plot your runs.
@@ -541,6 +656,11 @@ plot_fig =
 ggsave("plot_fig.png", plot_fig, width = 6.5, height = 6.75)
 
 ```
+
+```{r plots}
+
+```
+
 
 <center>
 
