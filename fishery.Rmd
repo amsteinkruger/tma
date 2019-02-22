@@ -105,10 +105,21 @@ $N_a = N_{a-1}e^{-M_a}$
 ```{r nmort}
 
 # Function for proportional marginal survival at age. From INAPESCA (2018) / Cisneros-Mata et al. (1995).
-fun_a_mort = function(n, m){s = n * exp(-m)}
+#fun_a_mort = function(n, m){s = n * exp(-m)}
 
-m = 0.268 # Also from INAPESCA (2018) / Cisneros-Mata et al. (1995).
-s = fun_a_mort(1, m)
+#m = 0.268 # Also from INAPESCA (2018) / Cisneros-Mata et al. (1995).
+#s = fun_a_mort(1, m)
+
+# Function for proportional marginal survival at age. From AS2, EAB pers. comm. Cisneros-Mata, February 2019.
+fun_a_mort = function(a){s = ifelse(a < a_mat, m_juv, ifelse(a_mat < m_old, m_mat, m_old))}
+
+# Source ^^^.
+a_mat = 3
+a_old = 20
+m_juv = 0.549
+m_mat = 0.69
+m_old = 0.411
+
 ```
 
 #####c. Selectivities at Age, Effort, Catchability, and Catches at Age (THIS SECTION IS SPAGHETII PLEASE SEND HELP)
@@ -395,7 +406,7 @@ paruse = c(10,
            -0.65,
            0.000005,
            3.0635,
-           s,
+           1,           # Placeholder for natural mortality variables (x5).
            974.4340378,
            1.745196,
            3.1966691,
@@ -515,7 +526,7 @@ fi = function(par){
                    
                    n[1,] = ninit # Age distribution for first year, e.g. 2017.
                    
-                   m[1,] = n[1,] * (1 - par[11]) # Natural mortalities.
+                   m[1,] = n[1,] * (1 - fun_a_mort(a[1,])) # Natural mortalities.
                    
                    b[1,] = (n[1,] - n[1,] * m[1,]) * 0 # Bycatch mortalities by cohort for first year.
                    b[1, 2] = (n[1, 2] - m[1, 2]) * par[16] # Bycatch mortality for the single cohort actually affected.
@@ -537,7 +548,7 @@ fi = function(par){
                      n[i, j] = n[i - 1, j - 1]  - m[i - 1, j - 1] - b[i - 1, j - 1] - y[i - 1, j - 1]
                      
                      # Natural mortalities for time i and cohort j are numbers for the same multipled by a constant factor for marginal mortality.
-                     m[i, j] = n[i, j] * (1 - par[11])
+                     m[i, j] = n[i, j] * (1 - fun_a_mort(a[i, j]))
                      
                      # Bycatch is 0 for all cohorts except the second, which loses a constant proportion for each time step.
                      b[i, j] = 0 # This is one of three clunky ways to implement bycatch - the other two are a long function or another line for n[i, 2].
@@ -549,7 +560,7 @@ fi = function(par){
                      n[i, 1] = rec[i - 1]
                      
                      # Natural mortalities for time i and first cohort.
-                     m[i, 1] = n[i, 1] * (1 - par[11])
+                     m[i, 1] = n[i, 1] * (1 - fun_a_mort(a[i, 1]))
                      
                      # Bycatch mortality for time i and first cohort.
                      b[i, 1] = 0
@@ -559,7 +570,7 @@ fi = function(par){
                      
                      # Catches from effort and the rest.
                      for(j in 2:par[2]){
-                     y[i, j] = (n[i, j] - m[i, j] - b[i, j]) * par[20] * e[i] * fun_poach(a[i, j]) # Identify selectivity and catchability to get this right.
+                     y[i, j] = (n[i, j] - m[i, j] - b[i, j]) * par[20] * e[i] * fun_poach(a[i, j])
                      y[i, 1] = 0
                      }
                      
@@ -579,16 +590,21 @@ fi = function(par){
                    
                    # Tidy results: years, ages, and values into a dataframe. Add efforts, revenues, and costs sometime.
                    # HEY PIPE THIS %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% 
+                   #  Numbers.
                    tidyn = melt(n)
                    tidyn$var = "Numbers"
+                   #  Catches.
                    tidyy = melt(y)
                    tidyy$var = "Catches"
-                   #tidye$e = e # Fix hashed-out section to get explicit effort for graphing, etc.
-                   #tidye$Var1 = seq(1, 10)
+                   #  Effort.
+                   tidye = rename(data.frame(matrix(NA, nrow = par[1], ncol = 4)), Var1 = X1, Var2 = X2, value = X3, var = X4)
+                   tidye$Var1 = seq(1, par[1])
                    #tidye$Var2 = NA
-                   #tidye$var = "Effort"
+                   tidye$value = e
+                   tidye$var = "Effort"
                    #tidye = select(tidye, tidye$Var1, tidye$Var2, var)
-                   tidy = bind_rows(tidyn, tidyy)#, tidye)
+                   #  Everything!
+                   tidy = bind_rows(tidyn, tidyy, tidye)
                    tidy$group = ifelse(tidy$Var2 < 4, "Machorro", ifelse(tidy$Var2 < 21, "Pre-Adulto", "Adulto")) # Bins from AS2 pers. comm. Cisneros 2019.
                    tidy = rename(tidy, Year = Var1, Age = Var2, Result = value, Variable = var, Group = group)
                    
@@ -641,7 +657,7 @@ results_sum = results %>%
 # Plot the summary numbers.
 plot_fig = 
   ggplot(results_sum) +
-  geom_line(aes(x = Year, y = Sum, group = Run, color = Run)) +
+  geom_line(aes(x = Year, y = Log, group = Run, color = Run)) +
   facet_grid(vars(Variable), vars(Group))
 
 ggsave("plot_fig.png", plot_fig, dpi = 300, width = 6.5, height = 6.5)
