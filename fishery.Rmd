@@ -335,7 +335,7 @@ par = c(10,
         -0.65,
         0.000005,
         3.0635,
-        s,
+        1,                # Placeholder for natural mortality values.
         974.4340378,
         1.745196,
         3.1966691,
@@ -566,7 +566,7 @@ fi = function(par){
                      b[i, 1] = 0
                      
                      # Effort for time and all cohorts from past effort, revenues, costs, and a stiffness parameter.
-                     e[i] = e[i - 1] + 0.000000003 * (rev[i - 1] - c[i - 1]) # Placeholder! The tiny number is eta, a stiffness parameter. See the Conrad text.
+                     e[i] = e[i - 1] + 0.000003 * (rev[i - 1] - c[i - 1]) # Placeholder! The tiny number is eta, a stiffness parameter. See the Conrad text.
                      
                      # Catches from effort and the rest.
                      for(j in 2:par[2]){
